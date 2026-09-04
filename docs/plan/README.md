@@ -30,7 +30,7 @@ Update this board. Commit the step document and this board together.
 | 02 | [Local rclone and token](02-local-rclone.md) | laptop | 01 | pending |
 | 03 | [Repository skeleton](03-repo-skeleton.md) | this repo | none | done |
 | 04 | [Config, identity, fs transport, fetch, push](04-fetch-and-push.md) | this repo | 03 | done |
-| 05 | [rclone transport, begin, checkpoint, pull](05-runs.md) | this repo | 04, 02 for the manual round trip | in-progress |
+| 05 | [rclone transport, begin, checkpoint, pull](05-runs.md) | this repo | 04, 02 for the manual round trip | done |
 | 06 | [Release 0.1.0](06-release.md) | this repo, npm | 05 | pending |
 | 07 | [Vault PR](07-vault-pr.md) | adc-vault | none | pending |
 | 08 | [First push of ATT-5387](08-first-push.md) | laptop | 02, 06, 07 | pending |

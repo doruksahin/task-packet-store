@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 05
 title: rclone transport, begin, checkpoint, pull, doctor
 ---
@@ -626,6 +626,16 @@ Release artifact: 1 file / 3 tests passed
 npm pack --dry-run: 30 files, exit 0
 
 manual round trip output:
+preflight: remote packets/TPS-1 absent (exit 3)
+doctor: {"driver":"gdrive","rclone":"1.75.0","rcloneTested":"1.75.0","credential":"PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS","remoteRoot":":drive,team_drive=0APywiuwYbmGMUk9PVA:packets"}
+push: {"ticket":"TPS-1","driver":"gdrive"}
+fetch: {"ticket":"TPS-1","fileCount":3,"packetSha256":"c0bf0b7a48cf92cd3c9707eab8d87b804d541a05c9dcf6be4d19697037736fbd","driver":"gdrive"}
+begin: {"ticket":"TPS-1","stage":"10-recon","version":"v1","runKey":"manual-1","runDirectory":"stages/10-recon/runs/v1"}
+checkpoint: {"version":"v1","reason":"manual","fileCount":1,"inventorySha256":"b5a605af95f5c16d4ec58201f0241bc7fff4a3410755ea31c87213b12c9a1b11"}
+pull: {"ticket":"TPS-1","driver":"gdrive","stages":1}
+local run files: report.html, run.md, snapshot.json
+remote packet files: 00 Packet.md, task.md, jira/00 Issue.md, stages/10-recon/runs/v1/{report.html,run.md,snapshot.json}
+cleanup: purged remote packets/TPS-1
 ```
 
 ## Rollback
