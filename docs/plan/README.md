@@ -28,7 +28,7 @@ Update this board. Commit the step document and this board together.
 | --- | --- | --- | --- | --- |
 | 01 | [Google Workspace setup](01-google-workspace.md) | Google Admin, GCP | none | pending |
 | 02 | [Local rclone and token](02-local-rclone.md) | laptop | 01 | pending |
-| 03 | [Repository skeleton](03-repo-skeleton.md) | this repo | none | pending |
+| 03 | [Repository skeleton](03-repo-skeleton.md) | this repo | none | in-progress |
 | 04 | [Config, identity, fs transport, fetch, push](04-fetch-and-push.md) | this repo | 03 | pending |
 | 05 | [rclone transport, begin, checkpoint, pull](05-runs.md) | this repo | 04, 02 for the manual round trip | pending |
 | 06 | [Release 0.1.0](06-release.md) | this repo, npm | 05 | pending |

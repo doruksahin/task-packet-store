@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 03
 title: Repository skeleton
 ---
