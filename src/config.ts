@@ -5,15 +5,22 @@ import { StoreError } from './errors.js';
 
 export const SAFE_TICKET = /^[A-Z][A-Z0-9]+-\d+$/;
 export const SAFE_STAGE = /^\d{2}-[a-z][a-z0-9-]*$/;
-export const SAFE_PREFIX = /^[A-Za-z0-9](?:[A-Za-z0-9._/-]*[A-Za-z0-9])?$/;
+/** One path segment: no separator, no backslash, no NUL, not `.` or `..`. */
+export const SAFE_SEGMENT = /^(?!\.{1,2}$)[^/\\\0]+$/;
+/** Slash-separated segments that start with a letter or digit. No leading, trailing, or doubled slash. */
+export const SAFE_PREFIX = /^[A-Za-z0-9][A-Za-z0-9._-]*(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/;
 export const DRIVE_ID = /^[A-Za-z0-9_-]{10,}$/;
 /** Anchored glob. Tool output lives here and is never part of fetch or push. */
 export const RUNS_GLOB = '/stages/*/runs/**';
 export const DEFAULT_IDENTITY = ['00 Packet.md', 'task.md', 'jira/**'] as const;
 
+/** An exact file (`a/b.md`) or a directory subtree (`a/b/**`). Segments are SAFE_SEGMENT without `*`. */
 const IdentityEntry = z
   .string()
-  .regex(/^(?!\/)(?!.*(?:^|\/)\.\.?(?:\/|$))[^\\\0]+$/, 'identity entry must be a relative path');
+  .regex(
+    /^(?!\.{1,2}(?:\/|$))[^/\\\0*]+(?:\/(?!\.{1,2}(?:\/|$))[^/\\\0*]+)*(?:\/\*\*)?$/,
+    'identity entry must be an exact file or dir/**',
+  );
 const identity = z.array(IdentityEntry).min(1).default([...DEFAULT_IDENTITY]);
 
 export const StoreConfigSchema = z.discriminatedUnion('driver', [

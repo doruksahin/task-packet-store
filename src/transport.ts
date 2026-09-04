@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { SAFE_SEGMENT } from './config.js';
 import { StoreError } from './errors.js';
 import { matchesAny } from './glob.js';
 import { listFiles } from './identity.js';
@@ -79,8 +80,13 @@ export class FsTransport implements PacketTransport {
 
   constructor(private readonly root: string) {}
 
+  /** <root>/<ticket>/<relative>. Every segment must be SAFE_SEGMENT, so no caller can escape the ticket. */
   private at(ticket: string, relative: string): string {
-    return path.join(this.root, ticket, ...relative.split('/').filter(Boolean));
+    const segments = [ticket, ...relative.split('/').filter(Boolean)];
+    for (const segment of segments) {
+      if (!SAFE_SEGMENT.test(segment)) throw new StoreError('STORE_CONFIG_INVALID', `unsafe path segment: ${segment}`);
+    }
+    return path.join(this.root, ...segments);
   }
 
   async download(ticket: string, remoteDir: string, localDir: string, filter?: TransferFilter): Promise<void> {

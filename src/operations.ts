@@ -1,11 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { RUNS_GLOB, validateTicket } from './config.js';
+import { RUNS_GLOB, SAFE_SEGMENT, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
 import { listFiles, packetSha256 } from './identity.js';
 import type { Driver, PacketTransport } from './transport.js';
-
-const SAFE_SEGMENT = /^(?!\.{1,2}$)[^/\\\0]+$/;
 
 export function assertAbsolute(value: string, label: string): string {
   if (!path.isAbsolute(value)) throw new StoreError('STORE_CONFIG_INVALID', `${label} must be an absolute path`);

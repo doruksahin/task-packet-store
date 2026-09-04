@@ -23,8 +23,18 @@ export function writeTree(root: string, tree: Record<string, string>): void {
   }
 }
 
+const tempDirs: string[] = [];
+
+/** A fresh directory under the OS temp root. Every one is removed by `cleanupTempDirs`. */
 export function tempDir(prefix: string): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempDirs.push(directory);
+  return directory;
+}
+
+/** Remove every directory handed out by `tempDir`. Call it from `afterEach`. `force` copes with read-only files. */
+export function cleanupTempDirs(): void {
+  for (const directory of tempDirs.splice(0)) fs.rmSync(directory, { recursive: true, force: true });
 }
 
 export interface Harness {
