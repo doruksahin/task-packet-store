@@ -3,7 +3,7 @@ import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TASK_PACKET_STORE_VERSION } from '../../src/version.js';
 
-const repositoryRoot = resolve('.');
+const repositoryRoot = resolve(import.meta.dirname, '..', '..');
 const forbiddenConsumerTerms = /adc-vault|adcreative|obsidian/i;
 
 describe('consumer-neutral package boundary', () => {
