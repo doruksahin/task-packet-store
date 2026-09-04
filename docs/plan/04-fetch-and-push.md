@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 04
 title: Config, identity, fs transport, fetch, push
 ---
