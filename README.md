@@ -42,9 +42,8 @@ npm exec --yes \
 | `pull` | Download every `stages/*/runs/**` into a local packet. |
 | `doctor` | Report the rclone version, the credential variables, and the resolved remote. |
 
-`fetch` and `push` work with the `fs` driver. `begin`, `checkpoint`, `pull`, `doctor`, and the
-`gdrive` driver become functional in 0.1.0. Until then each of those commands prints
-`<name>: not implemented` on stderr and exits 1.
+All six commands work through the same packet operations with either driver. The `fs` driver uses
+the local filesystem directly; the `gdrive` driver spawns the pinned rclone binary.
 
 Every command prints one JSON object on stdout when it succeeds. On failure stdout is empty and
 stderr has one line `CODE: message`. Exit 0 on success, 2 for usage or configuration errors, and 1

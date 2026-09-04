@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseStoreConfig } from '../src/config.js';
-import { fetchPacket, pushPacket } from '../src/operations.js';
+import { fetchPacket, pushPacket, readRunState } from '../src/operations.js';
 import { FsTransport } from '../src/transport.js';
 import {
   PACKET,
@@ -75,5 +75,33 @@ describe('fetch through FsTransport and unsafe packets', () => {
     const destination = tempDir('tps-dest-');
     await expect(fetchPacket(h.transport, h.config.identity, 'PROJ-1', destination)).rejects.toThrow('STORE_PACKET_UNSAFE');
     expect(fs.readdirSync(destination)).toEqual([]);
+  });
+});
+
+describe('run state validation', () => {
+  it.each([
+    ['storeFile', 'relative/store.json'],
+    ['ticket', 'proj-1'],
+    ['stage', 'recon'],
+    ['version', 'v0'],
+    ['runKey', 'not a valid key'],
+    ['runDirectory', '../outside'],
+    ['createdAt', 'yesterday'],
+  ])('rejects an invalid %s from a hand-edited state file', (field, value) => {
+    const stateFile = path.join(tempDir('tps-state-'), 'state.json');
+    const state = {
+      schemaVersion: 1,
+      storeFile: '/abs/store.json',
+      ticket: 'PROJ-1',
+      stage: '10-recon',
+      version: 'v1',
+      runKey: 'run-1',
+      runDirectory: 'stages/10-recon/runs/v1',
+      createdAt: '2026-09-04T09:12:33.120Z',
+      latestSnapshot: null,
+      [field]: value,
+    };
+    fs.writeFileSync(stateFile, JSON.stringify(state));
+    expect(() => readRunState(stateFile)).toThrow('STORE_STATE_INVALID');
   });
 });

@@ -36,4 +36,4 @@ export {
   type Snapshot,
 } from './run-record.js';
 export { createTransport, doctorStore } from './store.js';
-export { FsTransport, type Driver, type PacketTransport, type TransferFilter } from './transport.js';
+export { assertFilter, FsTransport, type Driver, type PacketTransport, type TransferFilter } from './transport.js';

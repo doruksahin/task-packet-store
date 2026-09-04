@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { RUNS_GLOB, SAFE_SEGMENT, validateStage, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
@@ -22,14 +23,14 @@ export function assertAbsolute(value: string, label: string): string {
 }
 
 /** Every downloaded path is checked before the packet is accepted: relative, no `.`/`..`, no backslashes. */
-function assertSafeTree(root: string): number {
+function assertSafeTree(root: string): string[] {
   const files = listFiles(root);
   for (const file of files) {
     for (const segment of file.split('/')) {
       if (!SAFE_SEGMENT.test(segment)) throw new StoreError('STORE_PACKET_UNSAFE', `unsafe path: ${file}`);
     }
   }
-  return files.length;
+  return files;
 }
 
 function freeze(root: string): void {
@@ -77,7 +78,7 @@ export async function fetchPacket(
   const temp = fs.mkdtempSync(path.join(parent, `.${ticket}.partial-`));
   try {
     await transport.download(ticket, '', temp, { excludes: [RUNS_GLOB] });
-    const fileCount = assertSafeTree(temp);
+    const fileCount = assertSafeTree(temp).length;
     if (fileCount === 0) throw new StoreError('STORE_PACKET_MISSING', `no files for ${ticket}`);
     const digest = digestOf(temp, ticket, identity);
     freeze(temp);
@@ -124,6 +125,7 @@ export async function beginRun(transport: PacketTransport, input: BeginInput) {
   validateTicket(input.ticket);
   validateStage(input.stage);
   const stateFile = assertAbsolute(input.stateFile, '--state');
+  const storeFile = assertAbsolute(input.storeFile, '--store');
   if (fs.existsSync(stateFile)) throw new StoreError('STORE_STATE_INVALID', `${stateFile} already exists`);
 
   const runsDir = `stages/${input.stage}/runs`;
@@ -140,7 +142,7 @@ export async function beginRun(transport: PacketTransport, input: BeginInput) {
     version,
     run_key: input.runKey,
     tool: input.tool,
-    ...(input.packetSha256 ? { packet_sha256: input.packetSha256 } : {}),
+    ...(input.packetSha256 !== undefined ? { packet_sha256: input.packetSha256 } : {}),
     started_at: new Date().toISOString(),
   };
 
@@ -155,7 +157,7 @@ export async function beginRun(transport: PacketTransport, input: BeginInput) {
   await transport.writeText(input.ticket, `${runDirectory}/run.md`, text);
   const state: RunState = {
     schemaVersion: 1,
-    storeFile: input.storeFile,
+    storeFile,
     ticket: input.ticket,
     stage: input.stage,
     version,
@@ -256,7 +258,18 @@ export async function pullRuns(transport: PacketTransport, ticket: string, into:
   if (!fs.existsSync(target)) throw new StoreError('STORE_PACKET_MISSING', `${target} does not exist`);
   const stages = await transport.listDirectories(ticket, 'stages');
   if (stages.length > 0) {
-    await transport.download(ticket, 'stages', path.join(target, 'stages'), { includes: ['/*/runs/**'] });
+    const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'tps-pull-'));
+    try {
+      await transport.download(ticket, 'stages', staging, { includes: ['/*/runs/**'] });
+      const files = assertSafeTree(staging);
+      for (const relative of files) {
+        const destination = path.join(target, 'stages', ...relative.split('/'));
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        fs.copyFileSync(path.join(staging, ...relative.split('/')), destination);
+      }
+    } finally {
+      fs.rmSync(staging, { recursive: true, force: true });
+    }
   }
   return { ticket, driver: transport.driver, into: target, stages: stages.length };
 }

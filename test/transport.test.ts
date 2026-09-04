@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { FsTransport, selected } from '../src/transport.js';
+import { assertFilter, FsTransport, selected, type TransferFilter } from '../src/transport.js';
 import { cleanupTempDirs, tempDir, writeTree } from './operations.shared.js';
 
 afterEach(cleanupTempDirs);
@@ -39,6 +39,12 @@ describe('FsTransport download', () => {
 });
 
 describe('selected', () => {
+  it('rejects a runtime filter that mixes includes and excludes', () => {
+    const mixed = { includes: ['/a/**'], excludes: ['/b/**'] } as unknown as TransferFilter;
+    expect(() => assertFilter(mixed)).toThrow('STORE_CONFIG_INVALID');
+    expect(() => selected('a/x', mixed)).toThrow('STORE_CONFIG_INVALID');
+  });
+
   it('keeps everything without a filter', () => {
     expect(selected('stages/10-x/runs/v1/run.md')).toBe(true);
     expect(selected('stages/10-x/runs/v1/run.md', undefined)).toBe(true);

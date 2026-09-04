@@ -1,20 +1,30 @@
+import path from 'node:path';
 import YAML from 'yaml';
 import { z } from 'zod';
+import { SAFE_STAGE, SAFE_TICKET } from './config.js';
 import { StoreError } from './errors.js';
 
 export const RUN_KEY = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const VERSION = /^v[1-9]\d*$/;
+const SHA256 = /^[0-9a-f]{64}$/;
 
-export const RunRecordSchema = z.strictObject({
-  type: z.literal('stage-run'),
-  jira_key: z.string(),
-  stage_folder: z.string(),
-  stage_id: z.string(),
-  version: z.string().regex(/^v[1-9]\d*$/),
-  run_key: z.string().regex(RUN_KEY),
-  tool: z.string().min(1),
-  packet_sha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
-  started_at: z.iso.datetime(),
-});
+export const RunRecordSchema = z
+  .strictObject({
+    type: z.literal('stage-run'),
+    jira_key: z.string().regex(SAFE_TICKET),
+    stage_folder: z.string().regex(SAFE_STAGE),
+    stage_id: z.string(),
+    version: z.string().regex(VERSION),
+    run_key: z.string().regex(RUN_KEY),
+    tool: z.string().min(1),
+    packet_sha256: z.string().regex(SHA256).optional(),
+    started_at: z.iso.datetime(),
+  })
+  .superRefine((record, context) => {
+    if (record.stage_id !== record.stage_folder.slice(3)) {
+      context.addIssue({ code: 'custom', path: ['stage_id'], message: 'stage_id must match stage_folder' });
+    }
+  });
 export type RunRecord = z.infer<typeof RunRecordSchema>;
 
 export function renderRunRecord(record: RunRecord): string {
@@ -25,7 +35,13 @@ export function renderRunRecord(record: RunRecord): string {
 export function parseRunRecord(text: string): RunRecord {
   const match = /^---\n([\s\S]*?)\n---\n/.exec(text);
   if (!match) throw new StoreError('STORE_RUN_MISSING', 'run.md has no frontmatter');
-  const parsed = RunRecordSchema.safeParse(YAML.parse(match[1]));
+  let frontmatter: unknown;
+  try {
+    frontmatter = YAML.parse(match[1]);
+  } catch (error) {
+    throw new StoreError('STORE_RUN_MISSING', `run.md frontmatter is invalid: ${(error as Error).message}`);
+  }
+  const parsed = RunRecordSchema.safeParse(frontmatter);
   if (!parsed.success) {
     const detail = parsed.error.issues.map((issue) => issue.message).join('; ');
     throw new StoreError('STORE_RUN_MISSING', `run.md frontmatter is invalid: ${detail}`);
@@ -34,35 +50,45 @@ export function parseRunRecord(text: string): RunRecord {
 }
 
 const SnapshotSummary = z.strictObject({
-  reason: z.string(),
-  inventorySha256: z.string(),
-  checkpointAt: z.string(),
+  reason: z.string().min(1),
+  inventorySha256: z.string().regex(SHA256),
+  checkpointAt: z.iso.datetime(),
 });
 
-export const RunStateSchema = z.strictObject({
-  schemaVersion: z.literal(1),
-  storeFile: z.string(),
-  ticket: z.string(),
-  stage: z.string(),
-  version: z.string(),
-  runKey: z.string(),
-  runDirectory: z.string(),
-  createdAt: z.string(),
-  latestSnapshot: SnapshotSummary.nullable(),
-});
+export const RunStateSchema = z
+  .strictObject({
+    schemaVersion: z.literal(1),
+    storeFile: z.string().refine((value) => path.isAbsolute(value), 'storeFile must be absolute'),
+    ticket: z.string().regex(SAFE_TICKET),
+    stage: z.string().regex(SAFE_STAGE),
+    version: z.string().regex(VERSION),
+    runKey: z.string().regex(RUN_KEY),
+    runDirectory: z.string(),
+    createdAt: z.iso.datetime(),
+    latestSnapshot: SnapshotSummary.nullable(),
+  })
+  .superRefine((state, context) => {
+    if (state.runDirectory !== `stages/${state.stage}/runs/${state.version}`) {
+      context.addIssue({
+        code: 'custom',
+        path: ['runDirectory'],
+        message: 'runDirectory must match stage and version',
+      });
+    }
+  });
 export type RunState = z.infer<typeof RunStateSchema>;
 
 export const SnapshotSchema = z.strictObject({
   schemaVersion: z.literal(1),
   reason: z.string(),
-  checkpointAt: z.string(),
+  checkpointAt: z.iso.datetime(),
   fileCount: z.number().int(),
-  inventorySha256: z.string(),
+  inventorySha256: z.string().regex(SHA256),
   files: z.array(
     z.strictObject({
       path: z.string(),
       size: z.number().int(),
-      sha256: z.string(),
+      sha256: z.string().regex(SHA256),
     }),
   ),
 });

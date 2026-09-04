@@ -130,6 +130,39 @@ export function exerciseFetchAndPush(make: () => Harness): void {
 }
 
 export function exerciseRuns(make: () => Harness): void {
+  it('begin rejects an explicitly empty packet digest before reserving a run', async () => {
+    const h = make();
+    h.seed('PROJ-1234', PACKET);
+    await expect(
+      beginRun(h.transport, {
+        ticket: 'PROJ-1234',
+        stage: '10-recon',
+        runKey: 'run-a',
+        tool: 'recon@1.0.0',
+        packetSha256: '',
+        stateFile: path.join(tempDir('tps-state-'), 'state.json'),
+        storeFile: '/abs/store.json',
+      }),
+    ).rejects.toThrow('STORE_CONFIG_INVALID');
+    expect(h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/run.md')).toBeNull();
+  });
+
+  it('begin rejects a relative store path before reserving a run', async () => {
+    const h = make();
+    h.seed('PROJ-1234', PACKET);
+    await expect(
+      beginRun(h.transport, {
+        ticket: 'PROJ-1234',
+        stage: '10-recon',
+        runKey: 'run-a',
+        tool: 'recon@1.0.0',
+        stateFile: path.join(tempDir('tps-state-'), 'state.json'),
+        storeFile: 'relative/store.json',
+      }),
+    ).rejects.toThrow('STORE_CONFIG_INVALID');
+    expect(h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/run.md')).toBeNull();
+  });
+
   it('begin numbers runs per stage and writes run.md and a state file', async () => {
     const h = make();
     h.seed('PROJ-1234', PACKET);

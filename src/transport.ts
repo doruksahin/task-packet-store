@@ -29,13 +29,23 @@ export interface PacketTransport {
   writeText(ticket: string, remoteFile: string, text: string): Promise<void>;
 }
 
+/** Runtime guard for JavaScript callers and deserialized values that bypass the TypeScript union. */
+export function assertFilter(filter?: TransferFilter): TransferFilter | undefined {
+  if (filter && filter.includes !== undefined && filter.excludes !== undefined) {
+    throw new StoreError('STORE_CONFIG_INVALID', 'a transfer filter cannot contain both includes and excludes');
+  }
+  return filter;
+}
+
 /** No filter keeps everything. `includes` keeps only matches. `excludes` drops matches. */
 export function selected(relativePath: string, filter?: TransferFilter): boolean {
-  if (filter && 'includes' in filter) return matchesAny(filter.includes, relativePath);
-  return !matchesAny(filter?.excludes, relativePath);
+  const checked = assertFilter(filter);
+  if (checked?.includes !== undefined) return matchesAny(checked.includes, relativePath);
+  return !matchesAny(checked?.excludes, relativePath);
 }
 
 function copyTree(from: string, to: string, filter?: TransferFilter): void {
+  assertFilter(filter);
   for (const relative of listFiles(from)) {
     if (!selected(relative, filter)) continue;
     const target = path.join(to, ...relative.split('/'));

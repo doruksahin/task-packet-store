@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { IGNORED_BASENAMES, type GdriveConfig } from './config.js';
 import { StoreError } from './errors.js';
-import type { PacketTransport, TransferFilter } from './transport.js';
+import { assertFilter, type PacketTransport, type TransferFilter } from './transport.js';
 
 export const RCLONE_TESTED_VERSION = '1.75.0';
 /** rclone exit code 3 is "directory not found", 4 is "file not found". */
@@ -81,6 +81,7 @@ export async function rcloneVersion(runner: RcloneRunner): Promise<string> {
 }
 
 function filterArgs(filter?: TransferFilter): string[] {
+  assertFilter(filter);
   const ignored = [...IGNORED_BASENAMES].flatMap((name) => [`/${name}`, `/**/${name}`]);
   if (filter?.includes !== undefined) {
     const rules = [

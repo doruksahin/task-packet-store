@@ -21,5 +21,6 @@ describe('run record', () => {
   it('rejects a record without frontmatter or with unknown keys', () => {
     expect(() => parseRunRecord('# no frontmatter\n')).toThrow('STORE_RUN_MISSING');
     expect(() => parseRunRecord('---\ntype: stage-run\nextra: 1\n---\n')).toThrow('STORE_RUN_MISSING');
+    expect(() => parseRunRecord('---\ntype: [broken\n---\n')).toThrow('STORE_RUN_MISSING');
   });
 });

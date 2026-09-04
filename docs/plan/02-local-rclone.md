@@ -54,7 +54,7 @@ Expected: exit 0.
 ## Evidence
 
 ```text
-rclone version:
+rclone version: v1.75.0
 lsd exit code:
 ```
 
