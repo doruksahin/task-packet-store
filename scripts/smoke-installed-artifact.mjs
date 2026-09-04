@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { lstat, mkdtemp, realpath, rm } from 'node:fs/promises';
+import { lstat, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -42,6 +42,23 @@ async function main() {
     });
     if (!stdout.includes('Usage:')) {
       throw new Error('Installed task-packet-store did not print help');
+    }
+
+    // Library smoke: consumers import packetSha256 from the installed package, so resolve the
+    // bare specifier from the install location, not from this repository.
+    const probe = join(smokeRoot, 'library-smoke.mjs');
+    await writeFile(
+      probe,
+      [
+        "const mod = await import('@doruksahin/task-packet-store');",
+        "if (typeof mod.packetSha256 !== 'function') throw new Error('packetSha256 is not a function');",
+        "process.stdout.write('library ok\\n');",
+        '',
+      ].join('\n'),
+    );
+    const library = await execFileAsync(process.execPath, [probe], { cwd: smokeRoot, env: process.env });
+    if (!library.stdout.includes('library ok')) {
+      throw new Error('Installed @doruksahin/task-packet-store did not export packetSha256');
     }
     process.stdout.write(`Installed package smoke passed: ${archive}\n`);
   } finally {
