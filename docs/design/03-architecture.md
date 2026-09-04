@@ -74,8 +74,11 @@ The remote is a connection string, so no `rclone.conf` exists anywhere:
 
 ## CLI contract
 
-Every command prints exactly one JSON object on stdout. Diagnostics go to stderr. Exit `0` is
-success. Exit `1` is a runtime failure. Exit `2` is a usage or configuration error.
+On success every command prints exactly one JSON object on stdout and exits `0`. On failure stdout
+is empty and stderr has one line `CODE: message`. Exit `2` is a usage or configuration error. This
+includes the usage errors commander detects itself, such as an unknown command, a missing required
+option, or no arguments at all; for those, commander writes its own message and the help text to
+stderr. Exit `1` is everything else. Help and version requests exit `0`.
 
 ### fetch
 
@@ -224,6 +227,11 @@ State file, local, written by `begin`, updated by `checkpoint`:
 `STORE_CONFIG_INVALID` (exit 2), `STORE_STATE_INVALID` (exit 2), `STORE_AUTH_MISSING`,
 `STORE_RCLONE_UNAVAILABLE`, `STORE_RCLONE_FAILED`, `STORE_PACKET_MISSING`, `STORE_PACKET_UNSAFE`,
 `STORE_DESTINATION_EXISTS`, `STORE_RUN_MISSING`, `STORE_VERSION_CONFLICT` (all exit 1).
+
+A failure never writes to stdout. It writes exactly one line to stderr, `CODE: message`, where
+`CODE` is one of the values above, and exits with the status listed. A caller can therefore treat
+any stdout as the success object and any non-zero exit as a failure whose first stderr token is the
+code. Usage errors caught by commander carry no `STORE_*` code; see "CLI contract".
 
 ## Testing strategy
 

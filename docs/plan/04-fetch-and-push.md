@@ -651,7 +651,7 @@ program
   .command('fetch')
   .description('Download one frozen packet without runs into <destination>/<TICKET>.')
   .requiredOption('--store <file>', 'absolute path to the store JSON')
-  .requiredOption('--ticket <ticket>', 'Jira ticket, for example ATT-5387')
+  .requiredOption('--ticket <ticket>', 'Jira ticket, for example PROJ-123')
   .requiredOption('--destination <dir>', 'absolute directory that receives <TICKET>')
   .action((options) =>
     run(async () => {
@@ -689,6 +689,10 @@ export function createTransport(config: StoreConfig, env: NodeJS.ProcessEnv = pr
 
 Create `src/index.ts` exporting the public surface: `packetSha256`, `DEFAULT_IDENTITY`,
 `parseStoreConfig`, `readStoreConfig`, `StoreError`, and the types.
+
+Re-add a library-import smoke to `scripts/smoke-installed-artifact.mjs`:
+`import('@doruksahin/task-packet-store')` from the installed tarball and assert `packetSha256` is a
+function, because step 09 imports it from the installed package.
 
 Commit: `feat: expose fetch and push on the CLI`
 

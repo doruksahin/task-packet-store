@@ -7,13 +7,19 @@ how the binary arrives and how it authenticates.
 
 ```bash
 version=v1.75.0
+cd "$RUNNER_TEMP"
+mkdir -p "$RUNNER_TEMP/bin"
 curl -fsSLO "https://downloads.rclone.org/$version/rclone-$version-linux-amd64.zip"
 curl -fsSLO "https://downloads.rclone.org/$version/SHA256SUMS"
 grep "rclone-$version-linux-amd64.zip" SHA256SUMS | sha256sum --check
 unzip -q "rclone-$version-linux-amd64.zip"
 install -m 0755 "rclone-$version-linux-amd64/rclone" "$RUNNER_TEMP/bin/rclone"
 echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+"$RUNNER_TEMP/bin/rclone" version
 ```
+
+Both workflows, CI and the publish job of Release Please, run this through the composite action
+`.github/actions/install-rclone`, whose `version` input defaults to the pinned tag.
 
 ## 2. Authentication is a service account, passed inline
 

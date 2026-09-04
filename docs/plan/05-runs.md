@@ -209,6 +209,10 @@ export class RcloneTransport implements PacketTransport {
 }
 ```
 
+Add a test that reads `.github/actions/install-rclone/action.yml` and asserts its default
+`version` input equals `v${RCLONE_TESTED_VERSION}`, so the CI pin and the runtime claim cannot
+drift.
+
 Commit: `feat: add the rclone transport for Google Drive`
 
 ## Task 2: run records
