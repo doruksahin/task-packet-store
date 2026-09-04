@@ -40,12 +40,37 @@ export function selected(relativePath: string, filter: TransferFilter): boolean 
 }
 
 function copyTree(from: string, to: string, filter: TransferFilter): void {
-  if (!fs.existsSync(from)) return;
   for (const relative of listFiles(from)) {
     if (!selected(relative, filter)) continue;
     const target = path.join(to, ...relative.split('/'));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.copyFileSync(path.join(from, ...relative.split('/')), target);
+  }
+}
+
+/** realpath of `target`; when it does not exist yet, realpath of its deepest existing ancestor plus the missing tail. */
+function intendedRealpath(target: string): string {
+  const missing: string[] = [];
+  let current = path.resolve(target);
+  while (!fs.existsSync(current)) {
+    missing.unshift(path.basename(current));
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return path.join(fs.realpathSync(current), ...missing);
+}
+
+function contains(outer: string, inner: string): boolean {
+  return inner === outer || inner.startsWith(outer + path.sep);
+}
+
+/** A copy from a directory onto itself, or across an ancestor, would read what it writes. Refuse both. */
+function assertDisjoint(localDir: string, target: string): void {
+  const source = fs.realpathSync(localDir);
+  const store = intendedRealpath(target);
+  if (contains(source, store) || contains(store, source)) {
+    throw new StoreError('STORE_CONFIG_INVALID', 'source is inside or equal to the store location for this ticket');
   }
 }
 
@@ -65,7 +90,10 @@ export class FsTransport implements PacketTransport {
   }
 
   async upload(ticket: string, localDir: string, remoteDir: string, filter?: TransferFilter): Promise<void> {
-    copyTree(localDir, this.at(ticket, remoteDir), assertFilter(filter));
+    const target = this.at(ticket, remoteDir);
+    if (!fs.existsSync(localDir)) return;
+    assertDisjoint(localDir, target);
+    copyTree(localDir, target, assertFilter(filter));
   }
 
   async listDirectories(ticket: string, remoteDir: string): Promise<string[]> {

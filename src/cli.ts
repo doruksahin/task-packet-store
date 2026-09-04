@@ -41,7 +41,7 @@ program
   .action((options: StoreOptions & { destination: string }) =>
     run(async () => {
       const config = readStoreConfig(options.store);
-      return fetchPacket(createTransport(config), config, options.ticket, options.destination);
+      return fetchPacket(createTransport(config), config.identity, options.ticket, options.destination);
     }),
   );
 
@@ -54,7 +54,7 @@ program
   .action((options: StoreOptions & { from: string }) =>
     run(async () => {
       const config = readStoreConfig(options.store);
-      return pushPacket(createTransport(config), config, options.ticket, options.from);
+      return pushPacket(createTransport(config), config.identity, options.ticket, options.from);
     }),
   );
 

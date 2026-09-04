@@ -40,7 +40,7 @@ export function exerciseFetchAndPush(make: () => Harness): void {
   it('fetch excludes runs, freezes files, and digests the identity zone', async () => {
     const h = make();
     h.seed('PROJ-1234', PACKET);
-    const result = await fetchPacket(h.transport, h.config, 'PROJ-1234', tempDir('tps-dest-'));
+    const result = await fetchPacket(h.transport, h.config.identity, 'PROJ-1234', tempDir('tps-dest-'));
     expect(result.fileCount).toBe(5);
     expect(fs.existsSync(path.join(result.packetDirectory, 'stages/20-ac-walkthrough/runs'))).toBe(false);
     expect(fs.statSync(path.join(result.packetDirectory, 'task.md')).mode & 0o222).toBe(0);
@@ -52,8 +52,8 @@ export function exerciseFetchAndPush(make: () => Harness): void {
     h.seed('PROJ-1234', PACKET);
     const destination = tempDir('tps-dest-');
     fs.mkdirSync(path.join(destination, 'PROJ-1234'));
-    await expect(fetchPacket(h.transport, h.config, 'PROJ-1234', destination)).rejects.toThrow('STORE_DESTINATION_EXISTS');
-    await expect(fetchPacket(h.transport, h.config, 'PROJ-9999', destination)).rejects.toThrow('STORE_PACKET_MISSING');
+    await expect(fetchPacket(h.transport, h.config.identity, 'PROJ-1234', destination)).rejects.toThrow('STORE_DESTINATION_EXISTS');
+    await expect(fetchPacket(h.transport, h.config.identity, 'PROJ-9999', destination)).rejects.toThrow('STORE_PACKET_MISSING');
     expect(fs.readdirSync(destination)).toEqual(['PROJ-1234']);
   });
 
@@ -61,10 +61,10 @@ export function exerciseFetchAndPush(make: () => Harness): void {
     const h = make();
     const local = path.join(tempDir('tps-local-'), 'PROJ-4321');
     writeTree(local, PACKET);
-    await pushPacket(h.transport, h.config, 'PROJ-4321', local);
+    await pushPacket(h.transport, h.config.identity, 'PROJ-4321', local);
     expect(h.remoteFile('PROJ-4321', 'stages/20-ac-walkthrough/runs/v1/run.md')).toBeNull();
     expect(h.remoteFile('PROJ-4321', 'jira/00 Issue.md')).toBe('# issue\n');
-    const fetched = await fetchPacket(h.transport, h.config, 'PROJ-4321', tempDir('tps-dest-'));
+    const fetched = await fetchPacket(h.transport, h.config.identity, 'PROJ-4321', tempDir('tps-dest-'));
     expect(fetched.fileCount).toBe(5);
   });
 }

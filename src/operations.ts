@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { RUNS_GLOB, type StoreConfig, validateTicket } from './config.js';
+import { RUNS_GLOB, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
 import { listFiles, packetSha256 } from './identity.js';
-import type { PacketTransport } from './transport.js';
+import type { Driver, PacketTransport } from './transport.js';
 
 const SAFE_SEGMENT = /^(?!\.{1,2}$)[^/\\\0]+$/;
 
@@ -32,12 +32,12 @@ export interface FetchResult {
   packetDirectory: string;
   fileCount: number;
   packetSha256: string;
-  driver: string;
+  driver: Driver;
 }
 
 export async function fetchPacket(
   transport: PacketTransport,
-  config: StoreConfig,
+  identity: readonly string[],
   ticket: string,
   destination: string,
 ): Promise<FetchResult> {
@@ -51,7 +51,7 @@ export async function fetchPacket(
     await transport.download(ticket, '', temp, { excludes: [RUNS_GLOB] });
     const fileCount = assertSafeTree(temp);
     if (fileCount === 0) throw new StoreError('STORE_PACKET_MISSING', `no files for ${ticket}`);
-    const digest = packetSha256(temp, config.identity);
+    const digest = packetSha256(temp, identity);
     freeze(temp);
     fs.renameSync(temp, final);
     return { ticket, packetDirectory: final, fileCount, packetSha256: digest, driver: transport.driver };
@@ -63,23 +63,20 @@ export async function fetchPacket(
 
 export interface PushResult {
   ticket: string;
-  driver: string;
+  driver: Driver;
   from: string;
 }
 
 export async function pushPacket(
   transport: PacketTransport,
-  config: StoreConfig,
+  identity: readonly string[],
   ticket: string,
   from: string,
 ): Promise<PushResult> {
   validateTicket(ticket);
   const source = assertAbsolute(from, '--from');
   if (!fs.existsSync(source)) throw new StoreError('STORE_PACKET_MISSING', `${source} does not exist`);
-  if (config.driver === 'fs' && path.resolve(config.root, ticket) === source) {
-    throw new StoreError('STORE_CONFIG_INVALID', '--from is already the store location for this ticket');
-  }
-  packetSha256(source, config.identity);
+  packetSha256(source, identity);
   await transport.upload(ticket, source, '', { excludes: [RUNS_GLOB] });
   return { ticket, driver: transport.driver, from: source };
 }
