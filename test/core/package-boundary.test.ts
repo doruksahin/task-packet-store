@@ -1,8 +1,11 @@
+import { execFile } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { TASK_PACKET_STORE_VERSION } from '../../src/version.js';
 
+const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, '..', '..');
 const forbiddenConsumerTerms = /adc-vault|adcreative|obsidian/i;
 
@@ -19,9 +22,16 @@ describe('consumer-neutral package boundary', () => {
   });
 
   it('keeps shipped markdown free of consumer identifiers', async () => {
-    const manifest = JSON.parse(await readFile(join(repositoryRoot, 'package.json'), 'utf8')) as { files: string[] };
-    const shippedMarkdown = manifest.files.filter((file) => file.endsWith('.md'));
-    expect(shippedMarkdown.length).toBeGreaterThan(0);
+    // Ask npm what it would pack: npm-packlist adds README files found in walked directories, so
+    // the `files` allowlist alone under-reports what ships.
+    const { stdout } = await execFileAsync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+      cwd: repositoryRoot,
+      env: process.env,
+    });
+    const [packed] = JSON.parse(stdout) as Array<{ files: Array<{ path: string }> }>;
+    const shippedMarkdown = packed.files.map((file) => file.path).filter((file) => file.endsWith('.md'));
+    expect(shippedMarkdown).toContain('README.md');
+    expect(shippedMarkdown).toContain('docs/design/03-architecture.md');
     const violations: string[] = [];
     for (const file of shippedMarkdown) {
       const content = await readFile(join(repositoryRoot, file), 'utf8');

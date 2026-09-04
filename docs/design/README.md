@@ -2,7 +2,7 @@
 
 ## 30-second overview
 
-A task packet is the folder `10 Tasks/Packets/<TICKET>/` in the adc-vault Obsidian vault. Today it
+A task packet is the folder `10 Tasks/Packets/<TICKET>/` in a vault checkout. Today it
 reaches a CI runner only through a hand-uploaded R2 copy, and tool results never return to it. This
 package closes both gaps.
 
