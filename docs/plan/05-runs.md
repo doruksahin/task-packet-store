@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 05
 title: rclone transport, begin, checkpoint, pull, doctor
 ---
