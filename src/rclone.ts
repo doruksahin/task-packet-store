@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { GdriveConfig } from './config.js';
+import { IGNORED_BASENAMES, type GdriveConfig } from './config.js';
 import { StoreError } from './errors.js';
 import type { PacketTransport, TransferFilter } from './transport.js';
 
@@ -77,10 +77,17 @@ export async function rcloneVersion(runner: RcloneRunner): Promise<string> {
 }
 
 function filterArgs(filter?: TransferFilter): string[] {
-  if (!filter) return [];
-  const [option, patterns] =
-    filter.includes !== undefined ? ['--include', filter.includes] : ['--exclude', filter.excludes];
-  return patterns.flatMap((pattern) => [option, pattern]);
+  const ignored = [...IGNORED_BASENAMES].flatMap((name) => [`/${name}`, `/**/${name}`]);
+  if (filter?.includes !== undefined) {
+    const rules = [
+      ...ignored.map((pattern) => `- ${pattern}`),
+      ...filter.includes.map((pattern) => `+ ${pattern}`),
+      '- **',
+    ];
+    return rules.flatMap((rule) => ['--filter', rule]);
+  }
+  const excludes = [...(filter?.excludes ?? []), ...ignored];
+  return excludes.flatMap((pattern) => ['--exclude', pattern]);
 }
 
 function join(remote: string, relative: string): string {

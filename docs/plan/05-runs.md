@@ -617,7 +617,7 @@ All suites pass, including the rclone suite. The manual round trip output is in 
 ## Evidence
 
 ```text
-rclone exit codes observed (missing dir / missing file):
+rclone exit codes observed (missing dir / missing file): 3 / 3 with rclone v1.75.0 local backend
 manual round trip output:
 ```
 

@@ -117,9 +117,11 @@ export function exerciseFetchAndPush(make: () => Harness): void {
   it('push uploads without runs and a later fetch returns the same digest', async () => {
     const h = make();
     const local = path.join(tempDir('tps-local-'), 'PROJ-4321');
-    writeTree(local, PACKET);
+    writeTree(local, { ...PACKET, '.DS_Store': 'finder noise', 'jira/.DS_Store': 'finder noise' });
     await pushPacket(h.transport, h.config.identity, 'PROJ-4321', local);
     expect(h.remoteFile('PROJ-4321', 'stages/20-ac-walkthrough/runs/v1/run.md')).toBeNull();
+    expect(h.remoteFile('PROJ-4321', '.DS_Store')).toBeNull();
+    expect(h.remoteFile('PROJ-4321', 'jira/.DS_Store')).toBeNull();
     expect(h.remoteFile('PROJ-4321', 'jira/00 Issue.md')).toBe('# issue\n');
     const fetched = await fetchPacket(h.transport, h.config.identity, 'PROJ-4321', tempDir('tps-dest-'));
     expect(fetched.fileCount).toBe(5);
