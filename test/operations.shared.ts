@@ -4,7 +4,14 @@ import path from 'node:path';
 import { expect, it } from 'vitest';
 import type { StoreConfig } from '../src/config.js';
 import { packetSha256 } from '../src/identity.js';
-import { fetchPacket, pushPacket } from '../src/operations.js';
+import {
+  beginRun,
+  checkpointRun,
+  fetchPacket,
+  pullRuns,
+  pushPacket,
+  readRunState,
+} from '../src/operations.js';
 import type { PacketTransport } from '../src/transport.js';
 
 export const PACKET: Record<string, string> = {
@@ -117,5 +124,105 @@ export function exerciseFetchAndPush(make: () => Harness): void {
     const fetched = await fetchPacket(h.transport, h.config.identity, 'PROJ-4321', tempDir('tps-dest-'));
     expect(fetched.fileCount).toBe(5);
     expect(fetched.packetSha256).toBe(packetSha256(local, h.config.identity));
+  });
+}
+
+export function exerciseRuns(make: () => Harness): void {
+  it('begin numbers runs per stage and writes run.md and a state file', async () => {
+    const h = make();
+    h.seed('PROJ-1234', PACKET);
+    const stateDir = tempDir('tps-state-');
+    const first = await beginRun(h.transport, {
+      ticket: 'PROJ-1234',
+      stage: '10-recon',
+      runKey: 'run-a',
+      tool: 'recon@1.0.0',
+      stateFile: path.join(stateDir, 'a.json'),
+      storeFile: '/abs/store.json',
+    });
+    expect(first.version).toBe('v1');
+    const second = await beginRun(h.transport, {
+      ticket: 'PROJ-1234',
+      stage: '20-ac-walkthrough',
+      runKey: 'run-b',
+      tool: 'ac-walkthrough@6.0.0',
+      stateFile: path.join(stateDir, 'b.json'),
+      storeFile: '/abs/store.json',
+    });
+    expect(second.version).toBe('v2');
+    expect(h.remoteFile('PROJ-1234', 'stages/20-ac-walkthrough/runs/v2/run.md')).toContain('run_key: run-b');
+    expect(readRunState(path.join(stateDir, 'b.json')).runDirectory).toBe('stages/20-ac-walkthrough/runs/v2');
+  });
+
+  it('checkpoint uploads the source and writes snapshot.json', async () => {
+    const h = make();
+    h.seed('PROJ-1234', PACKET);
+    const stateFile = path.join(tempDir('tps-state-'), 'state.json');
+    await beginRun(h.transport, {
+      ticket: 'PROJ-1234',
+      stage: '10-recon',
+      runKey: 'run-a',
+      tool: 't@1',
+      stateFile,
+      storeFile: '/abs/store.json',
+    });
+    const source = tempDir('tps-source-');
+    writeTree(source, {
+      'delivery/report.html': '<html/>',
+      'evidence/e1.png': 'png',
+      'run.md': 'must not overwrite',
+    });
+    const result = await checkpointRun(
+      h.transport,
+      readRunState(stateFile),
+      stateFile,
+      'evidence-captured',
+      source,
+    );
+    expect(result.fileCount).toBe(2);
+    expect(h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/delivery/report.html')).toBe('<html/>');
+    expect(h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/run.md')).toContain('run_key: run-a');
+    expect(JSON.parse(h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/snapshot.json') ?? '{}').reason).toBe(
+      'evidence-captured',
+    );
+    expect(readRunState(stateFile).latestSnapshot?.reason).toBe('evidence-captured');
+  });
+
+  it('checkpoint fails when another run owns the version', async () => {
+    const h = make();
+    h.seed('PROJ-1234', PACKET);
+    const stateFile = path.join(tempDir('tps-state-'), 'state.json');
+    await beginRun(h.transport, {
+      ticket: 'PROJ-1234',
+      stage: '10-recon',
+      runKey: 'run-a',
+      tool: 't@1',
+      stateFile,
+      storeFile: '/abs/store.json',
+    });
+    const stolen = (h.remoteFile('PROJ-1234', 'stages/10-recon/runs/v1/run.md') ?? '').replace(
+      'run_key: run-a',
+      'run_key: run-z',
+    );
+    await h.transport.writeText('PROJ-1234', 'stages/10-recon/runs/v1/run.md', stolen);
+    await expect(
+      checkpointRun(h.transport, readRunState(stateFile), stateFile, 'x', tempDir('tps-source-')),
+    ).rejects.toThrow('STORE_VERSION_CONFLICT');
+  });
+
+  it('pull brings every run into a local packet and nothing else', async () => {
+    const h = make();
+    h.seed('PROJ-1234', {
+      ...PACKET,
+      'stages/10-recon/runs/v1/run.md': 'r\n',
+      'jira/new.md': 'not pulled\n',
+    });
+    const local = path.join(tempDir('tps-local-'), 'PROJ-1234');
+    writeTree(local, { 'task.md': 'local\n' });
+    await pullRuns(h.transport, 'PROJ-1234', local);
+    expect(fs.existsSync(path.join(local, 'stages/10-recon/runs/v1/run.md'))).toBe(true);
+    expect(fs.existsSync(path.join(local, 'stages/20-ac-walkthrough/runs/v1/run.md'))).toBe(true);
+    expect(fs.existsSync(path.join(local, 'jira/new.md'))).toBe(false);
+    expect(fs.existsSync(path.join(local, 'stages/20-ac-walkthrough/README.md'))).toBe(false);
   });
 }

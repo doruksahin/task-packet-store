@@ -4,7 +4,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { parseStoreConfig } from '../src/config.js';
 import { fetchPacket, pushPacket } from '../src/operations.js';
 import { FsTransport } from '../src/transport.js';
-import { PACKET, cleanupTempDirs, exerciseFetchAndPush, tempDir, writeTree, type Harness } from './operations.shared.js';
+import {
+  PACKET,
+  cleanupTempDirs,
+  exerciseFetchAndPush,
+  exerciseRuns,
+  tempDir,
+  writeTree,
+  type Harness,
+} from './operations.shared.js';
 
 afterEach(cleanupTempDirs);
 
@@ -24,6 +32,7 @@ function makeFsHarness(): Harness & { root: string } {
 
 describe('operations through FsTransport', () => {
   exerciseFetchAndPush(makeFsHarness);
+  exerciseRuns(makeFsHarness);
 });
 
 describe('push through FsTransport and the store location', () => {
