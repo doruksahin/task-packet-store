@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_IDENTITY } from '../src/config.js';
-import { listFiles, packetSha256 } from '../src/identity.js';
+import { listFiles, matchesIdentity, packetSha256 } from '../src/identity.js';
 
 function write(root: string, tree: Record<string, string>): void {
   for (const [relative, text] of Object.entries(tree)) {
@@ -37,5 +37,18 @@ describe('packetSha256', () => {
     const c = fs.mkdtempSync(path.join(os.tmpdir(), 'tps-c-'));
     write(c, { 'stages/x/README.md': 'x\n' });
     expect(() => packetSha256(c, DEFAULT_IDENTITY)).toThrow('STORE_PACKET_MISSING');
+  });
+});
+
+describe('matchesIdentity', () => {
+  it('treats dir/** as a subtree and everything else as an exact file', () => {
+    expect(matchesIdentity('jira/x', ['jira/**'])).toBe(true);
+    expect(matchesIdentity('jira/a/b/c.md', ['jira/**'])).toBe(true);
+    expect(matchesIdentity('jira', ['jira/**'])).toBe(false);
+    expect(matchesIdentity('jirax/y', ['jira/**'])).toBe(false);
+    expect(matchesIdentity('task.md', ['task.md'])).toBe(true);
+    expect(matchesIdentity('task.md.bak', ['task.md'])).toBe(false);
+    expect(matchesIdentity('sub/task.md', ['task.md'])).toBe(false);
+    expect(matchesIdentity('task.md', [...DEFAULT_IDENTITY])).toBe(true);
   });
 });

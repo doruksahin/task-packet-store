@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseStoreConfig } from '../src/config.js';
-import { pushPacket } from '../src/operations.js';
+import { fetchPacket, pushPacket } from '../src/operations.js';
 import { FsTransport } from '../src/transport.js';
 import { PACKET, cleanupTempDirs, exerciseFetchAndPush, tempDir, writeTree, type Harness } from './operations.shared.js';
 
@@ -55,5 +55,16 @@ describe('push through FsTransport and the store location', () => {
       from: local,
     });
     expect(h.remoteFile('PROJ-1', 'task.md')).toBe('# task\n');
+  });
+});
+
+describe('fetch through FsTransport and unsafe packets', () => {
+  it('rejects a packet holding a symlink and leaves no partial directory', async () => {
+    const h = makeFsHarness();
+    h.seed('PROJ-1', PACKET);
+    fs.symlinkSync(path.join(h.root, 'PROJ-1', 'task.md'), path.join(h.root, 'PROJ-1', 'jira', 'link.md'));
+    const destination = tempDir('tps-dest-');
+    await expect(fetchPacket(h.transport, h.config.identity, 'PROJ-1', destination)).rejects.toThrow('STORE_PACKET_UNSAFE');
+    expect(fs.readdirSync(destination)).toEqual([]);
   });
 });

@@ -116,5 +116,6 @@ export function exerciseFetchAndPush(make: () => Harness): void {
     expect(h.remoteFile('PROJ-4321', 'jira/00 Issue.md')).toBe('# issue\n');
     const fetched = await fetchPacket(h.transport, h.config.identity, 'PROJ-4321', tempDir('tps-dest-'));
     expect(fetched.fileCount).toBe(5);
+    expect(fetched.packetSha256).toBe(packetSha256(local, h.config.identity));
   });
 }

@@ -16,4 +16,11 @@ describe('anchored glob', () => {
     expect(() => matchesGlob('stages/**', 'stages/x')).toThrow('anchored');
     expect(matchesAny(undefined, 'a')).toBe(false);
   });
+  it('rejects a segment that mixes a star with other characters', () => {
+    expect(() => matchesGlob('/*.tmp', 'a.tmp')).toThrow('glob segment must be a literal, "*", or "**"');
+    expect(() => matchesGlob('/stages/2*/runs/**', 'stages/20-x/runs/v1')).toThrow(
+      'glob segment must be a literal, "*", or "**"',
+    );
+    expect(() => matchesAny(['/ok/**', '/bad/***'], 'ok/x')).toThrow('glob segment must be a literal, "*", or "**"');
+  });
 });

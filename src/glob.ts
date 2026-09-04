@@ -1,7 +1,17 @@
+function patternSegments(pattern: string): string[] {
+  if (!pattern.startsWith('/')) throw new Error(`glob must be anchored with "/": ${pattern}`);
+  const segments = pattern.slice(1).split('/');
+  for (const segment of segments) {
+    if (segment.includes('*') && segment !== '*' && segment !== '**') {
+      throw new Error(`glob segment must be a literal, "*", or "**": ${segment}`);
+    }
+  }
+  return segments;
+}
+
 /** Anchored glob: the pattern starts with "/", "*" matches one segment, "**" matches zero or more. */
 export function matchesGlob(pattern: string, relativePath: string): boolean {
-  if (!pattern.startsWith('/')) throw new Error(`glob must be anchored with "/": ${pattern}`);
-  return match(pattern.slice(1).split('/'), relativePath.split('/'));
+  return match(patternSegments(pattern), relativePath.split('/'));
 }
 
 function match(pattern: string[], segments: string[]): boolean {
@@ -14,5 +24,6 @@ function match(pattern: string[], segments: string[]): boolean {
 }
 
 export function matchesAny(patterns: readonly string[] | undefined, relativePath: string): boolean {
-  return (patterns ?? []).some((pattern) => matchesGlob(pattern, relativePath));
+  const parsed = (patterns ?? []).map(patternSegments);
+  return parsed.some((pattern) => match(pattern, relativePath.split('/')));
 }
