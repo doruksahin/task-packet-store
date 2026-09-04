@@ -618,6 +618,13 @@ All suites pass, including the rclone suite. The manual round trip output is in 
 
 ```text
 rclone exit codes observed (missing dir / missing file): 3 / 3 with rclone v1.75.0 local backend
+
+$ pnpm release:check
+Test Files  13 passed (13)
+Tests       117 passed (117)
+Release artifact: 1 file / 3 tests passed
+npm pack --dry-run: 30 files, exit 0
+
 manual round trip output:
 ```
 
