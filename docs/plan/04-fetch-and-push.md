@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 04
 title: Config, identity, fs transport, fetch, push
 ---
@@ -696,21 +696,86 @@ function, because step 09 imports it from the installed package.
 
 Commit: `feat: expose fetch and push on the CLI`
 
+## Deviations
+
+- `run()` in `src/cli.ts` prints `failureLine(error)` instead of the raw `error.message`, so a
+  non-`StoreError` failure still yields one `STORE_UNEXPECTED: message` line (design failure rule).
+- `push --ticket` help text carries `PROJ-123` like `fetch` (AGENTS rule 3a). `--version` is wired
+  through `TASK_PACKET_STORE_VERSION` (design: version exits 0).
+- `src/identity.ts` adds `listFiles(root)` (walk without hashing). `regularFiles` builds on it,
+  `packetSha256` hashes only identity files, and `operations.ts` (`freeze`, `assertSafeTree`) and
+  `transport.ts` (`copyTree`) reuse it instead of a second walk.
+- `src/index.ts` also exports `fetchPacket`, `pushPacket`, `FsTransport`, `createTransport`,
+  `matchesIdentity`, `RUNS_GLOB`, `exitCodeFor`, and the `PacketTransport`, `TransferFilter`,
+  `FetchResult`, `PushResult`, `StoreErrorCode` types.
+- `test/cli.test.ts`: `fetch --nope` asserts exit 2, empty stdout, and `error:` on stderr, because
+  commander reports the missing required options before the unknown option. An end-to-end `push`
+  row was added next to the `fetch` rows.
+- `README.md` now says `fetch` and `push` work with the `fs` driver; the other commands and the
+  `gdrive` driver remain "not implemented" until 0.1.0.
+- Shipped design docs were neutralized (`PROJ-123`, `/absolute/path/to/packets`, "Task Packets",
+  "vault checkout") and `STORE_UNEXPECTED` was added to the error codes. The package-boundary test
+  now scans every markdown file in the `npm pack --dry-run --json` listing for consumer terms and
+  `ATT-\d+`, because npm-packlist also ships `docs/design/README.md` (README files in walked
+  directories), which is not in `files`; its consumer sentence was neutralized too.
+- The Done-when block below uses `PROJ-1` and adds `pnpm release:check` and `--version`.
+- No zod or commander adaptation was needed: zod 4.5.4 supports `z.strictObject` and array
+  `.default(...)`; commander 14.0.3 matches the text.
+
 ## Done when
 
 ```bash
 pnpm check
-store=$(mktemp -d); mkdir -p "$store/ATT-1/jira"; echo '# p' > "$store/ATT-1/00 Packet.md"; echo '# t' > "$store/ATT-1/task.md"; echo '# i' > "$store/ATT-1/jira/00 Issue.md"
+pnpm release:check
+store=$(mktemp -d); mkdir -p "$store/PROJ-1/jira"; echo '# p' > "$store/PROJ-1/00 Packet.md"; echo '# t' > "$store/PROJ-1/task.md"; echo '# i' > "$store/PROJ-1/jira/00 Issue.md"
 cfg=$(mktemp); printf '{"driver":"fs","root":"%s"}\n' "$store" > "$cfg"
-node dist/cli.js fetch --store "$cfg" --ticket ATT-1 --destination "$(mktemp -d)"
+node dist/cli.js fetch --store "$cfg" --ticket PROJ-1 --destination "$(mktemp -d)"
+node dist/cli.js --version
 ```
 
-Expected: all tests pass. The last command prints one JSON line with `fileCount` 3 and a 64-hex
-`packetSha256`, exit 0.
+Expected: all tests pass. The fetch prints one JSON line with `fileCount` 3 and a 64-hex
+`packetSha256`, exit 0. `--version` prints `0.0.0`.
 
 ## Evidence
 
 ```text
+$ pnpm check   (tail)
+ Test Files  7 passed (7)
+      Tests  40 passed (40)
+   Start at  17:24:45
+   Duration  2.17s (transform 300ms, setup 0ms, collect 820ms, tests 3.88s, environment 1ms, prepare 652ms)
+
+
+ RUN  v3.2.7 /Users/doruk/Desktop/PROJECTS/tools/task-packet-store
+
+ ✓ test/release-artifact.test.ts (3 tests) 3823ms
+   ✓ release artifact command > creates a checksummed npm archive reproducibly in explicit empty directories  3744ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  17:24:48
+   Duration  4.17s (transform 29ms, setup 0ms, collect 31ms, tests 3.82s, environment 0ms, prepare 47ms)
+
+$ pnpm release:check   (tail)
+npm notice 1.7kB package.json
+npm notice Tarball Details
+npm notice name: @doruksahin/task-packet-store
+npm notice version: 0.0.0
+npm notice filename: doruksahin-task-packet-store-0.0.0.tgz
+npm notice package size: 14.9 kB
+npm notice unpacked size: 44.9 kB
+npm notice shasum: fb7d906662d0beeb563389b41790c0bc326dacf0
+npm notice integrity: sha512-PCju1J00wXyKx[...]BWL8FPkrqsc2w==
+npm notice total files: 26
+npm notice
+doruksahin-task-packet-store-0.0.0.tgz
+
+$ node dist/cli.js fetch --store "$cfg" --ticket PROJ-1 --destination "$(mktemp -d)"
+{"ticket":"PROJ-1","packetDirectory":"/var/folders/2d/z1vzz2gd3xg3hhyz394247dh0000gn/T/tmp.OkoFQ4iuqX/PROJ-1","fileCount":3,"packetSha256":"c0bf0b7a48cf92cd3c9707eab8d87b804d541a05c9dcf6be4d19697037736fbd","driver":"fs"}
+exit: 0
+$ node dist/cli.js --version
+0.0.0
+exit: 0
 ```
 
 ## Rollback
