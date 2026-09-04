@@ -78,6 +78,9 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
+      - name: Install rclone
+        uses: ./.github/actions/install-rclone
+
       - name: Re-run the release gate
         run: pnpm release:check
 
