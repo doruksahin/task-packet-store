@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 03
 title: Repository skeleton
 ---
@@ -180,6 +180,41 @@ Expected: all tests pass, help lists six commands.
 ## Evidence
 
 ```text
+$ pnpm check   (tail -15)
+      Tests  12 passed (12)
+   Start at  16:29:52
+   Duration  2.42s (transform 185ms, setup 0ms, collect 204ms, tests 2.14s, environment 0ms, prepare 186ms)
+
+
+ RUN  v3.2.7 /Users/doruk/Desktop/PROJECTS/tools/task-packet-store
+
+ ✓ test/release-artifact.test.ts (3 tests) 2970ms
+   ✓ release artifact command > creates a checksummed npm archive reproducibly in explicit empty directories  2894ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  16:29:55
+   Duration  3.23s (transform 28ms, setup 0ms, collect 31ms, tests 2.97s, environment 0ms, prepare 44ms)
+
+$ node dist/cli.js --help
+Usage: task-packet-store [options] [command]
+
+Read and write task packets from a local file system or Google Drive.
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  fetch           Download one frozen packet without runs into
+                  <destination>/<TICKET>.
+  push            Upload one packet from a local directory, without runs.
+  begin           Reserve the next runs/vN for a stage and write run.md.
+  checkpoint      Upload a source directory into the reserved run and write
+                  snapshot.json.
+  pull            Download every stages/*/runs/** into a local packet.
+  doctor          Report rclone version, credential variables, and the resolved
+                  remote.
+  help [command]  display help for command
 ```
 
 ## Rollback
