@@ -40,10 +40,10 @@ What `task-packet-store fetch` does around rclone:
 
 ```text
 validate the config (zod)
-spawn: rclone copy ":drive,team_drive=<id>:packets/ATT-5387" <temp dir> --checksum --exclude "/stages/*/runs/**"
+spawn: rclone copy ":drive,team_drive=<id>:packets/PROJ-123" <temp dir> --checksum --exclude "/stages/*/runs/**"
 reject any path that is not a safe relative path of regular files
 chmod 0444 on every file
-rename <temp dir> to <destination>/ATT-5387, refuse when it exists
+rename <temp dir> to <destination>/PROJ-123, refuse when it exists
 compute packetSha256 over the identity globs
 print one JSON object
 ```

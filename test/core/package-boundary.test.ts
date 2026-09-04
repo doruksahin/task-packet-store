@@ -18,6 +18,20 @@ describe('consumer-neutral package boundary', () => {
     expect(violations).toEqual([]);
   });
 
+  it('keeps shipped markdown free of consumer identifiers', async () => {
+    const manifest = JSON.parse(await readFile(join(repositoryRoot, 'package.json'), 'utf8')) as { files: string[] };
+    const shippedMarkdown = manifest.files.filter((file) => file.endsWith('.md'));
+    expect(shippedMarkdown.length).toBeGreaterThan(0);
+    const violations: string[] = [];
+    for (const file of shippedMarkdown) {
+      const content = await readFile(join(repositoryRoot, file), 'utf8');
+      if (forbiddenConsumerTerms.test(content)) violations.push(`${file}: consumer term`);
+      const ticket = /\bATT-\d+\b/.exec(content);
+      if (ticket) violations.push(`${file}: ${ticket[0]}`);
+    }
+    expect(violations).toEqual([]);
+  });
+
   it('ships only the allowlisted package contents', async () => {
     const manifest = JSON.parse(await readFile(join(repositoryRoot, 'package.json'), 'utf8')) as { files: string[] };
     expect(manifest.files).toEqual([
