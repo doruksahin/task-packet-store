@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_IDENTITY } from '../src/config.js';
-import { packetSha256 } from '../src/identity.js';
+import { listFiles, packetSha256 } from '../src/identity.js';
 
 function write(root: string, tree: Record<string, string>): void {
   for (const [relative, text] of Object.entries(tree)) {
@@ -23,6 +23,15 @@ describe('packetSha256', () => {
     expect(packetSha256(a, DEFAULT_IDENTITY)).toBe(packetSha256(b, DEFAULT_IDENTITY));
     write(b, { 'jira/00 Issue.md': '# changed\n' });
     expect(packetSha256(a, DEFAULT_IDENTITY)).not.toBe(packetSha256(b, DEFAULT_IDENTITY));
+  });
+  it('ignores .DS_Store at any level', () => {
+    const a = fs.mkdtempSync(path.join(os.tmpdir(), 'tps-a-'));
+    const b = fs.mkdtempSync(path.join(os.tmpdir(), 'tps-b-'));
+    const identity = { '00 Packet.md': '# p\n', 'task.md': '# t\n', 'jira/00 Issue.md': '# i\n' };
+    write(a, identity);
+    write(b, { ...identity, 'jira/.DS_Store': 'noise', '.DS_Store': 'noise' });
+    expect(packetSha256(b, DEFAULT_IDENTITY)).toBe(packetSha256(a, DEFAULT_IDENTITY));
+    expect(listFiles(b)).toEqual(['00 Packet.md', 'jira/00 Issue.md', 'task.md']);
   });
   it('fails when no identity file exists', () => {
     const c = fs.mkdtempSync(path.join(os.tmpdir(), 'tps-c-'));

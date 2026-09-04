@@ -5,10 +5,13 @@ import { StoreError } from './errors.js';
 import { matchesAny } from './glob.js';
 import { listFiles } from './identity.js';
 
-export interface TransferFilter {
-  includes?: readonly string[];
-  excludes?: readonly string[];
-}
+/**
+ * Anchored globs to keep (`includes`) or to drop (`excludes`), never both: rclone treats the mix
+ * differently across versions. The `never` members make a literal with both keys a type error.
+ */
+export type TransferFilter =
+  | { readonly includes: readonly string[]; readonly excludes?: never }
+  | { readonly excludes: readonly string[]; readonly includes?: never };
 
 export type Driver = 'fs' | 'gdrive';
 
@@ -26,21 +29,13 @@ export interface PacketTransport {
   writeText(ticket: string, remoteFile: string, text: string): Promise<void>;
 }
 
-/** rclone treats include plus exclude differently across versions. The package refuses the mix. */
-export function assertFilter(filter: TransferFilter | undefined): TransferFilter {
-  const value = filter ?? {};
-  if (value.includes?.length && value.excludes?.length) {
-    throw new StoreError('STORE_CONFIG_INVALID', 'a filter has includes or excludes, never both');
-  }
-  return value;
+/** No filter keeps everything. `includes` keeps only matches. `excludes` drops matches. */
+export function selected(relativePath: string, filter?: TransferFilter): boolean {
+  if (filter && 'includes' in filter) return matchesAny(filter.includes, relativePath);
+  return !matchesAny(filter?.excludes, relativePath);
 }
 
-export function selected(relativePath: string, filter: TransferFilter): boolean {
-  if (filter.includes?.length) return matchesAny(filter.includes, relativePath);
-  return !matchesAny(filter.excludes, relativePath);
-}
-
-function copyTree(from: string, to: string, filter: TransferFilter): void {
+function copyTree(from: string, to: string, filter?: TransferFilter): void {
   for (const relative of listFiles(from)) {
     if (!selected(relative, filter)) continue;
     const target = path.join(to, ...relative.split('/'));
@@ -91,15 +86,17 @@ export class FsTransport implements PacketTransport {
 
   async download(ticket: string, remoteDir: string, localDir: string, filter?: TransferFilter): Promise<void> {
     const source = this.at(ticket, remoteDir);
-    if (!fs.existsSync(source)) throw new StoreError('STORE_PACKET_MISSING', `${source} does not exist`);
-    copyTree(source, localDir, assertFilter(filter));
+    const stat = fs.statSync(source, { throwIfNoEntry: false });
+    if (!stat) throw new StoreError('STORE_PACKET_MISSING', `${source} does not exist`);
+    if (!stat.isDirectory()) throw new StoreError('STORE_PACKET_MISSING', `${source} is not a directory`);
+    copyTree(source, localDir, filter);
   }
 
   async upload(ticket: string, localDir: string, remoteDir: string, filter?: TransferFilter): Promise<void> {
     const target = this.at(ticket, remoteDir);
     if (!fs.existsSync(localDir)) return;
     assertDisjoint(localDir, target);
-    copyTree(localDir, target, assertFilter(filter));
+    copyTree(localDir, target, filter);
   }
 
   async listDirectories(ticket: string, remoteDir: string): Promise<string[]> {

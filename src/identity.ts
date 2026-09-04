@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { IGNORED_BASENAMES } from './config.js';
 import { StoreError } from './errors.js';
 
 export interface PacketFile {
@@ -17,10 +18,11 @@ function byteCompare(left: string, right: string): number {
   return Buffer.compare(Buffer.from(left), Buffer.from(right));
 }
 
-/** Every regular file under root, as POSIX-relative paths sorted by path bytes. Non-regular entries fail. */
+/** Every regular file under root, as POSIX-relative paths sorted by path bytes. Skips IGNORED_BASENAMES. Non-regular entries fail. */
 export function listFiles(root: string, directory: string = root): string[] {
   const files: string[] = [];
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (IGNORED_BASENAMES.has(entry.name)) continue;
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) {
       files.push(...listFiles(root, absolute));

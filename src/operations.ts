@@ -25,6 +25,21 @@ function freeze(root: string): void {
   for (const file of listFiles(root)) fs.chmodSync(path.join(root, ...file.split('/')), 0o444);
 }
 
+/** `packetSha256`, with its missing-identity failure rephrased around the ticket instead of a local path. */
+function digestOf(root: string, ticket: string, identity: readonly string[]): string {
+  try {
+    return packetSha256(root, identity);
+  } catch (error) {
+    if (error instanceof StoreError && error.code === 'STORE_PACKET_MISSING') {
+      throw new StoreError(
+        'STORE_PACKET_MISSING',
+        `packet ${ticket} has none of the identity files ${JSON.stringify(identity)}`,
+      );
+    }
+    throw error;
+  }
+}
+
 export interface FetchResult {
   ticket: string;
   packetDirectory: string;
@@ -41,6 +56,10 @@ export async function fetchPacket(
 ): Promise<FetchResult> {
   validateTicket(ticket);
   const parent = assertAbsolute(destination, '--destination');
+  const parentStat = fs.statSync(parent, { throwIfNoEntry: false });
+  if (parentStat && !parentStat.isDirectory()) {
+    throw new StoreError('STORE_CONFIG_INVALID', `--destination ${parent} exists and is not a directory`);
+  }
   const final = path.join(parent, ticket);
   if (fs.existsSync(final)) throw new StoreError('STORE_DESTINATION_EXISTS', `${final} already exists`);
   fs.mkdirSync(parent, { recursive: true });
@@ -49,8 +68,9 @@ export async function fetchPacket(
     await transport.download(ticket, '', temp, { excludes: [RUNS_GLOB] });
     const fileCount = assertSafeTree(temp);
     if (fileCount === 0) throw new StoreError('STORE_PACKET_MISSING', `no files for ${ticket}`);
-    const digest = packetSha256(temp, identity);
+    const digest = digestOf(temp, ticket, identity);
     freeze(temp);
+    fs.chmodSync(temp, 0o755); // mkdtemp made it 0700; the packet root should read like its subdirectories
     fs.renameSync(temp, final);
     return { ticket, packetDirectory: final, fileCount, packetSha256: digest, driver: transport.driver };
   } catch (error) {
@@ -74,7 +94,7 @@ export async function pushPacket(
   validateTicket(ticket);
   const source = assertAbsolute(from, '--from');
   if (!fs.existsSync(source)) throw new StoreError('STORE_PACKET_MISSING', `${source} does not exist`);
-  packetSha256(source, identity);
+  digestOf(source, ticket, identity);
   await transport.upload(ticket, source, '', { excludes: [RUNS_GLOB] });
   return { ticket, driver: transport.driver, from: source };
 }

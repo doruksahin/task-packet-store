@@ -13,6 +13,8 @@ export const DRIVE_ID = /^[A-Za-z0-9_-]{10,}$/;
 /** Anchored glob. Tool output lives here and is never part of fetch or push. */
 export const RUNS_GLOB = '/stages/*/runs/**';
 export const DEFAULT_IDENTITY = ['00 Packet.md', 'task.md', 'jira/**'] as const;
+/** Basenames that no walk sees: they never enter a digest or a transfer. */
+export const IGNORED_BASENAMES: ReadonlySet<string> = new Set(['.DS_Store']);
 
 /** An exact file (`a/b.md`) or a directory subtree (`a/b/**`). Segments are SAFE_SEGMENT without `*`. */
 const IdentityEntry = z

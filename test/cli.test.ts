@@ -144,6 +144,16 @@ describe('cli fetch and push against a temp fs store', () => {
     expect(stderr.trimEnd().split('\n')).toHaveLength(1);
   });
 
+  it('the gdrive driver exits 2 with one STORE_CONFIG_INVALID line until it lands', () => {
+    const { base, destination } = seedStore();
+    const store = path.join(base, 'gdrive.json');
+    fs.writeFileSync(store, JSON.stringify({ driver: 'gdrive', sharedDriveId: '0ABcDeFgHiJkLmNoP' }));
+    const { status, stdout, stderr } = runCli(['fetch', '--store', store, '--ticket', 'PROJ-1', '--destination', destination]);
+    expect(status).toBe(2);
+    expect(stdout).toBe('');
+    expect(stderr).toBe('STORE_CONFIG_INVALID: driver gdrive is not available in this version\n');
+  });
+
   it('push uploads a local packet without runs and exits 0', () => {
     const { base, root, store } = seedStore();
     const from = path.join(base, 'local', 'PROJ-7');

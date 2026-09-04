@@ -28,9 +28,9 @@ export function exitCodeFor(error: unknown): number {
   return 1;
 }
 
-/** One `CODE: message` line for stderr. Unknown errors get a fixed code so the failure rule holds. */
+/** One `CODE: message` line for stderr. Unknown errors get a fixed code, and newlines collapse, so the failure rule holds. */
 export function failureLine(error: unknown): string {
-  if (error instanceof StoreError) return error.message;
-  const message = error instanceof Error ? error.message : String(error);
-  return `STORE_UNEXPECTED: ${message}`;
+  const line =
+    error instanceof StoreError ? error.message : `STORE_UNEXPECTED: ${error instanceof Error ? error.message : String(error)}`;
+  return line.replace(/\s*\r?\n\s*/g, ' ');
 }
