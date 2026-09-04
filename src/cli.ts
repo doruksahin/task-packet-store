@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command, CommanderError } from 'commander';
 
 const program = new Command()
   .name('task-packet-store')
   .description('Read and write task packets from a local file system or Google Drive.')
-  .showHelpAfterError();
+  .showHelpAfterError()
+  .exitOverride();
 
 for (const [name, summary] of [
   ['fetch', 'Download one frozen packet without runs into <destination>/<TICKET>.'],
@@ -20,4 +21,11 @@ for (const [name, summary] of [
   });
 }
 
-program.parseAsync(process.argv);
+try {
+  await program.parseAsync(process.argv);
+} catch (error) {
+  if (!(error instanceof CommanderError)) throw error;
+  // Commander has already written its message (and help, via showHelpAfterError) to stderr.
+  // Help and version requests exit 0. Every usage error is exit 2 per the CLI contract.
+  process.exitCode = error.exitCode === 0 ? 0 : 2;
+}
