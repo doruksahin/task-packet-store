@@ -41,8 +41,12 @@ export function rcloneEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 export function driveRemote(config: GdriveConfig, ticket: string): string {
-  const base = config.prefix ? `${config.prefix}/${ticket}` : ticket;
-  return `:drive,team_drive=${config.sharedDriveId}:${base}`;
+  const root = driveRoot(config);
+  return config.prefix ? `${root}/${ticket}` : `${root}${ticket}`;
+}
+
+export function driveRoot(config: GdriveConfig): string {
+  return `:drive,team_drive=${config.sharedDriveId}:${config.prefix ?? ''}`;
 }
 
 export function createRcloneRunner(env: NodeJS.ProcessEnv, binary = 'rclone'): RcloneRunner {

@@ -7,10 +7,9 @@ import { TASK_PACKET_STORE_VERSION } from '../src/version.js';
 
 const cliPath = resolve(import.meta.dirname, '..', 'dist', 'cli.js');
 const commands = ['fetch', 'push', 'begin', 'checkpoint', 'pull', 'doctor'] as const;
-const placeholders = ['begin', 'checkpoint', 'pull', 'doctor'] as const;
 
-function runCli(args: readonly string[]) {
-  const result = spawnSync(process.execPath, [cliPath, ...args], { encoding: 'utf8' });
+function runCli(args: readonly string[], env: NodeJS.ProcessEnv = process.env) {
+  const result = spawnSync(process.execPath, [cliPath, ...args], { encoding: 'utf8', env });
   if (result.error) throw result.error;
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
@@ -53,13 +52,6 @@ describe('cli contract', () => {
     expect(stderr).toBe('');
   });
 
-  it.each(placeholders)('%s placeholder exits 1 with an empty stdout', (command) => {
-    const { status, stdout, stderr } = runCli([command]);
-    expect(status).toBe(1);
-    expect(stdout).toBe('');
-    expect(stderr).toContain(`${command}: not implemented`);
-  });
-
   it('an unknown command exits 2 with an empty stdout', () => {
     const { status, stdout, stderr } = runCli(['bogus']);
     expect(status).toBe(2);
@@ -96,6 +88,20 @@ describe('cli contract', () => {
     expect(status).toBe(2);
     expect(stdout).toBe('');
     expect(stderr).toContain('required option');
+  });
+
+  it.each([
+    ['fetch', ['--store', '--ticket', '--destination']],
+    ['push', ['--store', '--ticket', '--from']],
+    ['begin', ['--store', '--ticket', '--stage', '--run-key', '--tool', '--state']],
+    ['checkpoint', ['--state', '--reason', '--source']],
+    ['pull', ['--store', '--ticket', '--into']],
+    ['doctor', ['--store']],
+  ] as const)('%s help lists its required options', (command, options) => {
+    const { status, stdout, stderr } = runCli([command, '--help']);
+    expect(status).toBe(0);
+    expect(stderr).toBe('');
+    for (const option of options) expect(stdout).toContain(option);
   });
 });
 
@@ -144,14 +150,22 @@ describe('cli fetch and push against a temp fs store', () => {
     expect(stderr.trimEnd().split('\n')).toHaveLength(1);
   });
 
-  it('the gdrive driver exits 2 with one STORE_CONFIG_INVALID line until it lands', () => {
+  it('the gdrive driver requires exactly one credential variable', () => {
     const { base, destination } = seedStore();
     const store = path.join(base, 'gdrive.json');
     fs.writeFileSync(store, JSON.stringify({ driver: 'gdrive', sharedDriveId: '0ABcDeFgHiJkLmNoP' }));
-    const { status, stdout, stderr } = runCli(['fetch', '--store', store, '--ticket', 'PROJ-1', '--destination', destination]);
-    expect(status).toBe(2);
+    const env = { ...process.env };
+    delete env.PACKET_STORE_DRIVE_TOKEN;
+    delete env.PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS;
+    const { status, stdout, stderr } = runCli(
+      ['fetch', '--store', store, '--ticket', 'PROJ-1', '--destination', destination],
+      env,
+    );
+    expect(status).toBe(1);
     expect(stdout).toBe('');
-    expect(stderr).toBe('STORE_CONFIG_INVALID: driver gdrive is not available in this version\n');
+    expect(stderr).toBe(
+      'STORE_AUTH_MISSING: set exactly one of PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS or PACKET_STORE_DRIVE_TOKEN\n',
+    );
   });
 
   it('push uploads a local packet without runs and exits 0', () => {
@@ -169,5 +183,64 @@ describe('cli fetch and push against a temp fs store', () => {
     expect(JSON.parse(stdout)).toEqual({ ticket: 'PROJ-7', driver: 'fs', from });
     expect(fs.readFileSync(path.join(root, 'PROJ-7', 'task.md'), 'utf8')).toBe('# t\n');
     expect(fs.existsSync(path.join(root, 'PROJ-7', 'stages', 'x', 'runs'))).toBe(false);
+  });
+
+  it('runs begin, checkpoint, pull, and doctor through an fs store', () => {
+    const { base, root, store } = seedStore();
+    const state = path.join(base, 'state.json');
+    const begun = runCli([
+      'begin',
+      '--store',
+      store,
+      '--ticket',
+      'PROJ-1',
+      '--stage',
+      '10-recon',
+      '--run-key',
+      'cli-run-1',
+      '--tool',
+      'test@1',
+      '--state',
+      state,
+    ]);
+    expect(begun.status).toBe(0);
+    expect(begun.stderr).toBe('');
+    expect(JSON.parse(begun.stdout)).toMatchObject({ ticket: 'PROJ-1', stage: '10-recon', version: 'v1' });
+
+    const source = path.join(base, 'output');
+    writeTree(source, { 'delivery/report.html': '<html/>\n' });
+    const checkpointed = runCli([
+      'checkpoint',
+      '--state',
+      state,
+      '--reason',
+      'cli-test',
+      '--source',
+      source,
+    ]);
+    expect(checkpointed.status).toBe(0);
+    expect(checkpointed.stderr).toBe('');
+    expect(JSON.parse(checkpointed.stdout)).toMatchObject({ version: 'v1', reason: 'cli-test', fileCount: 1 });
+
+    const into = path.join(base, 'local', 'PROJ-1');
+    fs.mkdirSync(into, { recursive: true });
+    const pulled = runCli(['pull', '--store', store, '--ticket', 'PROJ-1', '--into', into]);
+    expect(pulled.status).toBe(0);
+    expect(pulled.stderr).toBe('');
+    expect(JSON.parse(pulled.stdout)).toMatchObject({ ticket: 'PROJ-1', driver: 'fs', into });
+    expect(fs.readFileSync(path.join(into, 'stages/10-recon/runs/v1/delivery/report.html'), 'utf8')).toBe(
+      '<html/>\n',
+    );
+
+    const doctor = runCli(['doctor', '--store', store]);
+    expect(doctor.status).toBe(0);
+    expect(doctor.stderr).toBe('');
+    expect(JSON.parse(doctor.stdout)).toEqual({
+      driver: 'fs',
+      rclone: null,
+      rcloneTested: '1.75.0',
+      credential: 'none',
+      remoteRoot: root,
+    });
   });
 });

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { Command, CommanderError } from 'commander';
+import path from 'node:path';
 import { readStoreConfig } from './config.js';
 import { exitCodeFor, failureLine } from './errors.js';
-import { fetchPacket, pushPacket } from './operations.js';
-import { createTransport } from './store.js';
+import { beginRun, checkpointRun, fetchPacket, pullRuns, pushPacket, readRunState } from './operations.js';
+import { createTransport, doctorStore } from './store.js';
 import { TASK_PACKET_STORE_VERSION } from './version.js';
 
 const program = new Command()
@@ -58,17 +59,77 @@ program
     }),
   );
 
-for (const [name, summary] of [
-  ['begin', 'Reserve the next runs/vN for a stage and write run.md.'],
-  ['checkpoint', 'Upload a source directory into the reserved run and write snapshot.json.'],
-  ['pull', 'Download every stages/*/runs/** into a local packet.'],
-  ['doctor', 'Report rclone version, credential variables, and the resolved remote.'],
-] as const) {
-  program.command(name).description(summary).action(() => {
-    process.stderr.write(`${name}: not implemented\n`);
-    process.exitCode = 1;
-  });
-}
+program
+  .command('begin')
+  .description('Reserve the next runs/vN for a stage and write run.md.')
+  .requiredOption('--store <file>', 'absolute path to the store JSON')
+  .requiredOption('--ticket <ticket>', 'Jira ticket, for example PROJ-123')
+  .requiredOption('--stage <stage>', 'stage folder, for example 20-ac-walkthrough')
+  .requiredOption('--run-key <key>', 'unique key for this tool run')
+  .requiredOption('--tool <name@version>', 'tool name and version')
+  .option('--packet-sha256 <hex>', 'packet identity digest')
+  .requiredOption('--state <file>', 'absolute path for the new run state file')
+  .action(
+    (
+      options: StoreOptions & {
+        stage: string;
+        runKey: string;
+        tool: string;
+        packetSha256?: string;
+        state: string;
+      },
+    ) =>
+      run(async () => {
+        const config = readStoreConfig(options.store);
+        return beginRun(createTransport(config), {
+          ticket: options.ticket,
+          stage: options.stage,
+          runKey: options.runKey,
+          tool: options.tool,
+          ...(options.packetSha256 ? { packetSha256: options.packetSha256 } : {}),
+          stateFile: options.state,
+          storeFile: path.resolve(options.store),
+        });
+      }),
+  );
+
+program
+  .command('checkpoint')
+  .description('Upload a source directory into the reserved run and write snapshot.json.')
+  .requiredOption('--state <file>', 'absolute path to the run state file')
+  .requiredOption('--reason <text>', 'checkpoint reason')
+  .requiredOption('--source <dir>', 'absolute directory containing run output')
+  .action((options: { state: string; reason: string; source: string }) =>
+    run(async () => {
+      const state = readRunState(options.state);
+      const config = readStoreConfig(state.storeFile);
+      return checkpointRun(createTransport(config), state, options.state, options.reason, options.source);
+    }),
+  );
+
+program
+  .command('pull')
+  .description('Download every stages/*/runs/** into a local packet.')
+  .requiredOption('--store <file>', 'absolute path to the store JSON')
+  .requiredOption('--ticket <ticket>', 'Jira ticket, for example PROJ-123')
+  .requiredOption('--into <dir>', 'absolute local packet directory')
+  .action((options: StoreOptions & { into: string }) =>
+    run(async () => {
+      const config = readStoreConfig(options.store);
+      return pullRuns(createTransport(config), options.ticket, options.into);
+    }),
+  );
+
+program
+  .command('doctor')
+  .description('Report rclone version, credential variables, and the resolved remote.')
+  .requiredOption('--store <file>', 'absolute path to the store JSON')
+  .action((options: { store: string }) =>
+    run(async () => {
+      const config = readStoreConfig(options.store);
+      return doctorStore(config);
+    }),
+  );
 
 try {
   await program.parseAsync(process.argv);
