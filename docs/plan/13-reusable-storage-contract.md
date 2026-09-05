@@ -28,4 +28,6 @@ is required only if actual integrations expose a missing capability.
 
 ## Evidence
 
-Contract recorded before implementation. Consumer implementation and independent review pending.
+Contract recorded before implementation at `ed0be0d`. The
+[integration guide](../integrating-a-workflow.md) describes the shared inputs and storage sequence.
+Consumer implementation and independent review pending.

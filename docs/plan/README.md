@@ -28,6 +28,7 @@ entry points plus Recon as a second consumer. The original acceptance evidence r
 The [adapter contract](../design/06-workflow-adapters.md) keeps one store configuration, the existing
 package operations, and ordinary plugin input/output files. Separate implementation tasks own the
 consumers; the orchestrator owns the contract, integration, documentation, and acceptance.
+The [delivery run record](REUSABLE-STORAGE-RUN.md) records task assignments and review decisions.
 
 | Step | Work | Owner / repository | Depends on | Status |
 | --- | --- | --- | --- | --- |

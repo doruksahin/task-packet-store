@@ -49,6 +49,7 @@ The storage package, result links, and both CI workflows are implemented. The
 | D9 | Packet identity | Digest over `00 Packet.md`, `task.md`, and `jira/**` |
 | D10 | Deferred work | Seal, blueprint schema change, Git/LFS storage |
 | D11 | Required operator flow | Two CI commands, actual Drive links, no required local vault |
+| D12 | Reuse across workflows | Explicit shared store config and consumer adapters around ordinary files |
 
 The [plan's execution protocol](../plan/README.md#how-to-execute-a-step) is the single source for
 checkpoint statuses and evidence. Completed foundation documents retain their historical evidence;

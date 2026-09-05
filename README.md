@@ -110,5 +110,6 @@ arguments, or source control.
 ## Documentation
 
 - [Operator playbook](docs/playbook.md): run the complete Drive flow and understand local storage support.
+- [Integrate another workflow](docs/integrating-a-workflow.md): reuse store selection around ordinary input/output files.
 - [Design](docs/design/README.md): the 30-second overview, the architecture, and the CLI contract.
 - [Plan](docs/plan/README.md): completed delivery, acceptance evidence, and optional follow-ups.
