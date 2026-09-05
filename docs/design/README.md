@@ -15,6 +15,9 @@ The first delivery has two user commands: Jira → packet on Drive, then Drive p
 AC-walkthrough → HTML on Drive. Both execute in GitHub Actions and return result links in their
 completed run summaries. See the [required commands and outputs](../plan/00-required-operator-flow.md).
 
+To operate it, follow the [end-to-end playbook](../playbook.md): commands in order, inputs, outputs,
+and where to open the saved packet and report.
+
 The storage package, result links, and both CI workflows are implemented. The
 [plan board](../plan/README.md) records dependencies, live acceptance, and follow-ups.
 
@@ -28,6 +31,7 @@ The storage package, result links, and both CI workflows are implemented. The
 | [03-architecture.md](03-architecture.md) | You implement or consume the package: configuration, CLI, records, and rules. |
 | [04-server-operation.md](04-server-operation.md) | You install and authenticate the tools on a runner. |
 | [05-risks-and-scope.md](05-risks-and-scope.md) | You need the delivery scope, accepted risks, and follow-ups. |
+| [06-workflow-adapters.md](06-workflow-adapters.md) | You connect another workflow to the same filesystem/Drive selection. |
 | [../plan/README.md](../plan/README.md) | You select and execute the next eligible implementation step. |
 
 ## Decisions in one table
@@ -45,6 +49,7 @@ The storage package, result links, and both CI workflows are implemented. The
 | D9 | Packet identity | Digest over `00 Packet.md`, `task.md`, and `jira/**` |
 | D10 | Deferred work | Seal, blueprint schema change, Git/LFS storage |
 | D11 | Required operator flow | Two CI commands, actual Drive links, no required local vault |
+| D12 | Reuse across workflows | Explicit shared store config and consumer adapters around ordinary files |
 
 The [plan's execution protocol](../plan/README.md#how-to-execute-a-step) is the single source for
 checkpoint statuses and evidence. Completed foundation documents retain their historical evidence;

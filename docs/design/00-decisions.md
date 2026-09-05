@@ -123,3 +123,18 @@ storage operations. See [the exact commands and outputs](../plan/00-required-ope
 This supersedes the original PoC's manual vault upload and mandatory Obsidian verification. Local
 Drive access, vault integration, and Recon are outside the first delivery's dependencies. The
 existing lab target and draft-report behavior remain the first proof's walkthrough scope.
+
+## D12. Reuse one store config through consumer adapters
+
+The operator passes the same explicit store configuration to each packet-based workflow. Each
+consumer's small adapter connects the published package operations to ordinary input/output
+directories and returns the actual saved result locations. Filesystem and Drive use the same
+processing and delivery sequence. The execution host is chosen independently of storage.
+
+Why: the user requested reuse in other workflows/plugins on 2026-09-05. The existing published
+operations already provide the required transport, reservation, persistence, and result lookup;
+independent contract review found no missing primitive. The next delivery makes the walkthrough
+runner portable and integrates Recon dossier delivery as the second consumer.
+
+See [the adapter contract](06-workflow-adapters.md) and
+[the reusable-storage delivery plan](../plan/README.md#reusable-workflow-storage).

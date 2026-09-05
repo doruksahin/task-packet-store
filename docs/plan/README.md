@@ -1,11 +1,15 @@
 # task-packet-store delivery plan
 
-**Goal:** A user creates a task packet from Jira on Google Drive, then runs AC-walkthrough against
-that stored packet and receives a link to the HTML report on Drive.
+**Goal:** A user selects filesystem or Google Shared Drive storage once, creates a task packet from
+Jira, and runs workflows against that packet with reports saved in the same store. AC-walkthrough
+and Recon demonstrate the shared selection.
 
 [Required commands and outputs](00-required-operator-flow.md) define the operator contract.
 [Architecture](../design/03-architecture.md) defines the package contract. Step documents define
 bounded implementation work and record its completion evidence.
+
+For day-to-day use, start with the [operator playbook](../playbook.md), which explains the full
+sequence, inputs, outputs, and result locations.
 
 ## Current state and next action
 
@@ -17,7 +21,28 @@ published, both user commands succeeded on independent CI runners, and repeating
 created `v2` with all 701 stored `v1` files unchanged. See the
 [delivery run record](DELIVERY-RUN.md) for assignments and PRs, and
 [the acceptance record](10-drive-acceptance.md) for actual links, receipts, and disclosed limitations.
-The remaining items below are optional integrations and cleanup.
+The reusable-storage delivery below extends that flow to portable walkthrough entry points and
+Recon as a second consumer. The original acceptance evidence remains unchanged.
+
+## Reusable workflow storage
+
+The [adapter contract](../design/06-workflow-adapters.md) keeps one store configuration, the existing
+package operations, and ordinary plugin input/output files. Separate implementation tasks own the
+consumers; the orchestrator owns the contract, integration, documentation, and acceptance.
+The [delivery run record](REUSABLE-STORAGE-RUN.md) records task assignments and review decisions.
+
+| Step | Work | Owner / repository | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| 13 | [Shared adapter contract and integration guide](13-reusable-storage-contract.md) | Orchestrator / task-packet-store | 10 | done |
+| 14 | [Portable packet and walkthrough entry points](14-portable-walkthrough-runner.md) | AC-visual-walkthrough | 13 contract | done |
+| 11 | [Recon as a second consumer](11-recon-consumer.md) | recon-plugin | 13 contract | done |
+| 15 | [Independent review and both-store acceptance](15-reusable-storage-acceptance.md) | Orchestrator + reviewer | 13, 14, 11 | done |
+| 16 | [Repeated filesystem checkpoint correction and patch release](16-readonly-checkpoint-fix.md) | task-packet-store + consumers | Failed live proof in 15 | done |
+
+**Reusable storage delivery is complete.** Both consumers use published `0.1.1` and passed
+independently reviewed filesystem/Drive saves. The fresh Jira/LLM filesystem run passed all repeated
+checkpoints and final delivery. Both consumers and the repeatable acceptance workflow are merged,
+with combined CI green. The first failed `0.1.0` run remains recorded in step 16.
 
 ## Required delivery sequence
 
@@ -54,12 +79,10 @@ These items do not block step 10.
 | --- | --- | --- | --- | --- |
 | 02 | [Optional local Drive access](02-local-rclone.md) | Individual operator | 01, 06 | pending |
 | 07 | [Optional vault integration](07-vault-pr.md) | adc-vault | 06, 10; 02 for local Drive access | pending |
-| 11 | [Recon as second consumer](11-recon-consumer.md) | recon-plugin | 06, 10 | pending |
 | 12 | [Retire unused walkthrough storage code](12-cleanup.md) | AC-visual-walkthrough | 10 | pending |
 
-Local-only storage remains a supported choice. Package changes must work through both transports;
-packet preparation takes explicit filesystem paths. A user command for a completely local run can
-be specified later using those same steps.
+Local-only storage remains a supported choice. Step 14 now owns the complete filesystem invocation;
+all package changes must continue to work through both transports.
 
 ## How to execute a step
 
