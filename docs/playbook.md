@@ -1,5 +1,9 @@
 # Playbook: Jira → stored packet → walkthrough → stored report
 
+Use the configured GitHub Actions Drive flow below, or jump to
+[the portable commands](#run-the-same-flow-with-your-selected-store) to choose filesystem or Drive
+storage on your own execution host. That section also shows Recon using the same config.
+
 Run two workflows in order: create the packet, then run the walkthrough against that saved packet.
 GitHub Actions does the processing in temporary workspaces; Google Shared Drive keeps the packet
 and results. You can start either workflow from any computer with repository access, or from
