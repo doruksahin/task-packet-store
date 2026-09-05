@@ -1,0 +1,149 @@
+name: Verify published package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact published version to verify
+        required: true
+        default: 0.1.0
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: Verify exact npm and GitHub release archives
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PACKAGE_NAME: '@doruksahin/task-packet-store'
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check out the exact release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: v${{ inputs.version }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          package-manager-cache: false
+
+      - name: Enable the pinned package manager
+        run: corepack enable
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install rclone
+        uses: ./.github/actions/install-rclone
+
+      - name: Verify release and registry archives
+        id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version must be an exact X.Y.Z release" >&2
+            exit 1
+          fi
+
+          tag="v$VERSION"
+          archive_name="doruksahin-task-packet-store-$VERSION.tgz"
+          package_spec="$PACKAGE_NAME@$VERSION"
+          source_version="$(node -p "require('./package.json').version")"
+          checked_out_tag="$(git describe --tags --exact-match HEAD)"
+          if [[ $source_version != "$VERSION" || $checked_out_tag != "$tag" ]]; then
+            echo "::error::checked-out release identity does not match $package_spec" >&2
+            exit 1
+          fi
+
+          official_dir="$RUNNER_TEMP/github-release"
+          registry_dir="$RUNNER_TEMP/npm-registry"
+          mkdir -p "$official_dir" "$registry_dir"
+
+          gh release download "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "$archive_name" \
+            --pattern SHA256SUMS \
+            --dir "$official_dir"
+          (
+            cd "$official_dir"
+            sha256sum --check SHA256SUMS
+          )
+
+          npm pack "$package_spec" \
+            --ignore-scripts \
+            --json \
+            --pack-destination "$registry_dir" \
+            --@doruksahin:registry=https://registry.npmjs.org \
+            > "$RUNNER_TEMP/npm-pack.json"
+          jq -e \
+            --arg name "$PACKAGE_NAME" \
+            --arg version "$VERSION" \
+            --arg filename "$archive_name" \
+            'length == 1 and .[0].name == $name and .[0].version == $version and .[0].filename == $filename' \
+            "$RUNNER_TEMP/npm-pack.json" >/dev/null
+
+          registry_integrity="$(npm view "$package_spec" dist.integrity \
+            --json \
+            --@doruksahin:registry=https://registry.npmjs.org | jq -er \
+            'select(type == "string" and startswith("sha512-"))')"
+          packed_integrity="$(jq -er '.[0].integrity | select(startswith("sha512-"))' \
+            "$RUNNER_TEMP/npm-pack.json")"
+          if [[ $registry_integrity != "$packed_integrity" ]]; then
+            echo "::error::npm pack integrity differs from registry metadata" >&2
+            exit 1
+          fi
+
+          official_archive="$official_dir/$archive_name"
+          registry_archive="$registry_dir/$archive_name"
+          cmp "$official_archive" "$registry_archive"
+          official_sha256="$(sha256sum "$official_archive" | cut -d ' ' -f 1)"
+          registry_sha256="$(sha256sum "$registry_archive" | cut -d ' ' -f 1)"
+          if [[ $official_sha256 != "$registry_sha256" ]]; then
+            echo "::error::GitHub and npm archive digests differ" >&2
+            exit 1
+          fi
+
+          node scripts/smoke-installed-artifact.mjs "$registry_archive"
+
+          {
+            echo "version=$VERSION"
+            echo "tag=$tag"
+            echo "source_commit=$(git rev-parse HEAD)"
+            echo "archive=$archive_name"
+            echo "sha256=$registry_sha256"
+            echo "integrity=$registry_integrity"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish verification summary
+        env:
+          ARCHIVE: ${{ steps.verify.outputs.archive }}
+          INTEGRITY: ${{ steps.verify.outputs.integrity }}
+          SHA256: ${{ steps.verify.outputs.sha256 }}
+          SOURCE_COMMIT: ${{ steps.verify.outputs.source_commit }}
+          TAG: ${{ steps.verify.outputs.tag }}
+          VERIFIED_VERSION: ${{ steps.verify.outputs.version }}
+        run: |
+          {
+            echo '## Published package verification'
+            echo
+            echo "- Package: \`$PACKAGE_NAME@$VERIFIED_VERSION\`"
+            echo "- Release tag: \`$TAG\`"
+            echo "- Source commit: \`$SOURCE_COMMIT\`"
+            echo "- Archive: \`$ARCHIVE\`"
+            echo "- SHA-256: \`$SHA256\`"
+            echo "- Registry integrity: \`$INTEGRITY\`"
+            echo '- GitHub release and npm registry archives: byte-identical'
+            echo '- Registry archive installed-artifact smoke: passed'
+          } >> "$GITHUB_STEP_SUMMARY"
