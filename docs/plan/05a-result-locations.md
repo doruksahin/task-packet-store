@@ -102,7 +102,8 @@ The absolute smoke store root was
 `STORE_LOCATION_MISSING: PROJ-123/missing.html does not exist` on stderr.
 These are temporary local proof files, not portable acceptance artifacts.
 
-Independent review correction: `delivery/report.html/report.html` must fail when
+Independent review correction (`c242f224a7e53e26f7a158a0c8b7ee3b843d3fe7`):
+`delivery/report.html/report.html` must fail when
 `delivery/report.html` is a file. Real rclone 1.75.0 lists a file as its own entry; a fixture adding
 only its Drive ID reproduced a false successful URL before the fix. The regression command
 `pnpm exec vitest run test/operations.rclone.test.ts -t 'nonexistent child'` failed before the fix
@@ -115,6 +116,12 @@ missing parent codes retain the missing-location error. The updated `pnpm check`
 Bootstrap integration: merged upstream `9c07cf9` as `e96f9a4`; the corrected installer and Node 20
 release gate passed in [CI run 33959406490](https://github.com/doruksahin/task-packet-store/actions/runs/33959406490).
 The earlier installer failure above is historical.
+
+The corrected head `c242f224a7e53e26f7a158a0c8b7ee3b843d3fe7` passed the Node 20 release gate in
+[CI run 33959601582](https://github.com/doruksahin/task-packet-store/actions/runs/33959601582).
+Independent reviewer task `01a07100-632d-7cc1-b34c-621e05de8e00` re-reviewed that exact head:
+prior P2 resolved, no remaining actionable Standards/Spec findings, independent `pnpm check`
+passed all 190 tests with no skips, and `git diff --check` passed.
 
 Remaining evidence: step 01 must supply its CI scratch destination/access before live packet,
 run-folder, and HTML links can be captured here with a CI run URL and authorized teammate opening
