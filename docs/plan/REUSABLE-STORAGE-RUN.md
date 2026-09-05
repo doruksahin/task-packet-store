@@ -14,6 +14,7 @@ tracks completion; the original Drive delivery evidence remains unchanged.
 | Recon dossier delivery | `01a0733f-b928-7db2-a672-d04bfbde2ed3` | GPT-5.6 Sol, high | Recon adapter and repository governance |
 | Independent review | `01a07340-08c0-7de0-a709-79e931140a7b` | GPT-6 Astra, high | Read-only contract and exact-commit consumer review |
 | Both-store acceptance | `01a07344-768d-73e2-8f5d-209ea2a066e5` | GPT-5.6 Sol, high | Isolated acceptance harness in the private walkthrough repository |
+| Filesystem checkpoint correction | `01a07384-91d7-70c1-bcb0-1b6a78afe150` | GPT-6 Astra, high | Focused package fix, regressions, and installed-artifact verification |
 
 Implementers use separate worktrees and open reviewed PRs. The orchestrator coordinates merges
 and live proof. Remote acceptance uses an isolated prefix; existing packet/run evidence is preserved.

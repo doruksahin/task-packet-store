@@ -37,8 +37,12 @@ success. The required outcome is successful repeated checkpoints without changin
 - The AC implementation task independently reproduced the issue with the exact published CLI:
   source `0444`, first destination `0444`, unchanged second checkpoint fails. No LLM or Drive is
   required to reproduce it.
-- A separate GPT-6 Astra/high implementation task owns the transport correction in an isolated
-  `codex/fs-readonly-checkpoints` worktree. Root owns release and consumer coordination.
+- GPT-6 Astra/high task `01a07384-91d7-70c1-bcb0-1b6a78afe150` opened
+  [PR 12](https://github.com/doruksahin/task-packet-store/pull/12), head
+  `24537c1f9cbdfe6f721f0e055455a48fb9ed353f` on `codex/fs-readonly-checkpoints`.
+  Its 201 checks and `pnpm release:check` pass, including real rclone transport checks. The extended
+  installed-artifact smoke fails against published `0.1.0` at the original second-checkpoint error
+  and passes against the fixed archive. Independent review and exact-head CI are pending.
 
 ## Done when
 
