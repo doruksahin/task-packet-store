@@ -30,10 +30,11 @@ implementation does not complete its live evidence requirements.
   credential using process memory only. The shared platform credential's consumers now include
   the local GitHub CLI and this repository's Release Please workflow; this enables generated PRs
   to trigger their normal CI. No value is recorded in the repository or task outputs.
-- [Release candidate PR 3](https://github.com/doruksahin/task-packet-store/pull/3) opened automatically.
-  It remains unmerged while review/live proofs complete. The first planned version is `0.1.0`;
+- [Release PR 3](https://github.com/doruksahin/task-packet-store/pull/3) opened automatically.
+  The generated `0.1.0` candidate passed exact-head CI and merged at `793b2ec` after source review,
+  installed-artifact checks, and the live Jira/Drive proofs passed.
   [PR 4](https://github.com/doruksahin/task-packet-store/pull/4) configured Release Please's initial
-  version and merged at `e85327a`. The generated candidate now targets `0.1.0` and includes locations.
+  version and merged at `e85327a`. The release includes locations and the identity entry point.
 - The public npm package was absent when checked with both registry and scope explicitly set to
   npmjs.org. The current CLI has no npm authentication. The exact release artifact must be ready
   before any owner-operated bootstrap or authentication handoff.
@@ -52,27 +53,29 @@ implementation does not complete its live evidence requirements.
   the independent re-review found no remaining actionable findings.
 - The local live Jira/Drive smoke passed. All three result links were verified through the
   connected human Drive account, including exact HTML retrieval; the packet folder also opened
-  in the authenticated browser. Step 05a records the retained scratch location and results.
+  in the authenticated browser. Step 05a records the observations; scratch cleanup followed.
 - [CI access PR 92](https://github.com/doruksahin/AC-visual-walkthrough/pull/92) contains the shared
-  config, installer, and reproducible Jira/Drive smoke. Its fresh GitHub runner proof is underway.
+  config, installer, and reproducible Jira/Drive smoke. It merged at `8c73671` after all CI passed,
+  including [fresh runner proof 33960198608](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33960198608).
   Five target secret names were configured using existing credentials, without logging values.
 - [Preparation PR 91](https://github.com/doruksahin/AC-visual-walkthrough/pull/91) passed an
   independently reproduced filesystem push/fetch and walkthrough input validation. Review found
-  incomplete-attachment and literal-template-text handling gaps; the owner is correcting them.
+  incomplete-attachment and literal-template-text handling gaps; both were corrected and re-reviewed.
   Its exact package pin and live workflow proof await publication. The copied capture-smoke
   failure was reproduced on the untouched base, confirming it predates this change.
   Correction `f090499` now passes independent re-review and all five preparation tests.
 - The walkthrough owner is connecting phase checkpoints and mandatory final persistence. A
   successful render, saved output, and resolved result links must all precede `report-saved`.
-- The package's installed-artifact smoke is being extended from help/import checks to a complete
-  local filesystem round trip, including packet/run/HTML locations, before the release.
+- [Package PR 6](https://github.com/doruksahin/task-packet-store/pull/6) merged at `34448e5` after
+  independent review and CI. Its installed-artifact smoke executes a complete local filesystem
+  round trip, including packet/run/HTML locations, without Drive credentials or rclone.
 - Walkthrough bundling exposed that a root identity import also includes storage dependencies.
-  The package owner is adding a dedicated identity subpath while preserving digest behavior.
+  The dedicated identity subpath now imports without configuration or transport dependencies;
+  digest behavior and the root API are unchanged. Independent artifact rebuilds matched.
 
 ## Remaining delivery gates
 
-1. Record the fresh GitHub runner Jira/Drive and location smoke.
-2. Complete the installed-artifact round trip and re-review the preparation corrections.
-3. Publish and verify the exact release artifact on npm.
-4. Pin that version in the Jira workflow, integrate the walkthrough, and run both user commands.
-5. Retrieve the HTML and repeat the walkthrough, verifying that v2 preserves v1.
+1. Publish and verify the exact release artifact on npm.
+2. Pin that version and finish workflow reviews, including producer digest evidence.
+3. Run both user commands and retrieve the actual Drive HTML.
+4. Repeat the walkthrough, verifying that v2 preserves v1.

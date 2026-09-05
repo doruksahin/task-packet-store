@@ -41,12 +41,29 @@ result-location support required by both user workflows.
 
 ## Evidence
 
-Pending. Record:
+The GitHub artifact is ready; npm publication is awaiting the first owner sign-in.
 
-- Release PR, source commit, exact version, and release URL.
-- `pnpm release:check` result and artifact checksum.
-- Clean-install Actions run URL and command results.
-- Selected exporter version.
+- [Release PR 3](https://github.com/doruksahin/task-packet-store/pull/3) merged at
+  `793b2ec1450d37ef354ec5807e5c948a35238546`; [GitHub Release v0.1.0](https://github.com/doruksahin/task-packet-store/releases/tag/v0.1.0)
+  contains `doruksahin-task-packet-store-0.1.0.tgz` and `SHA256SUMS`.
+- [Release run 33960550447](https://github.com/doruksahin/task-packet-store/actions/runs/33960550447)
+  passed `pnpm release:check` (190 tests), deterministic artifact creation/checksum verification,
+  and the isolated installed-package smoke before uploading the assets. The smoke exercises
+  local push/fetch/begin/checkpoint/pull, packet/run/HTML lookup, and dependency-free identity imports.
+- Archive SHA-256: `02bea7886c5d78eb46453ed0ab7a63891d478d28ca825300248477e204855ee0`.
+  The orchestrator downloaded this exact GitHub archive, verified `SHA256SUMS`, and independently
+  passed the installed-package smoke. No replacement local build will be published.
+- The final npm step returned `ENEEDAUTH`; the package does not yet exist on public npm. An
+  interactive npm login is pending with the owner. Credentials are confined to a temporary npm
+  user configuration and will be revoked/removed after bootstrap. No npm token is added to CI.
+- After bootstrap, configure npm Trusted Publisher: GitHub owner `doruksahin`, repository
+  `task-packet-store`, workflow `release-please.yml`, no environment, allow `npm publish`.
+  Dispatch the existing tag with `publish_tag=v0.1.0` to verify GitHub/npm byte identity.
+  That retry verifies an existing publication; it does not prove future OIDC authentication.
+- Consumer versions: task packet store `0.1.0` once npm verification passes; Jira exporter `0.5.0`.
+
+Completion still requires npm version/integrity verification, exact registry archive comparison,
+the clean runner installed-registry-package check, and consumer lockfile pins.
 
 ## Handoff and rollback
 

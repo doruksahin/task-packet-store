@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 05a
 title: Result locations and Drive links
 ---
@@ -46,8 +46,8 @@ Drive returns a usable link; local storage returns an absolute filesystem path.
 
 ## Evidence
 
-Implementation and live Drive/user-access checks completed on 2026-09-05; fresh GitHub runner
-evidence is still pending.
+Implementation, live Drive/user-access checks, and fresh GitHub runner proof completed on
+2026-09-05. Step 01's consumer CI gates passed and its configuration was merged.
 
 - Contract-before-code commit: `d1e6f77` (`docs: define read-only result location contract`).
 - Review: [PR #2](https://github.com/doruksahin/task-packet-store/pull/2), branch `codex/result-locations`.
@@ -165,9 +165,18 @@ Existing human-account access was independently exercised after service-account 
 
 Package PR #2 was merged by the orchestrator as `bc2744a1596fc0a2d08577ddeb3167d63fbe1152`.
 The package correction, local live links, negative lookups, and existing human-account retrieval
-are verified. Remaining evidence is the fresh GitHub Actions smoke run URL using the candidate;
-step 01 is preparing that workflow. This step stays `in-progress` until the CI evidence is recorded.
-The orchestrator owns the plan board and release/dependent actions.
+are verified. The earlier local scratch was subsequently purged after reader verification; no
+`packets/` content was touched.
+
+The fresh GitHub runner [run 33960198608](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33960198608)
+passed using exact package source `bc2744a1596fc0a2d08577ddeb3167d63fbe1152` and consumer head
+`526209eb70a6acbd631d3954f9714040622afaa4`. It repeated packet/run/HTML lookup and both missing-path
+assertions against `ci-smoke/33960198608-1/TPS-33960198608`, then removed that scratch. Actual
+resolved IDs were packet `1O-0PcHJnJ-x4Y4D6DM3Il55G3lojK-jY`, run
+`1nCeDmE8tpV-yWXvHph0Y_FsyAwq2T4yC`, and HTML `1twTMX-K6zDI9wMVmoGm3qZfiO7VFzScZ`; these are
+historical observations, not retained result links. Step 01 records the matching digests.
+Both live environments passed; consumer PR 92 then passed all CI gates and merged at
+`8c7367188286e9e4f8eaf730986ca1d76e2d22ac`.
 
 ## Handoff and rollback
 
