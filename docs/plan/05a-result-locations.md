@@ -64,6 +64,10 @@ Local implementation completed on 2026-09-05; live Drive acceptance is still pen
 - CLI integration verifies all three fs locations with `PATH=/nonexistent` and no Drive credential
   variables. It verifies one JSON line on success, empty stdout and one error line on failure,
   exit 1 for missing objects, and exit 2 for unsafe relative paths.
+- PR CI [run 33959306288](https://github.com/doruksahin/task-packet-store/actions/runs/33959306288)
+  stopped before the release gate in the inherited install-rclone action: exported
+  `RCLONE_VERSION=v1.75.0` was parsed by rclone as its boolean `--version` option. Download and
+  checksum succeeded. The orchestrator owns this bootstrap fix; it is not changed in this branch.
 - `git diff --check` passed. Transfer commands, filters, identity calculation, release configuration,
   and the orchestrator's plan board are unchanged by this step.
 
