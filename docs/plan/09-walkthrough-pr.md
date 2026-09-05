@@ -59,12 +59,21 @@ packet and saves the draft HTML, evidence, and run records on Drive with working
 
 ## Evidence
 
-Pending. Record:
-
-- PR/commit, runtime/package versions, and check results.
-- User command, exact Actions run URL, fetched digest, and reservation receipt.
-- Final checkpoint result and actual HTML relative path.
-- Drive report/run links and verification that they address the saved output.
+- [PR 93](https://github.com/doruksahin/AC-visual-walkthrough/pull/93) merged at
+  `08307480cce07cfcab32d94df1359d1055f5d9d5`. Independent review cleared the final published-package
+  build and the merge delta at `a453c51a48969902f046d95b9d4cc53b59fa5d97`.
+  [CI 33962493465](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962493465)
+  passed the full tests, documentation, and registry-conformance checks.
+- Fresh root/runtime/legacy installs resolve published store `0.1.0`; the regenerated runtime
+  uses its lightweight identity entry point. Twenty-two delivery/digest tests and 188 renderer
+  tests passed. Both showcase HTML files and representative viewport captures match released
+  walkthrough `6.5.0`; the comparison is recorded in the consumer repository.
+- The wrapper preserves draft semantics, strips Drive credentials from the Claude child, and
+  requires validated render receipts, complete output, successful final checkpoint, and actual
+  Drive links before reporting `report-saved`.
+- The exact user command with `-f ticket=ATT-5387` started
+  [Actions run 33962860607](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962860607).
+  Live report, checkpoint, and link evidence remain pending.
 
 ## Handoff and rollback
 

@@ -62,17 +62,17 @@ the first run. This is the delivery acceptance step.
 
 ## Evidence
 
-Pending. Complete this table with observed results:
+Live runs remain pending. Record observed results in this table:
 
 | Check | Evidence |
 | --- | --- |
-| Starting state | Ticket, config/prefix, proof destination was absent |
-| Jira → packet | Command, Actions run URL/ID, commit, package/profile versions, packet link |
+| Starting state | On 2026-09-05, the intended operator's Drive connector listed the complete, empty `packets` folder (`1JlWfAw3yRk3-l2mBObMqRb3vhTyYW8ks`) on Shared Drive `0APywiuwYbmGMUk9PVA`. The chosen ticket is `ATT-5387`; no packet or runs existed. |
+| Jira → packet | User command with `ATT-5387` succeeded in [run 33962806577](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962806577) at `08307480cce07cfcab32d94df1359d1055f5d9d5`. Store `0.1.0`, exporter `0.5.0`, profile `ac-walkthrough-packet-v1`. [Packet on Drive](https://drive.google.com/drive/folders/1B4PV0MlE0O_JoWyNbksZoiPq2s8L-BiZ). Full receipts are recorded in step 08. |
 | Packet identity | Producer digest and each walkthrough's recorded input digest |
 | First walkthrough | Actions run URL/ID, run key/version, report and run links |
 | Saved output | HTML-opening result, evidence/record inventory, snapshot/file hashes |
 | Repeat walkthrough | Actions run URL/ID, v2 links, comparison showing unchanged v1 |
-| Operator access | Packet/report links opened and Actions UI inputs checked |
+| Operator access | The intended operator's Drive account listed the packet and Jira files and read `00 Packet.md`. Chrome's authenticated GitHub Actions UI exposed both workflows on `main` with a ticket field and Run workflow button; no duplicate UI run was submitted. Report access remains pending. |
 
 ## Handoff and rollback
 
