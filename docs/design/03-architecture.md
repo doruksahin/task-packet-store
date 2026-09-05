@@ -196,11 +196,13 @@ For `fs`, `location` is the existing absolute path, such as
 authentication is used. Symlinks within the packet path and non-regular files are rejected with
 `STORE_PACKET_UNSAFE`; the configured store root itself may be a symlink.
 
-For `gdrive`, the transport lists the object's parent with `rclone lsjson` and matches its exact
-name. It uses the observed `ID` and `IsDir` to return
+For `gdrive`, the transport first checks the parent's directory type with `rclone lsjson --stat`,
+then lists that directory with `rclone lsjson` and matches the object's exact name. It uses the observed `ID` and `IsDir` to return
 `https://drive.google.com/drive/folders/<observed-object-id>` for directories or the file URL above.
-No ID is inferred from a path. Listing the parent avoids the synthetic root entry without an ID
-that `lsjson --stat` can return. Lookup never invokes `rclone link`, changes sharing permissions,
+No ID is inferred from a path. A file parent returns missing: rclone can otherwise list a file as
+its own entry and falsely match a nonexistent child of the same name. Missing or malformed parent
+type metadata fails. The stat response is used only for directory type; listing the parent obtains
+the actual object ID instead of relying on the synthetic root entry that `lsjson --stat` can return. Lookup never invokes `rclone link`, changes sharing permissions,
 or writes content. Existing authorized readers can use the link; it does not grant access or host
 HTML as a website. The file link lets a reader retrieve the saved HTML.
 

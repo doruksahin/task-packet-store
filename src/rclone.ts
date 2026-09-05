@@ -99,6 +99,15 @@ function join(remote: string, relative: string): string {
   return relative ? `${remote}/${relative}` : remote;
 }
 
+function locationMetadata(result: RcloneResult): unknown {
+  const { stdout } = expectSuccess(result, 'rclone lsjson (locate)');
+  try {
+    return JSON.parse(stdout);
+  } catch {
+    throw new StoreError('STORE_RCLONE_FAILED', 'rclone lsjson (locate) returned invalid JSON');
+  }
+}
+
 interface Listed {
   Name: string;
   IsDir: boolean;
@@ -120,15 +129,18 @@ export class RcloneTransport implements PacketTransport {
     const name = relativePath ? segments.pop()! : ticket;
     // remoteFor addresses <root>/<ticket> (or :drive,...:<ticket> without a prefix).
     const parent = relativePath ? join(remote, segments.join('/')) : remote.slice(0, -ticket.length);
+    // lsjson FILE lists FILE itself, so its matching name cannot prove a child exists.
+    const stat = await this.rclone.run(['lsjson', '--stat', parent]);
+    if (NOT_FOUND.has(stat.code)) return null;
+    const parentEntry = locationMetadata(stat);
+    if (!parentEntry || Array.isArray(parentEntry) || typeof parentEntry !== 'object'
+      || !('IsDir' in parentEntry) || typeof parentEntry.IsDir !== 'boolean') {
+      throw new StoreError('STORE_RCLONE_FAILED', 'result parent has no valid directory type');
+    }
+    if (!parentEntry.IsDir) return null;
     const result = await this.rclone.run(['lsjson', parent]);
     if (NOT_FOUND.has(result.code)) return null;
-    const { stdout } = expectSuccess(result, 'rclone lsjson (locate)');
-    let entries: unknown;
-    try {
-      entries = JSON.parse(stdout);
-    } catch {
-      throw new StoreError('STORE_RCLONE_FAILED', 'rclone lsjson (locate) returned invalid JSON');
-    }
+    const entries = locationMetadata(result);
     if (!Array.isArray(entries) || entries.some((entry) => !entry || typeof entry.Name !== 'string')) {
       throw new StoreError('STORE_RCLONE_FAILED', 'rclone lsjson (locate) returned invalid entries');
     }

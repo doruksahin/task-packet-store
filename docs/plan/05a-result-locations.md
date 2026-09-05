@@ -53,7 +53,7 @@ Local implementation completed on 2026-09-05; live Drive acceptance is still pen
 - Implementation commit: `6a7c5d9` (`feat: locate existing packet result paths and Drive links`).
 - `pnpm install --frozen-lockfile` succeeded without lockfile changes. The first `pnpm check`
   attempt identified absent worktree dependencies; after installation, `pnpm check` passed.
-- Final implementation check: `pnpm check` passed typecheck/build and all **179 tests** (176
+- Initial implementation check: `pnpm check` passed typecheck/build and all **179 tests** (176
   core/integration plus 3 artifact tests). The existing shared transfer/run suite ran against fs
   and installed rclone **1.75.0**. No tests were skipped.
 - `test/locations.test.ts` exercises the same result contract with FsTransport and RcloneTransport
@@ -101,6 +101,20 @@ The absolute smoke store root was
 `--path missing.html` returned exit 1, empty stdout, and exactly
 `STORE_LOCATION_MISSING: PROJ-123/missing.html does not exist` on stderr.
 These are temporary local proof files, not portable acceptance artifacts.
+
+Independent review correction: `delivery/report.html/report.html` must fail when
+`delivery/report.html` is a file. Real rclone 1.75.0 lists a file as its own entry; a fixture adding
+only its Drive ID reproduced a false successful URL before the fix. The regression command
+`pnpm exec vitest run test/operations.rclone.test.ts -t 'nonexistent child'` failed before the fix
+and passed afterward. Both fs and rclone now reject this request with `STORE_LOCATION_MISSING`.
+The transport establishes the parent's directory type with read-only `lsjson --stat` before
+listing for the actual object ID. Parent stat with missing/invalid type metadata fails closed;
+missing parent codes retain the missing-location error. The updated `pnpm check` passes all
+**190 tests** (187 core/integration plus 3 artifact), including the real-rclone regression.
+
+Bootstrap integration: merged upstream `9c07cf9` as `e96f9a4`; the corrected installer and Node 20
+release gate passed in [CI run 33959406490](https://github.com/doruksahin/task-packet-store/actions/runs/33959406490).
+The earlier installer failure above is historical.
 
 Remaining evidence: step 01 must supply its CI scratch destination/access before live packet,
 run-folder, and HTML links can be captured here with a CI run URL and authorized teammate opening

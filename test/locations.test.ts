@@ -25,6 +25,7 @@ for (const driver of ['fs', 'gdrive'] as const) {
       const transport = driver === 'fs' ? new FsTransport(root) : new RcloneTransport({
         run: async (args) => {
           calls.push(args);
+          if (args[1] === '--stat') return { code: 0, stdout: '{"IsDir":true}', stderr: '' };
           // rclone listing fixture: distinct observed IDs, not IDs inferred from path names.
           const listing = objects.filter((object) => {
             const full = object.relativePath ? `${ticket}/${object.relativePath}` : ticket;
@@ -53,7 +54,7 @@ for (const driver of ['fs', 'gdrive'] as const) {
       });
       expect(fs.readFileSync(html, 'utf8')).toBe('<html>saved report</html>');
       expect(fs.statSync(html).mtimeMs).toBe(before.mtimeMs);
-      expect(h.calls.every((args) => args[0] === 'lsjson' && args.length === 2)).toBe(true);
+      expect(h.calls.every((args) => args[0] === 'lsjson' && (args.length === 2 || args[1] === '--stat'))).toBe(true);
     });
 
     it('defaults to the packet folder', async () => {
@@ -106,7 +107,10 @@ describe('fs location safety', () => {
 describe('rclone location metadata', () => {
   function make(result: RcloneResult, prefix = 'packets/') {
     const calls: string[][] = [];
-    const transport = new RcloneTransport({ run: async (args) => { calls.push(args); return result; } },
+    const transport = new RcloneTransport({ run: async (args) => {
+      calls.push(args);
+      return args[1] === '--stat' ? { code: 0, stdout: '{"IsDir":true}', stderr: '' } : result;
+    } },
       (key) => `:drive,team_drive=sharedDriveId:${prefix}${key}`);
     return { calls, transport };
   }
@@ -114,7 +118,10 @@ describe('rclone location metadata', () => {
   it('lists a bare shared Drive root to obtain the packet ID', async () => {
     const h = make({ code: 0, stdout: JSON.stringify([{ Name: ticket, ID: 'actual-id', IsDir: true }]), stderr: '' }, '');
     expect((await locateResult(h.transport, ticket)).location).toBe('https://drive.google.com/drive/folders/actual-id');
-    expect(h.calls).toEqual([['lsjson', ':drive,team_drive=sharedDriveId:']]);
+    expect(h.calls).toEqual([
+      ['lsjson', '--stat', ':drive,team_drive=sharedDriveId:'],
+      ['lsjson', ':drive,team_drive=sharedDriveId:'],
+    ]);
   });
 
   it.each([3, 4])('maps missing parent exit %i to missing location', async (code) => {
@@ -133,6 +140,26 @@ describe('rclone location metadata', () => {
 
   it('preserves non-missing rclone failures', async () => {
     await expect(locateResult(make({ code: 5, stdout: '', stderr: 'permission denied' }).transport, ticket)).rejects.toThrow('STORE_RCLONE_FAILED');
+  });
+
+  it.each(['null', '{}', '[]', 'true', 'not json', '{"IsDir":"true"}'])('rejects invalid parent stat %s', async (stdout) => {
+    const transport = new RcloneTransport({ run: async () => ({ code: 0, stdout, stderr: '' }) }, (key) => `:drive:${key}`);
+    await expect(locateResult(transport, ticket, report)).rejects.toThrow('STORE_RCLONE_FAILED');
+  });
+
+  it.each([3, 4, 5])('handles parent stat exit %i', async (code) => {
+    const transport = new RcloneTransport({ run: async () => ({ code, stdout: '', stderr: 'stat failed' }) }, (key) => `:drive:${key}`);
+    await expect(locateResult(transport, ticket, report)).rejects.toThrow(code === 5 ? 'STORE_RCLONE_FAILED' : 'STORE_LOCATION_MISSING');
+  });
+
+  it('does not list a file parent even when its name matches the requested child', async () => {
+    const calls: string[][] = [];
+    const transport = new RcloneTransport({ run: async (args) => {
+      calls.push(args);
+      return { code: 0, stdout: '{"Name":"report.html","IsDir":false,"ID":"actual-file-id"}', stderr: '' };
+    } }, (key) => `:drive:${key}`);
+    await expect(locateResult(transport, ticket, 'delivery/report.html/report.html')).rejects.toThrow('STORE_LOCATION_MISSING');
+    expect(calls).toEqual([['lsjson', '--stat', `:drive:${ticket}/delivery/report.html`]]);
   });
 
   it('rejects invalid transport inputs before spawning rclone', async () => {
