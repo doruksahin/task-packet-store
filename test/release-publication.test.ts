@@ -149,7 +149,7 @@ if (process.argv[2] === 'view') {
     expect(result.stdout).toContain('Published npm package');
     expect(calls).toContain('"publish"');
     expect(calls).toContain('--@doruksahin:registry=https://registry.npmjs.org');
-    expect(calls).toContain('--provenance');
+    expect(calls).not.toContain('--provenance');
   });
 
   it('rejects an npm version whose registry integrity differs', async () => {

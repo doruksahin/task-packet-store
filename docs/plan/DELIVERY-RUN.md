@@ -11,7 +11,8 @@ models. The operator contract and plan board remain authoritative for completion
 | Result locations | `01a070f8-4064-73b1-9f21-108c86d901cd` | GPT-6 Astra, high | Package interface, implementation/tests, step 05a evidence |
 | CI access | `01a070f8-4826-7982-8895-0fdee3268132` | GPT-5.6 Sol, high | Shared config, CI smoke, credentials and installer in consumer |
 | Packet preparation | `01a070f8-4825-7d11-bc19-9858a62ed84a` | GPT-5.6 Sol, high | Templates/profile, preparation, tests, Jira workflow |
-| Independent location review | `01a07100-632d-7cc1-b34c-621e05de8e00` | GPT-6 Astra, high | Read-only review and verification of revisions |
+| Independent review | `01a07100-632d-7cc1-b34c-621e05de8e00` | GPT-6 Astra, high | Read-only location and preparation review, then consumer integration |
+| Walkthrough integration | `01a07107-310f-7610-a1b7-9bb5a0e24512` | GPT-6 Astra, high | Drive fetch/reservation/checkpoints, runtime identity, final report links |
 
 Tasks use separate worktrees. The orchestrator merges checked PRs, coordinates exact package and
 interface handoffs, updates the plan board, and owns release/final acceptance. A locally tested
@@ -31,28 +32,47 @@ implementation does not complete its live evidence requirements.
   to trigger their normal CI. No value is recorded in the repository or task outputs.
 - [Release candidate PR 3](https://github.com/doruksahin/task-packet-store/pull/3) opened automatically.
   It remains unmerged while review/live proofs complete. The first planned version is `0.1.0`;
-  Release Please's initial-version configuration controls the generated files.
+  [PR 4](https://github.com/doruksahin/task-packet-store/pull/4) configured Release Please's initial
+  version and merged at `e85327a`. The generated candidate now targets `0.1.0` and includes locations.
 - The public npm package was absent when checked with both registry and scope explicitly set to
   npmjs.org. The current CLI has no npm authentication. The exact release artifact must be ready
   before any owner-operated bootstrap or authentication handoff.
+- npm's [trusted-publishing documentation](https://docs.npmjs.com/trusted-publishers/) supports
+  private repositories but cannot generate their provenance. The publish helper therefore lets
+  npm choose automatic provenance instead of forcing `--provenance`; OIDC authentication and
+  exact-archive integrity checks remain required. The GitHub repository stays private.
 
 ## Implementation and review
 
-- [Location PR 2](https://github.com/doruksahin/task-packet-store/pull/2) implements
+- [Location PR 2](https://github.com/doruksahin/task-packet-store/pull/2), merged at `bc2744a`, implements
   `locate --store <abs-config> --ticket PROJ-123 [--path <relative>]`. Consumers read `.location`.
-  Local checks reported 179 passing tests; fresh CI passed after incorporating the installer fix.
+  The corrected implementation passed independent review and all 190 tests, with green Node 20 CI.
 - Independent review found that rclone's file-root listing behavior could make a nonexistent
-  child of a file resolve successfully. The implementer is adding a regression and correction.
-- Packet preparation reported a successful filesystem push/fetch of a representative packet and
-  acceptance by the walkthrough input validator. Its package pin and live workflow proof await
-  publication. A reported unrelated capture-smoke failure is being checked against the base.
-- CI setup has configured the named credentials and is verifying Jira/Drive with isolated scratch
-  data. Result-location proof will use the tested candidate source and retained scratch objects.
+  child of a file resolve successfully. Commit `c242f22` corrected it with a real-rclone regression;
+  the independent re-review found no remaining actionable findings.
+- The local live Jira/Drive smoke passed. All three result links were verified through the
+  connected human Drive account, including exact HTML retrieval; the packet folder also opened
+  in the authenticated browser. Step 05a records the retained scratch location and results.
+- [CI access PR 92](https://github.com/doruksahin/AC-visual-walkthrough/pull/92) contains the shared
+  config, installer, and reproducible Jira/Drive smoke. Its fresh GitHub runner proof is underway.
+  Five target secret names were configured using existing credentials, without logging values.
+- [Preparation PR 91](https://github.com/doruksahin/AC-visual-walkthrough/pull/91) passed an
+  independently reproduced filesystem push/fetch and walkthrough input validation. Review found
+  incomplete-attachment and literal-template-text handling gaps; the owner is correcting them.
+  Its exact package pin and live workflow proof await publication. The copied capture-smoke
+  failure was reproduced on the untouched base, confirming it predates this change.
+  Correction `f090499` now passes independent re-review and all five preparation tests.
+- The walkthrough owner is connecting phase checkpoints and mandatory final persistence. A
+  successful render, saved output, and resolved result links must all precede `report-saved`.
+- The package's installed-artifact smoke is being extended from help/import checks to a complete
+  local filesystem round trip, including packet/run/HTML locations, before the release.
+- Walkthrough bundling exposed that a root identity import also includes storage dependencies.
+  The package owner is adding a dedicated identity subpath while preserving digest behavior.
 
 ## Remaining delivery gates
 
-1. Correct and re-review the location edge case; pass CI on the resulting exact head.
-2. Record the real CI Jira/Drive smoke, live location results, and authorized link access.
-3. Merge the verified package work, publish and verify the exact release artifact on npm.
+1. Record the fresh GitHub runner Jira/Drive and location smoke.
+2. Complete the installed-artifact round trip and re-review the preparation corrections.
+3. Publish and verify the exact release artifact on npm.
 4. Pin that version in the Jira workflow, integrate the walkthrough, and run both user commands.
 5. Retrieve the HTML and repeat the walkthrough, verifying that v2 preserves v1.

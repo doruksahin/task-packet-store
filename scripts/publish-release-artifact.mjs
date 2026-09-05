@@ -104,7 +104,7 @@ async function main() {
         archive,
         '--access',
         'public',
-        '--provenance',
+        // npm OIDC adds provenance when eligible; private repositories do not support it.
         npmRegistryArgument,
       ],
       { cwd: repositoryRoot, env: process.env, maxBuffer: 10 * 1024 * 1024 },
