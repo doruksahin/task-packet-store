@@ -40,9 +40,10 @@ npm exec --yes \
 | `begin` | Reserve the next `runs/vN` for a stage and write `run.md`. |
 | `checkpoint` | Upload a source directory into the reserved run and write `snapshot.json`. |
 | `pull` | Download every `stages/*/runs/**` into a local packet. |
+| `locate` | Resolve an existing packet, run folder, or file to a local absolute path or Drive link. |
 | `doctor` | Report the rclone version, the credential variables, and the resolved remote. |
 
-All six commands work through the same packet operations with either driver. The `fs` driver uses
+All seven commands work through the same packet operations with either driver. The `fs` driver uses
 the local filesystem directly; the `gdrive` driver spawns the pinned rclone binary.
 
 Every command prints one JSON object on stdout when it succeeds. On failure stdout is empty and

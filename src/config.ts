@@ -78,3 +78,15 @@ export function validateStage(stage: string): string {
   if (!SAFE_STAGE.test(stage)) throw new StoreError('STORE_CONFIG_INVALID', `invalid stage: ${stage}`);
   return stage;
 }
+
+/** Empty means the packet itself; otherwise an exact path, never a normalized or traversing path. */
+export function validateLocationPath(relativePath: string): string {
+  if (
+    typeof relativePath !== 'string' ||
+    /[\x00-\x1f\x7f]/.test(relativePath) ||
+    (relativePath !== '' && relativePath.split('/').some((segment) => !SAFE_SEGMENT.test(segment)))
+  ) {
+    throw new StoreError('STORE_CONFIG_INVALID', '--path must be an exact packet-relative path');
+  }
+  return relativePath;
+}

@@ -2,9 +2,9 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { IGNORED_BASENAMES, type GdriveConfig } from './config.js';
+import { IGNORED_BASENAMES, validateLocationPath, validateTicket, type GdriveConfig } from './config.js';
 import { StoreError } from './errors.js';
-import { assertFilter, type PacketTransport, type TransferFilter } from './transport.js';
+import { assertFilter, type PacketTransport, type ResultLocation, type TransferFilter } from './transport.js';
 
 export const RCLONE_TESTED_VERSION = '1.75.0';
 /** rclone exit code 3 is "directory not found", 4 is "file not found". */
@@ -99,6 +99,15 @@ function join(remote: string, relative: string): string {
   return relative ? `${remote}/${relative}` : remote;
 }
 
+function locationMetadata(result: RcloneResult): unknown {
+  const { stdout } = expectSuccess(result, 'rclone lsjson (locate)');
+  try {
+    return JSON.parse(stdout);
+  } catch {
+    throw new StoreError('STORE_RCLONE_FAILED', 'rclone lsjson (locate) returned invalid JSON');
+  }
+}
+
 interface Listed {
   Name: string;
   IsDir: boolean;
@@ -111,6 +120,46 @@ export class RcloneTransport implements PacketTransport {
     private readonly rclone: RcloneRunner,
     private readonly remoteFor: (ticket: string) => string,
   ) {}
+
+  async locate(ticket: string, relativePath: string): Promise<ResultLocation | null> {
+    validateTicket(ticket);
+    validateLocationPath(relativePath);
+    const remote = this.remoteFor(ticket);
+    const segments = relativePath.split('/');
+    const name = relativePath ? segments.pop()! : ticket;
+    // remoteFor addresses <root>/<ticket> (or :drive,...:<ticket> without a prefix).
+    const parent = relativePath ? join(remote, segments.join('/')) : remote.slice(0, -ticket.length);
+    // lsjson FILE lists FILE itself, so its matching name cannot prove a child exists.
+    const stat = await this.rclone.run(['lsjson', '--stat', parent]);
+    if (NOT_FOUND.has(stat.code)) return null;
+    const parentEntry = locationMetadata(stat);
+    if (!parentEntry || Array.isArray(parentEntry) || typeof parentEntry !== 'object'
+      || !('IsDir' in parentEntry) || typeof parentEntry.IsDir !== 'boolean') {
+      throw new StoreError('STORE_RCLONE_FAILED', 'result parent has no valid directory type');
+    }
+    if (!parentEntry.IsDir) return null;
+    const result = await this.rclone.run(['lsjson', parent]);
+    if (NOT_FOUND.has(result.code)) return null;
+    const entries = locationMetadata(result);
+    if (!Array.isArray(entries) || entries.some((entry) => !entry || typeof entry.Name !== 'string')) {
+      throw new StoreError('STORE_RCLONE_FAILED', 'rclone lsjson (locate) returned invalid entries');
+    }
+    const matches = entries.filter((entry) => entry.Name === name);
+    if (matches.length === 0) return null;
+    if (matches.length !== 1) {
+      throw new StoreError('STORE_RCLONE_FAILED', 'result location is ambiguous: duplicate object names');
+    }
+    const entry = matches[0];
+    if (typeof entry.IsDir !== 'boolean' || typeof entry.ID !== 'string' || !/^[A-Za-z0-9_-]+$/.test(entry.ID)) {
+      throw new StoreError('STORE_RCLONE_FAILED', 'result location has no valid object ID or type');
+    }
+    return {
+      kind: entry.IsDir ? 'directory' : 'file',
+      location: entry.IsDir
+        ? `https://drive.google.com/drive/folders/${entry.ID}`
+        : `https://drive.google.com/file/d/${entry.ID}/view`,
+    };
+  }
 
   async download(ticket: string, remoteDir: string, localDir: string, filter?: TransferFilter): Promise<void> {
     const source = join(this.remoteFor(ticket), remoteDir);

@@ -3,7 +3,7 @@ import { Command, CommanderError } from 'commander';
 import path from 'node:path';
 import { readStoreConfig } from './config.js';
 import { exitCodeFor, failureLine } from './errors.js';
-import { beginRun, checkpointRun, fetchPacket, pullRuns, pushPacket, readRunState } from './operations.js';
+import { beginRun, checkpointRun, fetchPacket, locateResult, pullRuns, pushPacket, readRunState } from './operations.js';
 import { createTransport, doctorStore } from './store.js';
 import { TASK_PACKET_STORE_VERSION } from './version.js';
 
@@ -32,6 +32,19 @@ interface StoreOptions {
   store: string;
   ticket: string;
 }
+
+program
+  .command('locate')
+  .description('Look up an existing packet, run folder, or file using its current access permissions.')
+  .requiredOption('--store <file>', 'absolute path to the store JSON')
+  .requiredOption('--ticket <ticket>', 'Jira ticket, for example PROJ-123')
+  .option('--path <relative>', 'exact packet-relative path; omit for the packet folder', '')
+  .action((options: StoreOptions & { path: string }) =>
+    run(async () => {
+      const config = readStoreConfig(options.store);
+      return locateResult(createTransport(config), options.ticket, options.path);
+    }),
+  );
 
 program
   .command('fetch')
