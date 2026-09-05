@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/doruksahin/task-packet-store/compare/v0.1.0...v0.1.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **fs:** safely replace read-only checkpoint and pull files ([#12](https://github.com/doruksahin/task-packet-store/issues/12)) ([a00a679](https://github.com/doruksahin/task-packet-store/commit/a00a679d36d4f88105128fd63f248c630778d536))
+
 ## 0.1.0 (2026-09-05)
 
 

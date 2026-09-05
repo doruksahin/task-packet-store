@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SAFE_SEGMENT, validateLocationPath, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
+import { copyFile, replaceFile } from './fs-file.js';
 import { matchesAny } from './glob.js';
 import { listFiles } from './identity.js';
 
@@ -56,8 +57,7 @@ function copyTree(from: string, to: string, filter?: TransferFilter): void {
   for (const relative of listFiles(from)) {
     if (!selected(relative, filter)) continue;
     const target = path.join(to, ...relative.split('/'));
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(path.join(from, ...relative.split('/')), target);
+    copyFile(path.join(from, ...relative.split('/')), target);
   }
 }
 
@@ -153,7 +153,10 @@ export class FsTransport implements PacketTransport {
 
   async writeText(ticket: string, remoteFile: string, text: string): Promise<void> {
     const file = this.at(ticket, remoteFile);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, text, 'utf8');
+    const existing = fs.statSync(file, { throwIfNoEntry: false });
+    replaceFile(file, temporary => {
+      fs.writeFileSync(temporary, text, 'utf8');
+      if (existing) fs.chmodSync(temporary, existing.mode & 0o7777);
+    });
   }
 }

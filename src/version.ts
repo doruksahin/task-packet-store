@@ -1,1 +1,1 @@
-export const TASK_PACKET_STORE_VERSION = '0.1.0' as const; // x-release-please-version
+export const TASK_PACKET_STORE_VERSION = '0.1.1' as const; // x-release-please-version
