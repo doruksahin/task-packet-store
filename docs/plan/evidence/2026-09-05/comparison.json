@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "ticket": "ATT-5387",
+  "sourceCommit": "08307480cce07cfcab32d94df1359d1055f5d9d5",
+  "packageVersions": {
+    "jiraMarkdownExporter": "0.5.0",
+    "taskPacketStore": "0.1.0",
+    "acWalkthroughPlugin": "6.5.0"
+  },
+  "producer": {
+    "runId": 33962806577,
+    "runUrl": "https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962806577",
+    "packetSha256": "2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653",
+    "fetchedPacketSha256": "2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653",
+    "packetFileCount": 9,
+    "packetFolderUrl": "https://drive.google.com/drive/folders/1B4PV0MlE0O_JoWyNbksZoiPq2s8L-BiZ"
+  },
+  "v1": {
+    "runId": 33962860607,
+    "runUrl": "https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962860607",
+    "runKey": "github-33962860607-1",
+    "packetSha256": "2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653",
+    "snapshotFileCount": 14,
+    "snapshotInventorySha256": "dffc612dda5d513acfb58a67ca802c9934ef7d49d5b48ed8236fdc17f1775b75",
+    "fullStoredFileCount": 701,
+    "fullManifestSha256": "c81b81fca4998fb0c8cb5d28ecac4ae0c084634b1057921984338634e618641c",
+    "htmlSha256": "274d73754a8bf15e31d38186339d01ec7ec71f073c8fc4d54889e6a75f86f442",
+    "htmlSize": 985530,
+    "htmlPath": "packets/ATT-5387/stages/20-ac-walkthrough/runs/v1/delivery/ATT-5387-ac-verification-v1.html",
+    "runFolderUrl": "https://drive.google.com/drive/folders/1ZarF3q5Bay8deEzayJHdfIxHH7UqSAQb",
+    "reportUrl": "https://drive.google.com/file/d/1cX-sJugWQhZaeUE8KKShPybuC-W4JIcN/view"
+  },
+  "v2": {
+    "runId": 33964047130,
+    "runUrl": "https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33964047130",
+    "runKey": "github-33964047130-1",
+    "packetSha256": "2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653",
+    "snapshotFileCount": 15,
+    "snapshotInventorySha256": "ed2e5ad1a5dcd1715bbc6fa370523f2e6ea60dd3173cfec2f0d9aa41ef4cda69",
+    "fullManifestSha256": "09bfe0abdc9ef666c4ea39eb52c08561654eeca919e529658eddc538c7db9196",
+    "htmlSha256": "d0ed22225affb5621f55348e015c314f7f8bd7b7abcd9f0e4d93dcc4742504ea",
+    "htmlSize": 1980288,
+    "htmlPath": "packets/ATT-5387/stages/20-ac-walkthrough/runs/v2/delivery/ATT-5387-ac-verification-v1.html",
+    "runFolderUrl": "https://drive.google.com/drive/folders/1eiOT7zPNuml_05VclQtA0q1Hv_v5yX4d",
+    "reportUrl": "https://drive.google.com/file/d/1EaKLaJMx0zb0GroPTqQY-SSFxxnjCCbh/view"
+  },
+  "comparison": {
+    "baselineCapturedAt": "2026-09-05T11:41:21.201Z",
+    "comparedAt": "2026-09-05T11:59:01.820Z",
+    "versions": ["v1", "v2"],
+    "packetIdentityUnchanged": true,
+    "v1Unchanged": true,
+    "verifier": "/tmp/verify-drive-acceptance.mjs",
+    "frozenBaseline": "/tmp/drive-acceptance-v1-33962860607-baseline.json"
+  }
+}

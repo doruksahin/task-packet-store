@@ -44,3 +44,11 @@ new workflows, result links, or present CI configuration.
 Optional local Drive access and vault integration are steps 02 and 07. Recon is step 11. Retiring
 unused walkthrough storage code is step 12 and depends on the completed Drive acceptance proof.
 A vault mirror, blueprint extension, or sealed-run feature needs its own subsequent scope.
+
+Live acceptance identified two additional follow-ups in the consumer. The HTML's trace shortcut
+still follows the existing renderer contract and points at the runner's absolute file path; the
+saved trace is accessible through the reported Drive run folder at `input/capture/trace.zip`.
+A portable shortcut needs a renderer/contract change or a resolved trace link in the Actions
+summary. Checkpoint uploads also retain hidden ephemeral capture-profile files beyond the
+snapshot's non-hidden report inventory. The acceptance comparison freezes all stored bytes;
+future cleanup can narrow new uploads while preserving historical runs.

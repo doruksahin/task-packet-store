@@ -5,17 +5,19 @@ that stored packet and receives a link to the HTML report on Drive.
 
 [Required commands and outputs](00-required-operator-flow.md) define the operator contract.
 [Architecture](../design/03-architecture.md) defines the package contract. Step documents define
-bounded implementation work. This revision plans the work; it does not implement the workflows.
+bounded implementation work and record its completion evidence.
 
 ## Current state and next action
 
 The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
 Shared Drive round trip in step 05. They are preserved unchanged.
 
-**Delivery is in progress.** CI access, result locations, packet preparation, and walkthrough integration are delegated to
-isolated tasks; the orchestrator owns integration and release. See the
-[delivery run record](DELIVERY-RUN.md) for assignments, PRs, and current evidence. Publication and
-final acceptance remain gated on the required live checks.
+**The required Drive delivery is complete and verified as of 2026-09-05.** Store `0.1.0` is
+published, both user commands succeeded on independent CI runners, and repeating the walkthrough
+created `v2` with all 701 stored `v1` files unchanged. See the
+[delivery run record](DELIVERY-RUN.md) for assignments and PRs, and
+[the acceptance record](10-drive-acceptance.md) for actual links, receipts, and disclosed limitations.
+The remaining items below are optional integrations and cleanup.
 
 ## Required delivery sequence
 
@@ -25,16 +27,13 @@ final acceptance remain gated on the required live checks.
 | 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | done |
 | 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | done |
 | 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | done |
-| 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | in-progress |
-| 10 | [Prove both commands and repeat the walkthrough](10-drive-acceptance.md) | AC-visual-walkthrough + Drive | 08, 09 | pending |
+| 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | done |
+| 10 | [Prove both commands and repeat the walkthrough](10-drive-acceptance.md) | AC-visual-walkthrough + Drive | 08, 09 | done |
 
-Step 05a's implementation can start while step 01 is being completed; its live link proof uses
-step 01's access. Packet preparation in step 08 can be developed against fixtures earlier, but
-the step is complete only after the released tools succeed in CI. Step 09 implementation is also
-underway against the agreed interface; its live acceptance still depends on step 08.
-
-The release follows result-link support so the workflows can consume one pinned package version.
-The delivery is complete only when step 10 has evidence for both commands and preserved run history.
+The release followed result-link support so both workflows consume one pinned package version.
+Packet preparation was verified through filesystem storage and the real CI/Drive path. Step 10
+records both successful commands and preserved run history; merged code alone was not used as
+completion evidence.
 
 ## Completed foundation
 

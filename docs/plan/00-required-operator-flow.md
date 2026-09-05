@@ -1,9 +1,8 @@
 # Required operator flow: Jira → Drive packet → Drive report
 
-Status: required behavior, not implemented or verified. This document specifies what must work;
-later sessions will fill the implementation gaps. The commands below describe the required finished
-experience. The new `jira-to-packet.yml` workflow does not exist yet, and `walkthrough-lab.yml`
-currently uses the old storage flow.
+Status: implemented and verified on 2026-09-05. Both commands passed, and repeating the walkthrough
+created `v2` with every stored `v1` file unchanged. This document remains the behavior contract;
+[the acceptance record](10-drive-acceptance.md) contains observed results and disclosed limitations.
 
 The user must be able to create a task packet from Jira, leave it on Google Drive, and later run
 AC-walkthrough against that stored packet. Both operations run in GitHub Actions. They must work
