@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 11
 title: Recon as second consumer
 ---
@@ -53,8 +53,9 @@ errors could omit unreadable current-run evidence, and overlapping filesystem de
 modify the source workspace. Corrective head `f6c5e244f50f42e4a262dbafe1502acec545ba96` fixes both,
 passes 11 contract groups, repeats the real filesystem proof, and passes the full staged pre-commit
 rail. Independent review repeated both failure reproductions and cleared this exact head.
-Real Drive acceptance and merge remain pending; this is not a plugin publication or
-activation claim.
+The [both-store acceptance](15-reusable-storage-acceptance.md#both-store-result) passed and received
+independent evidence review. PR 8 merged to `master` as `d2189c35d2df2a8341b0136531312df9b26bca80`.
+The source-checkout command is delivered; this is not a plugin publication or activation claim.
 
 ## Handoff and rollback
 

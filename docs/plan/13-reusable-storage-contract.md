@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 13
 title: Shared workflow adapter contract
 ---
@@ -30,4 +30,8 @@ is required only if actual integrations expose a missing capability.
 
 Contract recorded before implementation at `ed0be0d`. The
 [integration guide](../integrating-a-workflow.md) describes the shared inputs and storage sequence.
-Consumer implementation and independent review pending.
+Both consumers use published `0.1.0` with the same explicit config. Their independently reviewed
+adapters passed filesystem and Drive acceptance in step 15. The guide and playbook contain literal
+commands, inputs/outputs, and setup links, reviewed against both implementations. No package API
+change is required. Live repeated checkpoints later exposed a filesystem implementation defect;
+[step 16](16-readonly-checkpoint-fix.md) owns its corrective package release and consumer pins.

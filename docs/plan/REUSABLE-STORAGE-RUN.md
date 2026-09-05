@@ -24,7 +24,8 @@ Recon's public source repository must not receive Drive credentials or private t
 - Plan and adapter contract committed at `ed0be0d82d1f20998df633b12539a4e63ce6deba`.
 - `pnpm check`: 190 tests passed with no skips before the planning checkpoint.
 - Independent review found no blocking contract defect or missing published store operation.
-  Published `@doruksahin/task-packet-store@0.1.0` is sufficient; no package release is planned.
+  Published `@doruksahin/task-packet-store@0.1.0` supplied the required operations. The later live
+  filesystem run exposed a transport defect requiring the patch tracked in step 16; no new API is needed.
 - Consumer boundaries: preserve walkthrough runtime validation and draft semantics; support both
   location types; reserve fresh versions independently of internal runtime filenames.
 - Recon's source is the current ticket workspace root, including `report/dossier.html` and its

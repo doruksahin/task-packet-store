@@ -229,7 +229,7 @@ Input: the existing current ticket workspace, including `report/dossier.html` an
 Output: one JSON receipt with `version` and `locations.primary.location` for the saved dossier,
 plus run, run-record, and snapshot locations under `PROJ-123/stages/10-recon/runs/vN/`.
 This delivery command saves the existing dossier. Recon's rendering and approval steps keep their
-usual behavior. See [Recon storage setup](https://github.com/AdCreative-ai/recon-plugin/blob/main/recon/docs/storage.md).
+usual behavior. See [Recon storage setup](https://github.com/AdCreative-ai/recon-plugin/blob/master/recon/docs/storage.md).
 
 To connect a third workflow, follow the [integration guide](integrating-a-workflow.md). The workflow
 reads and writes ordinary directories; its adapter uses the selected store before and after that work.

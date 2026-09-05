@@ -40,12 +40,13 @@ fresh `v1`/`v2`, primary/supporting file readback, package records, snapshot reh
 packet verification, and unchanged earlier run trees. These are preliminary deterministic checks;
 final evidence must use the corrected independently reviewed consumer heads.
 
-The private walkthrough repository harness is being prepared with two deliberate triggers:
+The private walkthrough repository harness has two deliberate triggers:
 `reusable-storage-drive` for filesystem/Drive adapter proof and `reusable-storage-live-fs` for a
 new real Jira/LLM filesystem run. Secret-bearing jobs require an explicit same-repository labeled
 event (or later manual dispatch); an existing label must not trigger new writes on every push.
 The original private AC draft bundle and a synthetic skill-rendered Recon fixture are separately
-identified as acceptance inputs. No new remote or paid execution has started.
+identified as acceptance inputs. Both labels were applied once after independent review and green
+CI on the final harness commit; no label-triggered write occurs on subsequent pushes.
 
 The harness is [PR 98](https://github.com/doruksahin/AC-visual-walkthrough/pull/98), initially
 `170bcd248195ceb2c54d61076c47b3bbc5b6dc07`. Independent review found and confirmed three fixes at
@@ -58,4 +59,50 @@ the complete [Linux CI](https://github.com/doruksahin/AC-visual-walkthrough/acti
 Final candidate `46496a6832c868342ee234794787299022e31300` updates only the Recon reference and fixture
 provenance to `f6c5e244f50f42e4a262dbafe1502acec545ba96`. Both adapters passed filesystem acceptance
 at those exact refs. Independent review cleared both the Recon correction and final harness reference
-delta. Remote acceptance waits for the final harness CI check before the two labels are applied.
+delta. The final head passed [CI 33992595671](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992595671).
+
+### Both-store result
+
+[Run 33992872489](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992872489)
+passed both filesystem and Shared Drive jobs at harness `46496a6832c868342ee234794787299022e31300`.
+Both jobs used AC `6956b53111c81092c38738f7955b73560646c58a`, Recon
+`f6c5e244f50f42e4a262dbafe1502acec545ba96`, and published storage package `0.1.0`.
+Drive writes were confined to `acceptance/reusable-storage/33992872489-1` in the existing Shared Drive.
+The canonical `packets/` destination was not used by this acceptance run.
+
+| Consumer | Input | Each saved run | Drive primary results |
+| --- | --- | --- | --- |
+| AC-walkthrough | Existing real draft from run 33964047130; no new LLM judgment | 15 payload files + `run.md` + `snapshot.json`; HTML 1,980,288 bytes | [v1 HTML](https://drive.google.com/file/d/14TbQg7pzhQigt7NyjnkFZFXJrPK7ZVib/view), [v2 HTML](https://drive.google.com/file/d/1qsLIM_RGKw69BCAdhC0VLx2fzJpLtq4N/view) |
+| Recon | Synthetic, skill-rendered `PROJ-123` current workspace | 4 payload files + `run.md` + `snapshot.json`; HTML 17,893 bytes; archive excluded | [v1 dossier](https://drive.google.com/file/d/1SvCeHGKM4kugluGb0HdPVWl_j08QYjif/view), [v2 dossier](https://drive.google.com/file/d/1U4ErCt_drKjx6D47L4nKLsAxLzEbTvrL/view) |
+
+All four AC HTML copies (two stores × two versions) have SHA-256
+`d0ed22225affb5621f55348e015c314f7f8bd7b7abcd9f0e4d93dcc4742504ea`.
+All four Recon HTML copies have SHA-256
+`09620ae18febff0dd3eb29bbeef336cfeb4f74fa37451b92d4df870dd6999f96`.
+Fresh fetch/pull readbacks verified packet files, every saved payload file, both package records,
+and snapshot inventories. Re-pulling `v1` after `v2` preserved all 17 AC files and all 6 Recon files.
+Both source workspaces remained unchanged. Filesystem failure probes rejected checkpoint and
+location failures without emitting a success receipt or summary; the consumer suites additionally
+cover their validation and preservation failures.
+
+The connected human Drive account retrieved both kinds of HTML and listed both `v1` run folders:
+[AC run](https://drive.google.com/drive/folders/11egsJqcObLlhX2olTnIBPsrbBvOucB8r),
+[Recon run](https://drive.google.com/drive/folders/1wud7ojTWEqoooUEc2dJxUL1PyjPbpAUv).
+Metadata for all four primary links matched the expected names and sizes. Byte equality comes from
+the runner's complete readback; Drive links store downloadable HTML rather than hosted websites.
+
+Exact command arrays, locations, hashes, and preservation receipts are retained in the private run's
+`reusable-storage-fs-33992872489-1` and `reusable-storage-gdrive-33992872489-1` artifacts, under
+`acceptance-fs/acceptance-result.json` and `acceptance-gdrive/acceptance-result.json` respectively.
+The Drive receipt's SHA-256 is `3f535f0de33f1186ab523f8ef3421791f58621637bc0518104ccac3ae989f906`.
+
+### Fresh Jira and LLM filesystem run
+
+[Run 33992872261](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992872261)
+exported the real Jira ticket and ran a new walkthrough with the portable commands and an `fs`
+config, but final delivery failed: repeated checkpoints could not overwrite read-only capture files
+copied by the initial checkpoint. It emitted no successful delivery receipt. The focused package
+correction, release, consumer updates, and fresh retry are tracked in
+[step 16](16-readonly-checkpoint-fix.md). This job used no Drive storage credentials or rclone;
+its partial filesystem and diagnostics are retained as a private artifact, not claimed as durable
+storage across independent hosted jobs or as successful final delivery.
