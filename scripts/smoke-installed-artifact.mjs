@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -99,14 +99,43 @@ async function main() {
     const output = join(smokeRoot, 'output');
     const html = '<!doctype html><title>Installed package smoke</title>\n';
     await writeTree(output, { 'delivery/report.html': html, 'evidence/proof.txt': 'saved evidence\n' });
-    const checkpointed = await command('checkpoint', '--state', state, '--reason', 'installed-smoke', '--source', output);
-    assert.equal(checkpointed.version, 'v1');
-    assert.equal(checkpointed.fileCount, 2);
-    const pulled = await command('pull', '--store', storeFile, '--ticket', ticket, '--into', fetched.packetDirectory);
-    assert.equal(pulled.into, fetched.packetDirectory);
+    const evidenceFile = join(output, 'evidence/proof.txt');
+    await chmod(evidenceFile, 0o444);
+    const digests = [];
+    let checkpointed;
+    for (const reason of ['initialized', 'unchanged', 'changed']) {
+      const evidence = reason === 'changed' ? 'updated evidence\n' : 'saved evidence\n';
+      if (reason === 'changed') {
+        // The producer supplies a new sealed revision; checkpoint never changes source permissions.
+        await writeFile(`${evidenceFile}.next`, evidence, { mode: 0o444 });
+        await rename(`${evidenceFile}.next`, evidenceFile);
+      }
+      checkpointed = await command('checkpoint', '--state', state, '--reason', reason, '--source', output);
+      assert.equal(checkpointed.version, 'v1');
+      assert.equal(checkpointed.fileCount, 2);
+      digests.push(checkpointed.inventorySha256);
+      assert.equal(await readFile(evidenceFile, 'utf8'), evidence);
+      assert.equal((await lstat(evidenceFile)).mode & 0o777, 0o444);
+      const pulled = await command('pull', '--store', storeFile, '--ticket', ticket, '--into', fetched.packetDirectory);
+      assert.equal(pulled.into, fetched.packetDirectory);
+      for (const root of [join(storeRoot, ticket), fetched.packetDirectory]) {
+        const savedEvidence = join(root, runDirectory, 'evidence/proof.txt');
+        assert.equal(await readFile(savedEvidence, 'utf8'), evidence);
+        assert.equal((await lstat(savedEvidence)).mode & 0o777, 0o444);
+        assert.deepEqual(await readdir(dirname(savedEvidence)), ['proof.txt']);
+        const snapshot = JSON.parse(await readFile(join(root, runDirectory, 'snapshot.json'), 'utf8'));
+        assert.equal(snapshot.reason, reason);
+        assert.equal(snapshot.inventorySha256, checkpointed.inventorySha256);
+      }
+      const latestState = JSON.parse(await readFile(state, 'utf8'));
+      assert.equal(latestState.latestSnapshot.reason, reason);
+      assert.equal(latestState.latestSnapshot.inventorySha256, checkpointed.inventorySha256);
+    }
+    assert.equal(digests[1], digests[0]);
+    assert.notEqual(digests[2], digests[1]);
     for (const root of [join(storeRoot, ticket), fetched.packetDirectory]) {
       assert.equal(await readFile(join(root, reportPath), 'utf8'), html);
-      assert.equal(await readFile(join(root, runDirectory, 'evidence/proof.txt'), 'utf8'), 'saved evidence\n');
+      assert.equal(await readFile(join(root, runDirectory, 'evidence/proof.txt'), 'utf8'), 'updated evidence\n');
       const record = await readFile(join(root, runDirectory, 'run.md'), 'utf8');
       assert.ok(record.includes(`packet_sha256: ${fetched.packetSha256}`));
       const snapshot = JSON.parse(await readFile(join(root, runDirectory, 'snapshot.json'), 'utf8'));
