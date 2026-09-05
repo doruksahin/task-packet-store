@@ -61,5 +61,8 @@ The orchestrator started fresh both-store run `33995541137` and real Jira/LLM fi
 the reviewer independently checks evidence. The both-store run passed, all eight deliveries passed
 independent evidence review, and human Drive retrieval was verified. Recon PR 9 merged as
 `700641c21e10182fd964ff4944b936c8a1929d50`, with a tree identical to its reviewed head.
-Final walkthrough integration awaits the fresh live result. Existing rendered-bundle storage proof
-remains distinct from new live Jira/LLM execution.
+The fresh live run also passed independent review through all four checkpoint phases and final
+delivery. Walkthrough PR 97 merged as `3848abb340ebf58f9034376c70e0fe3b0859b4f7`, with a tree
+identical to its reviewed head. The orchestrator is integrating the acceptance harness with that
+merged code and closing documentation. Existing rendered-bundle storage proof remains distinct
+from new live Jira/LLM execution.

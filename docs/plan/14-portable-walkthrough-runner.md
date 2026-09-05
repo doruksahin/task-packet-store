@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 14
 title: Portable Jira and walkthrough runner
 ---
@@ -55,4 +55,8 @@ execution exposed the repeated-checkpoint defect recorded in [step 16](16-readon
 Final reviewed head `a4b652c8e3d9ab3528ac09ae358cc21989e10fbe` pins published storage `0.1.1`
 and adds the actual-observer regression through all checkpoint phases. Its 45 focused tests,
 188 renderer tests, and complete [Linux CI 33994798189](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33994798189)
-pass. Corrected acceptance and merge remain pending in step 16.
+pass. [Corrected acceptance](15-reusable-storage-acceptance.md) passed both-store saves in run
+`33995541137` and a fresh real Jira/LLM filesystem run in `33995541009`. Independent evidence review
+verified the final report, every stored file, packet identity, and all four checkpoint phases.
+PR 97 merged as `3848abb340ebf58f9034376c70e0fe3b0859b4f7`; its tree exactly matches the reviewed
+head. The source-checkout commands and existing Drive Actions wrappers are delivered.

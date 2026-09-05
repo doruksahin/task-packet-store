@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 16
 title: Fix repeated filesystem checkpoints of sealed files
 ---
@@ -59,11 +59,14 @@ success. The required outcome is successful repeated checkpoints without changin
 - An offline replay using the actual frozen walkthrough observer failed at `capture-finished`
   with `0.1.0`, then passed initialized → capture-finished → report-authored → final report-rendered
   checkpoints with the fixed code. It preserved source seals and all prior `v1` files after a new
-  `v2` save. Its synthetic report proves adapter integration; the fresh live retry is still required.
+  `v2` save. This synthetic report proves adapter integration; the separate fresh live retry below
+  completes real execution proof.
 - AC [PR 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) now pins `0.1.1` at
   `a4b652c8e3d9ab3528ac09ae358cc21989e10fbe`. Independent review, 45 focused tests (including the
   committed actual-observer regression), 188 renderer tests, and the complete
   [Linux CI](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33994798189) pass.
+  After corrected both-store and fresh-live evidence passed independent review, PR 97 merged as
+  `3848abb340ebf58f9034376c70e0fe3b0859b4f7`, with a tree identical to the reviewed head.
 - Recon [PR 9](https://github.com/AdCreative-ai/recon-plugin/pull/9) updates its pin and current
   mirrors at `006cefb5970904d779e9d1f11ab18a3e191a1eaa`. Independent review, 11 contract groups,
   real published-package filesystem repeats, generated checks, and the complete commit gate pass.
@@ -78,7 +81,11 @@ success. The required outcome is successful repeated checkpoints without changin
   passed both jobs, including two versions per consumer, complete readbacks, and prior-run
   preservation. Human Drive access was verified again; [step 15](15-reusable-storage-acceptance.md#corrected-both-store-result-on-011)
   records the new locations and receipt hashes. [Live filesystem run 33995541009](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995541009)
-  is still running. Replaying the unchanged failed workflow would retain the old package pins.
+  succeeded through all four checkpoint phases and final `report-saved`. Independent review
+  verified the fresh Jira/LLM provenance, complete 16-file payload plus two records, report/render
+  hashes, and capture evidence, with no findings. The report remains a draft with nine
+  `needs-evidence` verdicts caused by the mock application's avatar-selection blocker.
+  The original failed run remains retained; it was not rerun against old pins.
 
 ## Done when
 

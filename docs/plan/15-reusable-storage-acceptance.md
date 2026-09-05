@@ -138,5 +138,41 @@ hashes are `6e8c93b5817a6ef1cc595123cc805716b5795dbc7c603719673b8035f9a3ef25` (f
 `4b1ccd961d9c2aecd84536f89c99e00d854997432d5f301905e7c5669411eaca` (Drive).
 Independent evidence review rehashed all eight deliveries and their raw receipts, all packet and
 snapshot inventories, and every earlier-run preservation copy, with no findings. This remains
-existing-output storage proof. Fresh live run `33995541009` is recorded separately
-when its final result is verified.
+existing-output storage proof. The fresh live result follows.
+
+### Successful fresh Jira and LLM filesystem execution
+
+[Run 33995541009](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995541009)
+succeeded in 11 minutes 20 seconds at the same reviewed harness and AC commits with storage `0.1.1`.
+It exported Jira anew, prepared and verified the packet, started the configured `v2-mock` app,
+and invoked the real walkthrough through the portable filesystem command. This job used no Drive
+storage credentials or rclone installation step.
+
+- The producer returned `packet-ready` with packet SHA-256
+  `2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653`.
+- Checkpoints advanced through initialized, capture-finished, and report-authored; the final
+  snapshot and runner state agree on `report-rendered` at `2026-09-05T22:29:57.054Z`.
+  The complete 16-file payload has inventory SHA-256
+  `04b4d7e61bbd8d3b2ab1923c826c0f8248565352df15bad13e3956decd2c3618`.
+- Delivery returned `report-saved`, `label: draft`, `version: v1`, and actual filesystem locations.
+  Its receipt SHA-256 is `0d1f70d0e54d810a406e4cbd23d5bea334837794c0bc6fe505225f880e790c91`.
+- Source, staged, and stored HTML match: 1,326,042 bytes, SHA-256
+  `ba1bd5c904bcd7f706739ddfed4c75259c4a2a06874395f57c26887158228446`. The render receipt reports
+  exit 0, zero errors, and zero warnings. Three screenshots and the capture trace are retained.
+- The new LLM invocation succeeded in 61 turns. All nine AC verdicts remain `needs-evidence`:
+  the mock's avatar-selection step prevented reaching Script. Storage completion is not an AC pass
+  or human approval.
+
+The private `reusable-storage-live-fs-33995541009-1` artifact retains the Jira receipts, full
+processing workspace, and filesystem store. The saved report is at
+`live-fs-persistent/ATT-5387/stages/20-ac-walkthrough/runs/v1/delivery/ATT-5387-ac-verification-v1.html`
+under the artifact's `AC-visual-walkthrough/AC-visual-walkthrough/` directory. Runner-local paths
+are evidence of the configured job filesystem; the artifact provides retention after that hosted
+job ends. A production filesystem deployment must use a persistent host or mounted volume.
+The original failed `0.1.0` run and every earlier Drive prefix remain unchanged.
+
+Independent evidence review cleared this exact run with no findings: Jira identity and all nine
+packet files, new LLM invocation, all four checkpoint inventories, the complete final payload and
+records, source/staged/stored HTML and Markdown, three screenshot hashes, transcript, and valid
+trace archive. The final store contains 18 files including `run.md` and `snapshot.json`, with no
+omitted or unlisted payload and no observer error. Walkthrough PR 97 then merged at the reviewed tree.

@@ -33,14 +33,15 @@ The [delivery run record](REUSABLE-STORAGE-RUN.md) records task assignments and 
 | Step | Work | Owner / repository | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | 13 | [Shared adapter contract and integration guide](13-reusable-storage-contract.md) | Orchestrator / task-packet-store | 10 | done |
-| 14 | [Portable packet and walkthrough entry points](14-portable-walkthrough-runner.md) | AC-visual-walkthrough | 13 contract | in-progress |
+| 14 | [Portable packet and walkthrough entry points](14-portable-walkthrough-runner.md) | AC-visual-walkthrough | 13 contract | done |
 | 11 | [Recon as a second consumer](11-recon-consumer.md) | recon-plugin | 13 contract | done |
 | 15 | [Independent review and both-store acceptance](15-reusable-storage-acceptance.md) | Orchestrator + reviewer | 13, 14, 11 | in-progress |
-| 16 | [Repeated filesystem checkpoint correction and patch release](16-readonly-checkpoint-fix.md) | task-packet-store + consumers | Failed live proof in 15 | in-progress |
+| 16 | [Repeated filesystem checkpoint correction and patch release](16-readonly-checkpoint-fix.md) | task-packet-store + consumers | Failed live proof in 15 | done |
 
-Both consumers passed fresh-version saves on both stores. The first full filesystem run then
-exposed a read-only destination overwrite bug during repeated checkpoints within one run.
-Step 16 owns the corrective patch and consumer updates before final completion.
+Both consumers now use published `0.1.1` and passed independently reviewed filesystem/Drive saves.
+The fresh Jira/LLM filesystem run also passed all repeated checkpoints and final delivery. Both
+consumer changes are merged. Step 15 is finishing the repeatable acceptance workflow's integration
+and final documentation; the first failed `0.1.0` run remains recorded in step 16.
 
 ## Required delivery sequence
 
