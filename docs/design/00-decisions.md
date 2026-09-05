@@ -137,4 +137,4 @@ independent contract review found no missing primitive. The next delivery makes 
 runner portable and integrates Recon dossier delivery as the second consumer.
 
 See [the adapter contract](06-workflow-adapters.md) and
-[the active delivery plan](../plan/README.md#active-delivery-reusable-workflow-storage).
+[the reusable-storage delivery plan](../plan/README.md#reusable-workflow-storage).

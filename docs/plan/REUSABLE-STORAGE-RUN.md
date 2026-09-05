@@ -2,7 +2,7 @@
 
 Orchestrator: `01a070c2-5df2-7711-bf96-a2493e76ab7b`.
 The user requested a plan and delegated implementation of shared filesystem/Google Drive selection
-for additional LLM workflows/plugins. The [plan board](README.md#active-delivery-reusable-workflow-storage)
+for additional LLM workflows/plugins. The [plan board](README.md#reusable-workflow-storage)
 tracks completion; the original Drive delivery evidence remains unchanged.
 
 ## Assignments
@@ -63,6 +63,8 @@ independent evidence review, and human Drive retrieval was verified. Recon PR 9 
 `700641c21e10182fd964ff4944b936c8a1929d50`, with a tree identical to its reviewed head.
 The fresh live run also passed independent review through all four checkpoint phases and final
 delivery. Walkthrough PR 97 merged as `3848abb340ebf58f9034376c70e0fe3b0859b4f7`, with a tree
-identical to its reviewed head. The orchestrator is integrating the acceptance harness with that
-merged code and closing documentation. Existing rendered-bundle storage proof remains distinct
-from new live Jira/LLM execution.
+identical to its reviewed head. The acceptance branch incorporated this reviewed merge at
+`139a0e24677a82c8dbde94ecd53dd7dadf8deaf8`, keeping every accepted harness file byte-identical.
+Combined CI `33996326753` passed; PR 98 merged as `53787a0a9e233b2f6d7ae18fb5dbdb20fa108e19`.
+All required delivery steps are complete. Existing rendered-bundle storage proof remains distinct
+from new live Jira/LLM execution; the fresh report remains a draft with nine `needs-evidence` verdicts.

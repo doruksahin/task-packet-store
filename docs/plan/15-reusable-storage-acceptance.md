@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 15
 title: Verify two workflows with both stores
 ---
@@ -35,18 +35,18 @@ it is not evidence of a newly completed live Jira/LLM workflow. Any missing live
 
 ## Evidence
 
-The acceptance task has exercised both candidate adapters through real filesystem storage:
+The acceptance task first exercised both candidate adapters through real filesystem storage:
 fresh `v1`/`v2`, primary/supporting file readback, package records, snapshot rehashing, complete
-packet verification, and unchanged earlier run trees. These are preliminary deterministic checks;
-final evidence must use the corrected independently reviewed consumer heads.
+packet verification, and unchanged earlier run trees. These were preliminary deterministic checks;
+the final evidence below uses the corrected independently reviewed consumer heads.
 
 The private walkthrough repository harness has two deliberate triggers:
 `reusable-storage-drive` for filesystem/Drive adapter proof and `reusable-storage-live-fs` for a
 new real Jira/LLM filesystem run. Secret-bearing jobs require an explicit same-repository labeled
 event (or later manual dispatch); an existing label must not trigger new writes on every push.
 The original private AC draft bundle and a synthetic skill-rendered Recon fixture are separately
-identified as acceptance inputs. Both labels were applied once after independent review and green
-CI on the final harness commit; no label-triggered write occurs on subsequent pushes.
+identified as acceptance inputs. Each attempt used one deliberate application of each label after
+independent review and green CI on that attempt's frozen commit; subsequent pushes do not trigger writes.
 
 The harness is [PR 98](https://github.com/doruksahin/AC-visual-walkthrough/pull/98), initially
 `170bcd248195ceb2c54d61076c47b3bbc5b6dc07`. Independent review found and confirmed three fixes at
@@ -56,10 +56,10 @@ The package includes hidden files and ignores only `.DS_Store`; full stored-byte
 checked separately. The corrected harness passed actionlint, local filesystem acceptance, and
 the complete [Linux CI](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992263960).
 
-Final candidate `46496a6832c868342ee234794787299022e31300` updates only the Recon reference and fixture
+Initial both-store candidate `46496a6832c868342ee234794787299022e31300` updated only the Recon reference and fixture
 provenance to `f6c5e244f50f42e4a262dbafe1502acec545ba96`. Both adapters passed filesystem acceptance
 at those exact refs. Independent review cleared both the Recon correction and final harness reference
-delta. The final head passed [CI 33992595671](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992595671).
+delta. That head passed [CI 33992595671](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992595671).
 
 ### Both-store result
 
@@ -176,3 +176,13 @@ packet files, new LLM invocation, all four checkpoint inventories, the complete 
 records, source/staged/stored HTML and Markdown, three screenshot hashes, transcript, and valid
 trace archive. The final store contains 18 files including `run.md` and `snapshot.json`, with no
 omitted or unlisted payload and no observer error. Walkthrough PR 97 then merged at the reviewed tree.
+
+### Final integration
+
+After walkthrough PR 97 merged, harness PR 98 incorporated that exact `main` commit at
+`139a0e24677a82c8dbde94ecd53dd7dadf8deaf8`. Its parents are the accepted harness `222482ec...`
+and walkthrough merge `3848abb...`; every harness script, workflow, and fixture stayed byte-identical.
+The combined [CI 33996326753](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33996326753)
+and PR-title check passed. PR 98 merged as `53787a0a9e233b2f6d7ae18fb5dbdb20fa108e19`.
+The repeatable acceptance workflow and both consumers are delivered. All completion criteria are
+evidenced, and the operator playbook and new-workflow integration guide passed independent review.

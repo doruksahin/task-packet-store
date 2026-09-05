@@ -42,7 +42,7 @@ new workflows, result links, or present CI configuration.
 ## Follow-ups
 
 Optional local Drive access and vault integration are steps 02 and 07. Recon's step 11 is now part
-of the [active reusable-storage delivery](../plan/README.md#active-delivery-reusable-workflow-storage).
+of the [reusable-storage delivery](../plan/README.md#reusable-workflow-storage).
 Retiring unused walkthrough storage code is step 12 and depends on the completed Drive acceptance proof.
 A vault mirror, blueprint extension, or sealed-run feature needs its own subsequent scope.
 
