@@ -13,10 +13,10 @@ runs:
     - name: Download, verify, and install rclone
       shell: bash
       env:
-        RCLONE_VERSION: ${{ inputs.version }}
+        PACKET_STORE_RCLONE_RELEASE: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        version="$RCLONE_VERSION"
+        version="$PACKET_STORE_RCLONE_RELEASE"
         cd "$RUNNER_TEMP"
         mkdir -p "$RUNNER_TEMP/bin"
         curl -fsSLO "https://downloads.rclone.org/$version/rclone-$version-linux-amd64.zip"
