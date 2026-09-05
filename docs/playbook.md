@@ -1,4 +1,4 @@
-# Playbook: Jira → Drive packet → walkthrough → Drive report
+# Playbook: Jira → stored packet → walkthrough → stored report
 
 Run two workflows in order: create the packet, then run the walkthrough against that saved packet.
 GitHub Actions does the processing in temporary workspaces; Google Shared Drive keeps the packet
@@ -160,33 +160,79 @@ their own invocation and stage folder; these two workflows currently automate pa
 the walkthrough. `push`/`fetch` handle packet files and exclude run history; `begin`/`checkpoint`
 save stage runs. `pull` is available when a separate consumer needs a local copy of saved runs.
 
-## How local storage fits
+## Run the same flow with your selected store
 
-The storage package supports both choices through the same commands:
+The portable commands run on any prepared execution host. Select the store once and pass the same
+absolute config path to each command. The host can be your computer, a server, or a CI runner.
 
-| Choice | Durable home | Processing workspace | Current end-to-end entry point |
+| Choice | Durable home | Processing workspace | Entry point |
 | --- | --- | --- | --- |
-| Google Drive | Configured Shared Drive | Temporary GitHub Actions runner files | The two workflows above |
-| Filesystem (`fs`) | A persistent directory accessible to the process | Separate working directory | Storage commands work; a complete local workflow is still to be specified |
+| Google Drive | Configured Shared Drive | Fresh working directory | Portable commands below, or the two configured Actions workflows above |
+| Filesystem (`fs`) | A persistent directory accessible to the process | Separate fresh working directory | The same portable commands below |
 
-For filesystem storage, the store configuration is:
+For example, save one of these configurations as `/srv/config/task-store.json`:
 
 ```json
-{
-  "driver": "fs",
-  "root": "/absolute/path/to/packets"
-}
+{"driver":"fs","root":"/srv/task-packets"}
 ```
 
-Point the same `task-packet-store` commands at that config with `--store`. Their inputs and packet/run
-layout stay the same, and `locate` returns filesystem paths. Filesystem storage needs no Google
-credentials or rclone. The persistent directory can be on a server or mounted volume; it does not
-have to belong to a particular person's laptop.
+```json
+{"driver":"gdrive","sharedDriveId":"YOUR_SHARED_DRIVE_ID","prefix":"packets"}
+```
 
-The shipped GitHub workflows specifically require Drive results, so changing their config to `fs`
-alone does not provide a complete local workflow. That follow-up needs to connect the same Jira
-preparation and walkthrough steps to persistent filesystem storage. See the
-[CLI reference](design/03-architecture.md#cli-contract) for exact storage commands.
+Replace the example paths and Drive ID with your own. Filesystem storage needs no Google credentials
+or rclone. Its directory must survive between runs: use a persistent host or mounted volume if you
+want separate jobs to share it. A hosted runner's temporary disk lasts only for that job.
+
+Prepare an `AC-visual-walkthrough` checkout using its
+[portable runner setup](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/docs/portable-workflows.md).
+That page covers pinned dependencies, Jira access, walkthrough credentials, and the mock application.
+Run the following commands from that checkout.
+
+**1. Jira → packet in the selected store.** Input: ticket key, Jira credentials, config, and a fresh
+workspace path.
+
+```sh
+node .github/scripts/jira-to-packet.mjs \
+  --store /srv/config/task-store.json --ticket PROJ-123 \
+  --workspace /srv/work/jira-PROJ-123-001
+```
+
+Output: one JSON result with `status: "packet-ready"`, `packetSha256`, and `packet.location`.
+That location is the saved packet's filesystem path or Drive folder URL. The command verifies the
+saved packet before reporting success. You can pause here for other work.
+
+**2. Stored packet → walkthrough → stored draft.** Input: the same config and ticket, a fresh
+workspace, and the prepared application checkout with its mock server running.
+
+```sh
+node .github/scripts/run-walkthrough.mjs \
+  --store /srv/config/task-store.json --ticket PROJ-123 \
+  --workspace /srv/work/walkthrough-PROJ-123-001 --app /srv/app/frontend
+```
+
+Output: one JSON result with `status: "report-saved"`, `label: "draft"`, `version`,
+`report.location`, and `run.location`. Open the report path or download the HTML from its Drive
+URL. The run location contains supporting evidence and records under
+`PROJ-123/stages/20-ac-walkthrough/runs/vN/`. Repeat with a new workspace to create the next version.
+
+**3. Save another plugin's output using that same config.** For Recon, first produce its normal
+current ticket workspace and rendered dossier. From the `recon-plugin` checkout:
+
+```sh
+bash recon/scripts/store-dossier.sh \
+  --store /srv/config/task-store.json --ticket PROJ-123 \
+  --source /srv/recon/PROJ-123
+```
+
+Input: the existing current ticket workspace, including `report/dossier.html` and supporting files.
+Output: one JSON receipt with `version` and `locations.primary.location` for the saved dossier,
+plus run, run-record, and snapshot locations under `PROJ-123/stages/10-recon/runs/vN/`.
+This delivery command saves the existing dossier. Recon's rendering and approval steps keep their
+usual behavior. See [Recon storage setup](https://github.com/AdCreative-ai/recon-plugin/blob/main/recon/docs/storage.md).
+
+To connect a third workflow, follow the [integration guide](integrating-a-workflow.md). The workflow
+reads and writes ordinary directories; its adapter uses the selected store before and after that work.
 
 ## References
 

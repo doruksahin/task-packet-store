@@ -76,8 +76,9 @@ required operator contract after checking the actual receipts and completed comp
 | Repeat walkthrough | [Run 33964047130](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33964047130) succeeded in 12m40s at the same source commit, reserving `v2` with run key `github-33964047130-1`. [HTML](https://drive.google.com/file/d/1EaKLaJMx0zb0GroPTqQY-SSFxxnjCCbh/view), [run folder](https://drive.google.com/drive/folders/1eiOT7zPNuml_05VclQtA0q1Hv_v5yX4d). The comparison found exactly `v1` and `v2`, validated both snapshots, and confirmed every v1 path, size, and SHA unchanged. |
 | Operator access | The operator's Drive account listed the packet, Jira files, run/evidence/trace directories and retrieved the HTML. Chrome's authenticated GitHub Actions UI exposed both workflows on `main` with a ticket field and Run workflow button; no duplicate UI run was submitted. |
 
-The snapshot intentionally inventories the non-hidden report payload. Independent verification also
-compared every stored hidden `.capture-session` file. Step 09 records
+The snapshot inventories the source files present at its checkpoint. Checkpoints copy without
+deleting earlier stored files; independent verification also compared every stored hidden
+`.capture-session` file. Hidden paths are not generally excluded from package snapshots. Step 09 records
 the draft's nine `Needs evidence` outcomes and the existing runner-local trace-shortcut limitation;
 the actual trace is stored and accessible through Drive.
 

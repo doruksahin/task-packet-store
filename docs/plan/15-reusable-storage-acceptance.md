@@ -46,3 +46,16 @@ new real Jira/LLM filesystem run. Secret-bearing jobs require an explicit same-r
 event (or later manual dispatch); an existing label must not trigger new writes on every push.
 The original private AC draft bundle and a synthetic skill-rendered Recon fixture are separately
 identified as acceptance inputs. No new remote or paid execution has started.
+
+The harness is [PR 98](https://github.com/doruksahin/AC-visual-walkthrough/pull/98), initially
+`170bcd248195ceb2c54d61076c47b3bbc5b6dc07`. Independent review found and confirmed three fixes at
+`420e546b2a4c904ab114bb719e4286ec9322073f`: valid step-level runner paths, installation of consumer
+runtime dependencies, and snapshot manifests sorted with the package's UTF-8 byte ordering.
+The package includes hidden files and ignores only `.DS_Store`; full stored-byte preservation is
+checked separately. The corrected harness passed actionlint, local filesystem acceptance, and
+the complete [Linux CI](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33992263960).
+
+Final candidate `46496a6832c868342ee234794787299022e31300` updates only the Recon reference and fixture
+provenance to `f6c5e244f50f42e4a262dbafe1502acec545ba96`. Both adapters passed filesystem acceptance
+at those exact refs. Independent review cleared both the Recon correction and final harness reference
+delta. Remote acceptance waits for the final harness CI check before the two labels are applied.

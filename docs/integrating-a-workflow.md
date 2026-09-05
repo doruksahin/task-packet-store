@@ -86,5 +86,17 @@ successfully stored draft remains a draft.
 
 The [adapter contract](design/06-workflow-adapters.md) defines the implementation boundaries, and
 the [CLI reference](design/03-architecture.md#cli-contract) gives exact storage-command arguments.
-The [active plan](plan/README.md#active-delivery-reusable-workflow-storage) tracks the portable
-walkthrough and Recon integrations; their verified operator commands will be linked here at delivery.
+## Existing adapters to copy
+
+| Consumer | Command from its repository | Input → saved output |
+| --- | --- | --- |
+| Jira producer | `node .github/scripts/jira-to-packet.mjs --store /config/store.json --ticket PROJ-123 --workspace /work/jira-001` | Jira ticket → verified packet |
+| AC-walkthrough | `node .github/scripts/run-walkthrough.mjs --store /config/store.json --ticket PROJ-123 --workspace /work/ac-001 --app /app/frontend` | Stored packet + running mock application → draft HTML and evidence |
+| Recon delivery | `bash recon/scripts/store-dossier.sh --store /config/store.json --ticket PROJ-123 --source /work/recon/PROJ-123` | Current rendered workspace → dossier and supporting files |
+
+The [operator playbook](playbook.md#run-the-same-flow-with-your-selected-store) puts these commands
+in order. Consumer setup is documented in
+[the portable walkthrough guide](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/docs/portable-workflows.md)
+and [Recon storage](https://github.com/AdCreative-ai/recon-plugin/blob/main/recon/docs/storage.md).
+AC also provides `run-walkthrough.mjs save --from <completed-workspace>` to save a validated existing
+draft without another LLM run; the destination must already contain the matching packet.

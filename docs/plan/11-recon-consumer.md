@@ -46,12 +46,14 @@ The literal entry point is `bash recon/scripts/store-dossier.sh --store <absolut
 --ticket PROJ-123 --source <current-ticket-workspace>`.
 
 The adapter stages current-run supporting files, excluding top-level archived `runs/`, and saves
-`report/dossier.html` plus evidence through published package `0.1.0`. Its eight contract groups,
+`report/dossier.html` plus evidence through published package `0.1.0`. Its initial eight contract groups,
 real filesystem repeat proof, generated-adapter check, and complete local pre-commit rail passed.
 No hosted checks are registered on that PR. Independent review reproduced two issues: traversal
 errors could omit unreadable current-run evidence, and overlapping filesystem destinations could
-modify the source workspace. The implementer is correcting both with regressions. Corrective
-review, real Drive acceptance, and merge remain pending; this is not a plugin publication or
+modify the source workspace. Corrective head `f6c5e244f50f42e4a262dbafe1502acec545ba96` fixes both,
+passes 11 contract groups, repeats the real filesystem proof, and passes the full staged pre-commit
+rail. Independent review repeated both failure reproductions and cleared this exact head.
+Real Drive acceptance and merge remain pending; this is not a plugin publication or
 activation claim.
 
 ## Handoff and rollback

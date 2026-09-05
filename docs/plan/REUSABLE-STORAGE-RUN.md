@@ -40,8 +40,11 @@ Documentation [PR 11](https://github.com/doruksahin/task-packet-store/pull/11) p
 review at `c2a43ed23b5e1dc33402d90cf1e9de4205dd345b` and the required Node 20 CI. A wording correction
 clarifies that a new `begin` reserves the next version; checkpoints update the reserved run.
 
-Walkthrough [PR 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) is under corrective
-review. Step 14 records the concrete findings. Recon and acceptance harness implementation are
-still in progress. Record exact PR/commit references and evidence in steps 11, 14, and 15 as work completes.
+Walkthrough [PR 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) passed corrective
+review and the complete Linux CI at `6956b53111c81092c38738f7955b73560646c58a`. Step 14 records the
+resolved findings. Recon's corrected head `f6c5e244f50f42e4a262dbafe1502acec545ba96` and the final
+acceptance harness head `46496a6832c868342ee234794787299022e31300` passed independent review.
+The portable command documentation also passed implementation-owner and independent review. Steps 11 and 15 retain
+the exact references and evidence as work completes.
 Deterministic storage proof and existing rendered bundles must be labeled separately from new
 live Jira/LLM execution. Merged code alone does not complete acceptance.
