@@ -68,7 +68,8 @@ and calls `push`. These cases reuse the same package without pretending to run a
 ## 4. Pass results to another stage
 
 Each workflow owns a stage, for example `10-recon`, `20-ac-walkthrough`, or `30-code-review`.
-Repeated saves reserve a new run such as `v2`, leaving `v1` available.
+For each new delivery, call `begin` again to reserve the next run, such as `v2`, leaving `v1`
+available. Checkpoints within one delivery update that reserved run.
 
 `fetch` retrieves the packet without run history. If a later workflow needs an earlier report,
 also call `pull`, then pass the specifically selected stage/version to that workflow. Record the
