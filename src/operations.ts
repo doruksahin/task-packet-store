@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { RUNS_GLOB, SAFE_SEGMENT, validateStage, validateTicket } from './config.js';
+import { RUNS_GLOB, SAFE_SEGMENT, validateLocationPath, validateStage, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
 import { listFiles, packetSha256, regularFiles, sha256 } from './identity.js';
 import {
@@ -12,7 +12,25 @@ import {
   RunStateSchema,
   type Snapshot,
 } from './run-record.js';
-import type { Driver, PacketTransport } from './transport.js';
+import type { Driver, PacketTransport, ResultLocation } from './transport.js';
+
+export interface LocationResult extends ResultLocation {
+  ticket: string;
+  driver: Driver;
+  relativePath: string;
+}
+
+export async function locateResult(
+  transport: PacketTransport,
+  ticket: string,
+  relativePath = '',
+): Promise<LocationResult> {
+  validateTicket(ticket);
+  validateLocationPath(relativePath);
+  const result = await transport.locate(ticket, relativePath);
+  if (!result) throw new StoreError('STORE_LOCATION_MISSING', `${ticket}/${relativePath} does not exist`);
+  return { ticket, driver: transport.driver, relativePath, ...result };
+}
 
 /** Control characters are not allowed in a checkpoint reason. */
 const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;

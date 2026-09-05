@@ -204,6 +204,9 @@ that `lsjson --stat` can return. Lookup never invokes `rclone link`, changes sha
 or writes content. Existing authorized readers can use the link; it does not grant access or host
 HTML as a website. The file link lets a reader retrieve the saved HTML.
 
+The lookup relies on rclone's documented [lsjson fields](https://rclone.org/commands/rclone_lsjson/)
+and the pinned version's [directory stat behavior](https://github.com/rclone/rclone/blob/v1.75.0/fs/operations/lsjson.go).
+
 Missing objects (including an absent parent) fail with `STORE_LOCATION_MISSING` (exit 1). Duplicate
 matching names or missing/invalid ID/type metadata fail with `STORE_RCLONE_FAILED` (exit 1), never
 a guessed URL. Invalid ticket/path/configuration fails with `STORE_CONFIG_INVALID` (exit 2).

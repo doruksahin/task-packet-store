@@ -6,11 +6,13 @@ export {
   beginRun,
   checkpointRun,
   fetchPacket,
+  locateResult,
   pullRuns,
   pushPacket,
   readRunState,
   type BeginInput,
   type FetchResult,
+  type LocationResult,
   type PushResult,
 } from './operations.js';
 export {
@@ -36,4 +38,4 @@ export {
   type Snapshot,
 } from './run-record.js';
 export { createTransport, doctorStore } from './store.js';
-export { assertFilter, FsTransport, type Driver, type PacketTransport, type TransferFilter } from './transport.js';
+export { assertFilter, FsTransport, type Driver, type PacketTransport, type ResultLocation, type TransferFilter } from './transport.js';

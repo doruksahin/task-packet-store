@@ -1,8 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { afterEach, describe } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { parseStoreConfig } from '../src/config.js';
+import { locateResult } from '../src/operations.js';
 import { createRcloneRunner, RcloneTransport } from '../src/rclone.js';
 import {
   cleanupTempDirs,
@@ -34,6 +35,15 @@ function makeRcloneHarness(): Harness {
 describe.skipIf(!hasRclone)('operations through RcloneTransport (local backend)', () => {
   exerciseFetchAndPush(makeRcloneHarness);
   exerciseRuns(makeRcloneHarness);
+  it('location lookup distinguishes missing objects from a backend without Drive IDs', async () => {
+    const h = makeRcloneHarness();
+    h.seed('PROJ-123', { 'delivery/report.html': '<html>saved</html>' });
+    await expect(locateResult(h.transport, 'PROJ-999')).rejects.toThrow('STORE_LOCATION_MISSING');
+    await expect(locateResult(h.transport, 'PROJ-123', 'missing.html')).rejects.toThrow('STORE_LOCATION_MISSING');
+    await expect(locateResult(h.transport, 'PROJ-123')).rejects.toThrow('STORE_RCLONE_FAILED');
+    await expect(locateResult(h.transport, 'PROJ-123', 'delivery/report.html')).rejects.toThrow('STORE_RCLONE_FAILED');
+    expect(h.remoteFile('PROJ-123', 'delivery/report.html')).toBe('<html>saved</html>');
+  });
 });
 
 if (process.env.CI && !hasRclone) throw new Error('rclone is required in CI');

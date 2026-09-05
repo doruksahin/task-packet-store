@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { TASK_PACKET_STORE_VERSION } from '../src/version.js';
 
 const cliPath = resolve(import.meta.dirname, '..', 'dist', 'cli.js');
-const commands = ['fetch', 'push', 'begin', 'checkpoint', 'pull', 'doctor'] as const;
+const commands = ['fetch', 'push', 'begin', 'checkpoint', 'pull', 'locate', 'doctor'] as const;
 
 function runCli(args: readonly string[], env: NodeJS.ProcessEnv = process.env) {
   const result = spawnSync(process.execPath, [cliPath, ...args], { encoding: 'utf8', env });
@@ -97,6 +97,7 @@ describe('cli contract', () => {
     ['checkpoint', ['--state', '--reason', '--source']],
     ['pull', ['--store', '--ticket', '--into']],
     ['doctor', ['--store']],
+    ['locate', ['--store', '--ticket', '--path']],
   ] as const)('%s help lists its required options', (command, options) => {
     const { status, stdout, stderr } = runCli([command, '--help']);
     expect(status).toBe(0);
@@ -242,5 +243,33 @@ describe('cli fetch and push against a temp fs store', () => {
       credential: 'none',
       remoteRoot: root,
     });
+  });
+});
+
+
+describe('cli result locations', () => {
+  it('resolves packet, run, and HTML without rclone or Drive credentials', () => {
+    const { root, store } = seedStore();
+    const relative = 'stages/x/runs/v1/delivery/report.html';
+    writeTree(path.join(root, 'PROJ-1'), { [relative]: '<html>report</html>' });
+    const env = { ...process.env, PATH: '/nonexistent' };
+    delete env.PACKET_STORE_DRIVE_TOKEN;
+    delete env.PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS;
+    for (const [relativePath, kind] of [['', 'directory'], ['stages/x/runs/v1', 'directory'], [relative, 'file']]) {
+      const result = runCli(['locate', '--store', store, '--ticket', 'PROJ-1', ...(relativePath ? ['--path', relativePath] : [])], env);
+      expect(result.status).toBe(0);
+      expect(result.stderr).toBe('');
+      expect(result.stdout.trimEnd().split('\n')).toHaveLength(1);
+      expect(JSON.parse(result.stdout)).toEqual({ ticket: 'PROJ-1', driver: 'fs', relativePath, kind, location: path.join(root, 'PROJ-1', relativePath) });
+    }
+  });
+
+  it.each([['missing.html', 1, 'STORE_LOCATION_MISSING'], ['../outside', 2, 'STORE_CONFIG_INVALID']])('fails for %s with empty stdout and one error line', (relative, code, error) => {
+    const { store } = seedStore();
+    const result = runCli(['locate', '--store', store, '--ticket', 'PROJ-1', '--path', String(relative)]);
+    expect(result.status).toBe(code);
+    expect(result.stdout).toBe('');
+    expect(result.stderr.startsWith(`${error}:`)).toBe(true);
+    expect(result.stderr.trimEnd().split('\n')).toHaveLength(1);
   });
 });

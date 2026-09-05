@@ -11,6 +11,7 @@ describe('pull safety boundary', () => {
   it('rejects an unsafe downloaded tree before merging any run files', async () => {
     const transport: PacketTransport = {
       driver: 'gdrive',
+      locate: async () => null,
       download: async (_ticket, _remoteDir, localDir) => {
         writeTree(localDir, { '10-recon/runs/v1/run.md': 'safe file that must not be merged\n' });
         fs.symlinkSync('/outside', path.join(localDir, '10-recon', 'runs', 'v1', 'unsafe-link'));

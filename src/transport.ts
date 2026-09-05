@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { SAFE_SEGMENT } from './config.js';
+import { SAFE_SEGMENT, validateLocationPath, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
 import { matchesAny } from './glob.js';
 import { listFiles } from './identity.js';
@@ -15,8 +15,15 @@ export type TransferFilter =
 
 export type Driver = 'fs' | 'gdrive';
 
+export interface ResultLocation {
+  kind: 'directory' | 'file';
+  location: string;
+}
+
 export interface PacketTransport {
   readonly driver: Driver;
+  /** Existing file/directory location, using existing access permissions only. Null means absent. */
+  locate(ticket: string, relativePath: string): Promise<ResultLocation | null>;
   /** Copy files below <ticket>/<remoteDir> into localDir. Merges. Never deletes. */
   download(ticket: string, remoteDir: string, localDir: string, filter?: TransferFilter): Promise<void>;
   /** Copy files below localDir into <ticket>/<remoteDir>. Merges. Never deletes. */
@@ -84,6 +91,26 @@ export class FsTransport implements PacketTransport {
   readonly driver = 'fs' as const;
 
   constructor(private readonly root: string) {}
+
+  async locate(ticket: string, relativePath: string): Promise<ResultLocation | null> {
+    validateTicket(ticket);
+    validateLocationPath(relativePath);
+    const segments = [ticket, ...(relativePath ? relativePath.split('/') : [])];
+    let target = path.resolve(this.root);
+    for (const [index, segment] of segments.entries()) {
+      target = path.join(target, segment);
+      const stat = fs.lstatSync(target, { throwIfNoEntry: false });
+      if (!stat) return null;
+      if (!stat.isDirectory() && !stat.isFile()) {
+        throw new StoreError('STORE_PACKET_UNSAFE', 'result path contains a symlink or non-regular file');
+      }
+      if (index === segments.length - 1) {
+        return { kind: stat.isDirectory() ? 'directory' : 'file', location: target };
+      }
+      if (!stat.isDirectory()) return null;
+    }
+    return null;
+  }
 
   /** <root>/<ticket>/<relative>. Every segment must be SAFE_SEGMENT, so no caller can escape the ticket. */
   private at(ticket: string, relative: string): string {
