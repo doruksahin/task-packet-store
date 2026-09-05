@@ -5,7 +5,7 @@
 | Option | Ingress on CI | Egress from CI | Cost | Verdict |
 | --- | --- | --- | --- | --- |
 | A. Vault Git repository is the store | sparse checkout at a commit | commit into `runs/`, push with retry | LFS in the vault, write token, teammates need git-lfs | Rejected by Doruk on 2026-09-04 |
-| B. Google Shared Drive, local fs on laptops | `rclone copy` | `rclone copy` | rclone binary, service account, one manual `push` per packet until a mirror job exists | **Chosen** |
+| B. Google Shared Drive or configured local fs | package `push` / `fetch` | package `checkpoint` | For Drive: pinned rclone and CI service account; packet preparation runs in CI | **Chosen** |
 | C. Extend R2 with egress | exists | PutObject, then a sync job into the vault | two copies of every packet, an uploader, a sync job | Rejected |
 | D. Jira as the bus (status quo) | exporter refresh | Jira attachment | lossy, size limits, not diffable | Rejected |
 

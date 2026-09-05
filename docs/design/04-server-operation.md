@@ -1,7 +1,9 @@
 # Server operation
 
-The runner uses rclone as the Drive client. There is no workaround. The differences from a laptop are
-how the binary arrives and how it authenticates.
+Both required workflows run on fresh CI runners and use the shared credential-free store config.
+The first exports Jira, prepares a packet, and pushes it; the second fetches the stored packet and
+saves the walkthrough output. See [the delivery plan](../plan/README.md) for implementation steps.
+The package uses rclone for Drive transport. Local-only `fs` operations need no rclone or Drive auth.
 
 ## 1. The binary arrives as a pinned download
 
@@ -31,10 +33,11 @@ env:
 The service account must be a member of the Shared Drive with the Content manager role. Use a
 Shared Drive, not a My Drive folder. A service account has no My Drive quota and uploads fail.
 
-A fetch-only job can set `RCLONE_DRIVE_SCOPE=drive.readonly` after the package's own mapping. The
-PoC does not need it because the walkthrough runner both fetches and checkpoints.
+The package owns scope and credential mapping and strips ambient `RCLONE_*`. Both workflows need
+write access for their outputs. CI also provides the exporter's named Jira credentials for the
+first workflow; the second reads the stored packet without re-exporting Jira.
 
-## 3. The package runs one rclone command per operation
+## 3. The package owns rclone invocations
 
 What `task-packet-store fetch` does around rclone:
 

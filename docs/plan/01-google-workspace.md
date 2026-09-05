@@ -1,54 +1,65 @@
 ---
 status: pending
 step: 01
-title: Google Workspace setup
+title: CI access and shared configuration
 ---
 
-# Step 01. Google Workspace setup
+# Step 01. CI access and shared configuration
 
-## Goal
+## Outcome
 
-A Shared Drive exists. A service account can list it. Its key is a GitHub secret.
+A fresh GitHub Actions runner can read the nominated Jira ticket and read/write the configured
+Shared Drive. The workflows obtain configuration and credentials independently of a user's vault.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-None. Needs Doruk with Google Admin and GCP access at Appier.
+- Owner: an administrator with the required Google/GitHub access, with implementation in
+  `doruksahin/AC-visual-walkthrough`.
+- Depends on the completed storage core, steps 03–05. Publication is not required for this check.
+- Inputs: the existing Drive/service-account details in step 05's evidence, repository access,
+  and a Jira ticket suitable for the current lab walkthrough.
 
-## Steps
+## Work
 
-1. In Google Drive, create a Shared Drive named `ADC Task Packets`.
-2. Open the Shared Drive. Copy its id from the URL. The id follows `/drive/folders/`.
-   Record it below as `sharedDriveId`.
-3. In Google Cloud Console, create or select a project for AdCreative tooling.
-4. Enable the API named `Google Drive API` in that project.
-5. Create a service account named `task-packet-store-ci`. Do not grant project roles.
-6. Create a JSON key for the service account. Download it once. Do not commit it.
-7. In the Shared Drive, add the service account email as a member with the role `Content manager`.
-8. In the GitHub repository `doruksahin/AC-visual-walkthrough`, add the secret
-   `PACKET_STORE_DRIVE_SERVICE_ACCOUNT` with the complete JSON key as its value.
-9. Delete the local copy of the key file after step 02 confirms access.
+1. Inspect existing infrastructure and repository configuration. Reuse working resources. Record
+   what already exists and configure only missing access.
+2. Put one credential-free store config in the walkthrough repository at
+   `.github/packet-store.json`. It selects the Shared Drive and the `packets` prefix. Both user
+   workflows will use this file.
+3. Confirm the CI secret `PACKET_STORE_DRIVE_SERVICE_ACCOUNT` and map it to
+   `PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS` when invoking the package. Confirm exporter
+   inputs `JIRA_HOST`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` through repository configuration/secrets.
+   Confirm the existing walkthrough and application-checkout credentials remain available.
+4. Run a recorded CI smoke check using the storage package built from an exact commit. Use an
+   isolated scratch prefix on the same Drive for a small `push → fetch → begin → checkpoint → pull`
+   round trip. Use the package's pinned rclone installer and credential mapping.
+5. In CI, run the exporter against the nominated ticket into temporary storage. Validate its
+   success receipt. Confirm that its AC material is suitable for the existing walkthrough mode.
+6. Record how a later session runs this smoke check. Its script/workflow must be checked in or
+   otherwise tied to the recorded commit. No developer shell profile supplies credentials.
 
 ## Done when
 
-Run this on the laptop with the key file present. Replace the two placeholders.
-
-```bash
-RCLONE_DRIVE_SERVICE_ACCOUNT_FILE=/absolute/path/key.json \
-  rclone lsd ":drive,team_drive=<sharedDriveId>:"
-```
-
-Expected: exit 0 and an empty or short listing. An error that mentions `storageQuotaExceeded` or
-`insufficientPermissions` means the drive is not a Shared Drive or the account is not a member.
+- The CI Drive round trip succeeds and the retrieved content matches what was written.
+- The exporter succeeds on the nominated ticket from CI.
+- Both workflows have a documented shared config and named credential sources.
+- An authorized teammate has read access to the destination; CI access alone is insufficient.
+- The evidence identifies the exact runner, commit, and smoke results. `doctor` alone does not
+  prove access because it makes no network call.
 
 ## Evidence
 
-```text
-sharedDriveId:
-service account email:
-rclone lsd output:
-```
+Pending. Record:
 
-## Rollback
+- Smoke script/workflow path, commit, and Actions run URL.
+- Config path, Shared Drive ID, prefix, and service-account identity.
+- Secret/configuration names confirmed, without values.
+- Test ticket and exporter receipt outcome.
+- Store command outcomes and content/digest comparison.
+- Scratch destination and whether it was retained or removed.
 
-Remove the member from the Shared Drive. Delete the service account key in GCP. Delete the GitHub
-secret.
+## Handoff and rollback
+
+Pass the config path, test ticket, and CI smoke invocation to steps 05a and 08. Retain existing
+infrastructure if this step fails; revert only changes introduced by this step. Any scratch cleanup
+is limited to its recorded scratch destination.

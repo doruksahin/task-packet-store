@@ -1,10 +1,12 @@
 # Decisions
 
-Date: 2026-09-04. Decider: Doruk. Each decision lists what reopens it.
+Initial decisions: 2026-09-04. Delivery revision: 2026-09-05, from Doruk's required operator flow.
 
 ## D1. Storage backend: Google Shared Drive and local file system
 
-Cloud storage is a Google Shared Drive. Local storage is the vault checkout on the developer's disk.
+Cloud storage is a Google Shared Drive. Local storage is an explicitly configured persistent
+directory accessible to the process. Either may hold the entire packet and its tool output.
+A vault checkout is an optional local consumer, not a required source of packets.
 
 Why: Doruk decided on 2026-09-04 to drop Git and Git LFS for file storage and to use Google Drive.
 Appier uses Google Workspace, so Shared Drives exist and the team already has access control there.
@@ -55,8 +57,9 @@ numbers (no human-facing version).
 
 ## D5. Runs in vault Git: ignored
 
-The vault `.gitignore` gains `10 Tasks/Packets/*/stages/*/runs/`. Runs exist on disk after `pull`
-and on Drive. They never enter Git.
+When the optional vault integration is used, its `.gitignore` gains
+`10 Tasks/Packets/*/stages/*/runs/`. Runs live in the selected store and can be retrieved with
+`pull`. They do not enter vault Git.
 
 Why: runs carry screenshots and HTML reports. Without LFS they would bloat the vault repository.
 Obsidian shows local files whether or not Git tracks them.
@@ -105,3 +108,18 @@ change the input identity of every later run. The digest formula stays identical
 - A `stageRuns` entry in the vault `blueprint.md`. The blueprint is a closed schema that the Work OS
   plugin parses fail-closed. Adding a key needs a Work OS parser change and tests. Deferred.
 - Git and LFS storage in any form.
+
+## D11. Two operator commands, independent of a local vault
+
+The first GitHub Actions workflow exports Jira, prepares a complete packet, and pushes it to Drive.
+The second fetches that stored packet, runs the existing walkthrough, and checkpoints the HTML and
+evidence to Drive. Both report actual result links. Acceptance starts with an absent packet and
+includes a repeat walkthrough that preserves the first run.
+
+Why: the user requires the flow to work without their machine. The preparation script and templates
+belong to the consumer repository; the exporter owns only its Jira output, and the store owns
+storage operations. See [the exact commands and outputs](../plan/00-required-operator-flow.md).
+
+This supersedes the original PoC's manual vault upload and mandatory Obsidian verification. Local
+Drive access, vault integration, and Recon are outside the first delivery's dependencies. The
+existing lab target and draft-report behavior remain the first proof's walkthrough scope.

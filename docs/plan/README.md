@@ -1,54 +1,82 @@
-# task-packet-store PoC Implementation Plan
+# task-packet-store delivery plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan
-> task-by-task. Read `docs/design/README.md` first. Each task below is one checkpoint document.
+**Goal:** A user creates a task packet from Jira on Google Drive, then runs AC-walkthrough against
+that stored packet and receives a link to the HTML report on Drive.
 
-**Goal:** Run the ac-implementation-verification walkthrough in GitHub Actions where the packet comes
-from a Google Shared Drive and the run lands in `packets/ATT-5387/stages/20-ac-walkthrough/runs/v1/`
-on that drive, then appears in the vault after `pull`.
+[Required commands and outputs](00-required-operator-flow.md) define the operator contract.
+[Architecture](../design/03-architecture.md) defines the package contract. Step documents define
+bounded implementation work. This revision plans the work; it does not implement the workflows.
 
-**Architecture:** One npm package with a CLI. Operations are written once against a `PacketTransport`
-interface. `FsTransport` uses `node:fs`. `RcloneTransport` spawns a pinned rclone binary with a
-Drive connection string. The vault ignores `runs/` in Git.
+## Current state and next action
 
-**Tech Stack:** Node 20, TypeScript, zod, yaml, commander, vitest, rclone 1.75.0, Google Shared
-Drive with a service account, Release Please, npm trusted publishing.
+The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
+Shared Drive round trip in step 05. They are preserved unchanged.
 
----
+**Next required step: 01 — confirm the existing setup from CI.** Reuse the Drive and service account
+recorded in step 05 when available. Their successful earlier use does not establish current CI
+access, package publication, or either user workflow.
 
-## Checkpoint protocol
+## Required delivery sequence
 
-Each step document has `status` in its frontmatter: `pending`, `in-progress`, `done`, `blocked`.
-Set `in-progress` before you start. Paste the "Done when" output into "Evidence". Set `done`.
-Update this board. Commit the step document and this board together.
-
-## Board
-
-| Step | Document | Where | Depends on | Status |
+| Step | Work | Owner / repository | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| 01 | [Google Workspace setup](01-google-workspace.md) | Google Admin, GCP | none | pending |
-| 02 | [Local rclone and token](02-local-rclone.md) | laptop | 01 | pending |
-| 03 | [Repository skeleton](03-repo-skeleton.md) | this repo | none | done |
-| 04 | [Config, identity, fs transport, fetch, push](04-fetch-and-push.md) | this repo | 03 | done |
-| 05 | [rclone transport, begin, checkpoint, pull](05-runs.md) | this repo | 04, 02 for the manual round trip | done |
-| 06 | [Release 0.1.0](06-release.md) | this repo, npm | 05 | pending |
-| 07 | [Vault PR](07-vault-pr.md) | adc-vault | none | pending |
-| 08 | [First push of ATT-5387](08-first-push.md) | laptop | 02, 06, 07 | pending |
-| 09 | [Walkthrough PR](09-walkthrough-pr.md) | AC-visual-walkthrough | 06, 08 | pending |
-| 10 | [Pull and verify in Obsidian](10-pull-and-verify.md) | laptop | 09 | pending |
-| 11 | [Recon as second consumer](11-recon-consumer.md) | recon-plugin | 06 | pending |
-| 12 | [Cleanup](12-cleanup.md) | AC-visual-walkthrough | 10 | pending |
+| 01 | [CI access and shared configuration](01-google-workspace.md) | Administrator + AC-visual-walkthrough | 03–05 | pending |
+| 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | pending |
+| 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | pending |
+| 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | pending |
+| 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | pending |
+| 10 | [Prove both commands and repeat the walkthrough](10-drive-acceptance.md) | AC-visual-walkthrough + Drive | 08, 09 | pending |
 
-## Order
+Step 05a's implementation can start while step 01 is being completed; its live link proof uses
+step 01's access. Packet preparation in step 08 can be developed against fixtures earlier, but
+the step is complete only after the released tools succeed in CI.
 
-- Steps 01 and 02 need Doruk. Start them first because they wait on Google Admin.
-- Steps 03 to 06 are one package. Run them in sequence.
-- Step 07 can run in parallel with 03 to 06.
-- Steps 08 to 12 need the published version from 06.
+The release follows result-link support so the workflows can consume one pinned package version.
+The delivery is complete only when step 10 has evidence for both commands and preserved run history.
 
-## Conventions for every step in this repository
+## Completed foundation
 
-- Commit after each green test run. Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
-- Run `pnpm check` before every commit that touches `src/` or `test/`.
-- Code in the step documents is the reference implementation. Keep the contract from
-  `docs/design/03-architecture.md` when you adjust names.
+| Step | Work | Status |
+| --- | --- | --- |
+| 03 | [Repository skeleton](03-repo-skeleton.md) | done |
+| 04 | [Config, identity, fs transport, fetch, push](04-fetch-and-push.md) | done |
+| 05 | [rclone transport, begin, checkpoint, pull](05-runs.md) | done |
+
+Completed step documents are implementation history. Their old environment-specific examples do
+not add dependencies to the required delivery sequence.
+
+## Optional integrations and later work
+
+These items do not block step 10.
+
+| Step | Work | Owner / repository | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| 02 | [Optional local Drive access](02-local-rclone.md) | Individual operator | 01, 06 | pending |
+| 07 | [Optional vault integration](07-vault-pr.md) | adc-vault | 06, 10; 02 for local Drive access | pending |
+| 11 | [Recon as second consumer](11-recon-consumer.md) | recon-plugin | 06, 10 | pending |
+| 12 | [Retire unused walkthrough storage code](12-cleanup.md) | AC-visual-walkthrough | 10 | pending |
+
+Local-only storage remains a supported choice. Package changes must work through both transports;
+packet preparation takes explicit filesystem paths. A user command for a completely local run can
+be specified later using those same steps.
+
+## How to execute a step
+
+1. Read the operator contract and the selected step. Work from any checkout of its named repository;
+   absolute paths in completed historical documents are not prerequisites.
+2. Check dependency evidence. If access or input is missing, record the exact missing item in the
+   step's Evidence section and use `blocked`. Continue only independent work.
+3. Set the selected step to `in-progress`, update this board, and commit the checkpoint. Create
+   implementation branches with the `codex/` prefix.
+4. Complete the listed work and its verification. Record exact commands, commit/package versions,
+   workflow run URLs, and result paths or links. Evidence contains outcomes, never credentials.
+5. Mark `done` only when every completion criterion is evidenced. Update this board and commit the
+   step and board together. A merged PR or a dispatch confirmation alone is not runtime proof.
+
+Statuses are `pending`, `in-progress`, `done`, and `blocked`. A later session selects the first
+eligible unfinished step in the required sequence, rather than the lowest-numbered optional step.
+If a partial change is resumed, inspect its existing PR and evidence before creating another.
+
+Run `pnpm check` after changes in this repository and `pnpm release:check` before a release
+candidate. Consumer work follows the consumer repository's own checks. Planning-only edits leave
+implementation statuses and existing runtime evidence unchanged.

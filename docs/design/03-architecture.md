@@ -3,19 +3,26 @@
 ## Components
 
 ```text
-                 laptop                                        GitHub Actions runner
-  ┌──────────────────────────────────┐               ┌──────────────────────────────────────┐
-  │ vault checkout                   │               │ task-packet-store fetch   (gdrive)   │
-  │  10 Tasks/Packets/PROJ-123/      │   push        │   -> $RUNNER_TEMP/packets/PROJ-123   │
-  │    00 Packet.md task.md jira/    │ ───────────►  │ ac-walkthrough plugin reads it       │
-  │    stages/*/README.md            │               │ task-packet-store begin              │
-  │    stages/*/runs/  (git-ignored) │ ◄───────────  │ task-packet-store checkpoint x N     │
-  │                                  │   pull        │   -> Drive: .../runs/v1/**           │
-  └──────────────────────────────────┘               └──────────────────────────────────────┘
-                     ▲                                                  │
-                     │        Google Shared Drive "Task Packets"        │
-                     └──────────────  packets/PROJ-123/**  ◄────────────┘
+User: Jira ticket
+  │
+  ▼  GitHub Actions: jira-to-packet.yml
+Jira exporter → packet preparation → push → Google Shared Drive
+                                              packets/PROJ-123/
+                                                    │
+  ┌──────────────────────── fetch ───────────────────┘
+  ▼  GitHub Actions: walkthrough-lab.yml (a separate run)
+Temporary packet → begin → AC-walkthrough → checkpoint → Google Shared Drive
+                                              stages/20-ac-walkthrough/runs/vN/
+                                              HTML + evidence + run records
 ```
+
+These are the required consumer workflows; their implementation is tracked in
+[the delivery plan](../plan/README.md). Each workflow reports the actual saved result location.
+A vault can optionally fetch packets and pull runs afterward.
+
+Both storage backends use the same file-processing steps. The Drive workflow uses temporary
+runner files and a persistent Shared Drive; a local workflow uses a configured persistent directory
+accessible to its process. Storage choice does not imply a particular person's machine or a vault.
 
 Inside the package:
 
@@ -100,11 +107,11 @@ not exist. Files are written `0444`. A failed fetch removes the partial director
 task-packet-store push --store <abs cfg> --ticket <TICKET> --from <abs packet dir>
 ```
 
-Uploads the packet from the vault checkout without `/stages/*/runs/**`. Copy, never delete. With the
-`fs` driver, `--from` must differ from `<root>/<TICKET>`.
+Uploads the packet from an explicit local working directory without `/stages/*/runs/**`. Copy,
+never delete. With the `fs` driver, `--from` must differ from `<root>/<TICKET>`.
 
 ```json
-{ "ticket": "PROJ-123", "driver": "gdrive", "from": "/abs/vault/10 Tasks/Packets/PROJ-123" }
+{ "ticket": "PROJ-123", "driver": "gdrive", "from": "/abs/work/packets/PROJ-123" }
 ```
 
 ### begin
@@ -157,11 +164,22 @@ task-packet-store doctor --store <abs cfg>
 Reports the rclone version, whether exactly one credential variable is set, and the resolved remote
 root. Makes no network call.
 
-## Layout on Drive and, after pull, in the vault
+## Planned result-location interface
+
+The transfer commands above are implemented. Resolving an existing packet folder, run folder, or
+HTML file to a usable Drive link or local absolute path is required by
+[step 05a](../plan/05a-result-locations.md) and is not implemented yet.
+
+That step must specify the exact package invocation and result shape here before implementation.
+It is a read-only operation against `PacketTransport`; backend-specific lookup stays in the
+transports. Existing transfer commands, filters, credential handling, and digest semantics remain
+in place. Both user workflows consume the resulting interface rather than invoking rclone directly.
+
+## Layout in the selected store
 
 ```text
 packets/PROJ-123/
-  00 Packet.md  task.md  jira/**  stages/*/README.md ...     <- push, from the vault
+  00 Packet.md  task.md  jira/**  stages/*/README.md ...     <- push, from preparation
   stages/20-ac-walkthrough/runs/v1/
     run.md            record: see below
     snapshot.json     manifest of the latest checkpoint

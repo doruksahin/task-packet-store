@@ -1,67 +1,54 @@
 ---
 status: pending
 step: 06
-title: Release 0.1.0
+title: Publish the consumer release
 ---
 
-# Step 06. Release 0.1.0
+# Step 06. Publish the consumer release
 
-## Goal
+## Outcome
 
-`@doruksahin/task-packet-store@0.1.0` is on npm. A checksummed tarball is on the GitHub Release.
+A fresh runner can install one exact published version containing the storage operations and the
+result-location support required by both user workflows.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-Step 05.
+- Owner: `task-packet-store`, with an npm/repository maintainer for publishing setup.
+- Depends on steps 01 and 05a. Step 05 already records the core's real-Drive round trip.
+- Inputs: the completed source commits, working release workflow, and npm publishing access.
 
-## Steps
+## Work
 
-1. Create the GitHub repository `doruksahin/task-packet-store`, private or public as you prefer for
-   the exporter. Push `main`.
-
-   ```bash
-   cd /Users/doruk/Desktop/PROJECTS/tools/task-packet-store
-   gh repo create doruksahin/task-packet-store --source . --push --private
-   ```
-
-2. Add the repository secret `RELEASE_PLEASE_TOKEN`. Use the same kind of fine-grained token as the
-   exporter: Contents, Issues, Pull requests read/write, limited to this repository.
-
-   ```bash
-   gh secret set RELEASE_PLEASE_TOKEN --repo doruksahin/task-packet-store
-   ```
-
-3. Configure npm trusted publishing for the new package name. Follow
-   `jira-markdown-exporter/docs/releasing.md`, section "npm bootstrap". This is a one-time action on
-   npmjs.com that needs Doruk's npm account.
-
-4. Merge the feature commits from steps 03 to 05 to `main` through a PR with a Conventional Commit
-   title. Release Please opens `chore(main): release 0.1.0`.
-
-5. Run the release gate on the release PR branch:
-
-   ```bash
-   pnpm release:check
-   ```
-
-6. Merge the release PR. The release workflow builds the tarball, verifies it, attaches it to the
-   GitHub Release, and publishes it to npm.
+1. Inspect the existing repository, release state, and npm package before provisioning anything.
+   Complete only missing release configuration, following this repository's release workflow and
+   the exporter's release precedent.
+2. Prepare the release that includes step 05a. The original target is `0.1.0`; if that version is
+   already published, select the next appropriate release and record it. Never replace a published
+   version. Use the existing Release Please and trusted-publishing process.
+3. Run `pnpm release:check` against the exact release candidate. Preserve the generated release
+   artifact and checksum verification required by the repository's release process.
+4. Publish through that process. From a clean CI runner, install the exact published package and
+   exercise the documented commands, including result locations, against a local fixture.
+5. Record the exact exporter version the consumer will pin as well. Step 08 validates its selected
+   output profile; publishing a new exporter is not required unless that validation finds a gap.
 
 ## Done when
 
-```bash
-npm view @doruksahin/task-packet-store@0.1.0 version
-npm exec --yes --package=@doruksahin/task-packet-store@0.1.0 -- task-packet-store --help
-gh release view v0.1.0 --repo doruksahin/task-packet-store --json assets --jq '.assets[].name'
-```
-
-Expected: `0.1.0`, the help text, and asset names that include the tarball and `SHA256SUMS`.
+- npm serves the recorded exact package version with the expected source and location interface.
+- The GitHub Release contains the package artifact and checksums.
+- `pnpm release:check` and the clean-runner installed-package check pass.
+- The evidence supplies exact package versions for the walkthrough lockfile and CI install.
 
 ## Evidence
 
-```text
-```
+Pending. Record:
 
-## Rollback
+- Release PR, source commit, exact version, and release URL.
+- `pnpm release:check` result and artifact checksum.
+- Clean-install Actions run URL and command results.
+- Selected exporter version.
 
-Deprecate the npm version with `npm deprecate`. Never unpublish a version that a consumer pinned.
+## Handoff and rollback
+
+Steps 08 and 09 use the same recorded package version, never `latest`. If a published release is
+faulty, deprecate it and publish a corrected version; do not unpublish a version consumers pinned.

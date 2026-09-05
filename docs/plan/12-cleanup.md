@@ -1,56 +1,44 @@
 ---
 status: pending
 step: 12
-title: Cleanup
+title: Retire unused walkthrough storage code
 ---
 
-# Step 12. Cleanup
+# Step 12. Retire unused walkthrough storage code
 
-## Goal
+## Outcome
 
-The walkthrough repository has one packet path and no R2 code.
+Current walkthrough documentation and execution use the new packet store. Unused legacy storage
+code can be removed after the Drive flow has passed acceptance.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-Step 10.
+- Owner: `AC-visual-walkthrough`.
+- Depends on step 10.
+- Inputs: acceptance evidence and an inventory of remaining consumers of the R2/Git storage paths.
 
-## Files in `AC-visual-walkthrough`
+## Work
 
-| File | Change |
-| --- | --- |
-| `packages/packet-store/` | Delete the directory |
-| `package.json` | Remove `test:packet-store` from `scripts.test` and from `scripts` |
-| `packages/README.md` | Remove the packet-store row |
-| `README.md` | Remove every mention of R2 and `fetch-packet.mjs` |
-| `docs/adr/ADR-0015-...md` | Keep as history. Status already says superseded after step 09 |
-| `docs/storage-setup.md` | Replace the packet-store paragraph with a pointer to ADR-0016 |
-| GitHub secrets | Delete `PACKET_STORE_ACCESS_KEY_ID` and `PACKET_STORE_SECRET_ACCESS_KEY`. Delete `WALKTHROUGH_STORAGE_TOKEN` when no workflow uses it |
-
-## Steps
-
-1. Branch `chore/remove-r2-packet-store`.
-2. Apply the changes. `pnpm test`.
-3. PR titled `chore: remove the R2 packet store`. Merge.
-4. Delete the secrets.
-
-   ```bash
-   gh secret delete PACKET_STORE_ACCESS_KEY_ID --repo doruksahin/AC-visual-walkthrough
-   gh secret delete PACKET_STORE_SECRET_ACCESS_KEY --repo doruksahin/AC-visual-walkthrough
-   ```
-
-5. Empty and delete the R2 bucket `ac-walkthrough-packets` in the Cloudflare dashboard after one
-   more successful `walkthrough-lab` run.
+1. Search current workflows, runtime code, scripts, and docs for old packet-store entry points and
+   credential names. Identify every remaining consumer before removing shared code.
+2. Remove the superseded `packages/packet-store/` and its scripts/dependencies only when no active
+   consumer needs it. Retire other storage code only after its consumers have migrated.
+3. Update current documentation and keep superseded architecture records as history.
+4. Remove repository secrets only after the inventory establishes that no workflow uses them.
+   Historical artifact migration and deletion of external stores are outside this code cleanup.
+5. Run consumer checks and one successful walkthrough using the new store.
 
 ## Done when
 
-`pnpm test` is green. `grep -ri "r2\.cloudflarestorage\|fetch-packet" README.md docs .github` prints
-nothing except the historical ADR-0015.
+Current entry points use the new store, repository checks pass, and a new walkthrough still saves
+its report on Drive. Historical reports remain available.
 
 ## Evidence
 
-```text
-```
+Pending. Record PR/commit, consumer inventory, removed code/secret names, check results, and the
+successful Actions run/report link.
 
-## Rollback
+## Handoff and rollback
 
-Revert the PR. Restore the secrets from the password manager.
+Revert the code change if necessary. Keep the previous configuration recoverable until the new
+workflow check passes; this step does not remove historical external artifacts.

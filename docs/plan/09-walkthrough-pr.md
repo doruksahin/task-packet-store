@@ -1,173 +1,72 @@
 ---
 status: pending
 step: 09
-title: Walkthrough PR
+title: Drive packet to walkthrough to Drive report
 ---
 
-# Step 09. Walkthrough PR
+# Step 09. Drive packet → walkthrough → Drive report
 
-## Goal
+## Outcome
 
-`walkthrough-lab.yml` fetches the packet from the Shared Drive, reserves a run, checkpoints after
-every phase, and needs no R2 and no Git artifacts repository. The plugin runtime does not change.
+The second command in [the operator contract](00-required-operator-flow.md) consumes the stored
+packet and saves the draft HTML, evidence, and run records on Drive with working result links.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-Steps 06 and 08.
+- Owner: `doruksahin/AC-visual-walkthrough`.
+- Depends on step 08, including its shared CI config, pinned tools, and valid Drive packet.
+- Inputs: ticket and the existing lab target/credentials. Keep the lab's draft-report behavior.
 
-## Files in `/Users/doruk/Desktop/ADCREATIVE/llm/llm-workflows/AC-visual-walkthrough`
+## Deliverables
 
-| File | Change |
+| File or area | Change |
 | --- | --- |
-| `.github/workflows/walkthrough-lab.yml` | Steps below |
-| `.github/walkthrough-agent-prompt.md` | `storage: git` becomes `storage: local` |
-| `package.json` | Add devDependency `@doruksahin/task-packet-store` at exact `0.1.0` |
-| `packages/ac-walkthrough-plugin/runtime/scripts/src/run-history.ts` | `packetSha256(root)` delegates to the package with `DEFAULT_IDENTITY` |
-| `test/packet-digest-contract.test.mjs` | Import `packetSha256` from the package instead of `packages/packet-store` |
-| `docs/adr/ADR-0016-store-packets-and-runs-on-google-drive.md` | New. Supersedes ADR-0015 ingress and the Git persistence for CI |
-| `docs/adr/ADR-0015-...md` | Status row: superseded by ADR-0016 |
-| `README.md` | Row for `packages/packet-store/` points to the new package. GitHub Actions section describes the Drive flow |
+| `.github/workflows/walkthrough-lab.yml` | Drive input, run reservation, checkpoints, final result links |
+| `.github/walkthrough-agent-prompt.md` | Local temporary runtime output; wrapper persists it to the selected store |
+| `run-history.ts` and digest contract test | Delegate packet identity to the shared package |
+| Packaged runtime, consumer docs, and relevant ADRs | Rebuild as required and describe the new storage path |
 
-## Workflow changes
+## Work
 
-Replace the step "Write packet-store configuration" with:
-
-```yaml
-      - name: Install rclone and task-packet-store
-        run: |
-          version=v1.75.0
-          mkdir -p "$RUNNER_TEMP/bin"
-          curl -fsSLO "https://downloads.rclone.org/$version/rclone-$version-linux-amd64.zip"
-          curl -fsSLO "https://downloads.rclone.org/$version/SHA256SUMS"
-          grep "rclone-$version-linux-amd64.zip" SHA256SUMS | sha256sum --check
-          unzip -q "rclone-$version-linux-amd64.zip"
-          install -m 0755 "rclone-$version-linux-amd64/rclone" "$RUNNER_TEMP/bin/rclone"
-          npm install --global --prefix "$RUNNER_TEMP/tps" @doruksahin/task-packet-store@0.1.0
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-          echo "$RUNNER_TEMP/tps/bin" >> "$GITHUB_PATH"
-
-      - name: Write the packet-store configuration
-        run: |
-          cat > "$RUNNER_TEMP/packet-store.json" <<'JSON'
-          { "driver": "gdrive", "sharedDriveId": "<from step 01>", "prefix": "packets" }
-          JSON
-```
-
-Replace "Fetch packet from R2" with:
-
-```yaml
-      - name: Fetch the packet from the Shared Drive
-        env:
-          PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.PACKET_STORE_DRIVE_SERVICE_ACCOUNT }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/packets"
-          task-packet-store fetch \
-            --store "$RUNNER_TEMP/packet-store.json" \
-            --ticket "$TICKET" \
-            --destination "$RUNNER_TEMP/packets" | tee "$RUNNER_TEMP/fetch-output.json"
-
-      - name: Reserve the stage run
-        env:
-          PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.PACKET_STORE_DRIVE_SERVICE_ACCOUNT }}
-        run: |
-          task-packet-store begin \
-            --store "$RUNNER_TEMP/packet-store.json" \
-            --ticket "$TICKET" \
-            --stage 20-ac-walkthrough \
-            --run-key "gha-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --tool "ac-walkthrough@$(cat version.txt)" \
-            --packet-sha256 "$(jq -r .packetSha256 "$RUNNER_TEMP/fetch-output.json")" \
-            --state "$RUNNER_TEMP/run-state.json" | tee "$RUNNER_TEMP/begin-output.json"
-```
-
-In the step "Phases 1–4 — Run the verification skill":
-
-- Add `PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.PACKET_STORE_DRIVE_SERVICE_ACCOUNT }}`
-  to its `env`. Remove `GH_TOKEN`.
-- Add this function before `observe_phases`:
-
-  ```bash
-  checkpoint_run() {
-    local version_dir
-    version_dir=$(jq -er '.versionDirectory' "$RUNNER_TEMP/init-output.json" 2> /dev/null) || return 0
-    task-packet-store checkpoint \
-      --state "$RUNNER_TEMP/run-state.json" \
-      --reason "$1" \
-      --source "$version_dir" >> "$RUNNER_TEMP/checkpoints.jsonl" \
-      || echo "::warning title=Checkpoint failed::reason=$1"
-  }
-  ```
-
-  Confirm the key name of the version directory in the initialize output. `RunHandle` names it
-  `versionDirectory`. Adjust the `jq` path if the output uses another name.
-
-- In every `case "$reason"` branch of `observe_phases`, add `checkpoint_run "$reason"` as the first
-  line.
-
-Add a final step after "Phases 1–4":
-
-```yaml
-      - name: Checkpoint the finished run
-        if: always()
-        env:
-          PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.PACKET_STORE_DRIVE_SERVICE_ACCOUNT }}
-        run: |
-          if [[ ! -s "$RUNNER_TEMP/run-state.json" ]]; then exit 0; fi
-          version_dir=$(jq -er '.versionDirectory' "$RUNNER_TEMP/init-output.json" 2> /dev/null) || exit 0
-          task-packet-store checkpoint --state "$RUNNER_TEMP/run-state.json" --reason finished --source "$version_dir"
-          {
-            echo "## Packet store"
-            echo
-            echo "Run: $(jq -r .runDirectory "$RUNNER_TEMP/begin-output.json") on the Shared Drive under packets/$TICKET"
-          } >> "$GITHUB_STEP_SUMMARY"
-```
-
-Add `${{ runner.temp }}/begin-output.json`, `run-state.json`, and `checkpoints.jsonl` to the
-diagnostics upload.
-
-## Digest scoping in the plugin
-
-In `run-history.ts`, replace the body of `packetSha256`:
-
-```ts
-import { DEFAULT_IDENTITY, packetSha256 as identityPacketSha256 } from '@doruksahin/task-packet-store';
-
-export function packetSha256(root: string): string {
-  return identityPacketSha256(root, DEFAULT_IDENTITY);
-}
-```
-
-The runtime bundler includes the dependency, so the installed plugin still ships no `node_modules`.
-Run `pnpm package:runtime` and commit the rebuilt runtime as the repository requires.
-
-In `test/packet-digest-contract.test.mjs`, replace the import of `packages/packet-store/src/` with
-the package. Keep the assertion that the plugin digest equals the package digest for a fixture that
-contains `stages/*/runs/**`.
-
-## Steps
-
-1. Branch `feat/packet-store-drive`.
-2. Apply the file changes.
-3. `pnpm test`. Expected: green, including the contract test.
-4. Push. Open a PR titled `feat: fetch packets and persist runs through task-packet-store`.
-5. After CI passes, run the workflow by hand: `gh workflow run walkthrough-lab.yml -f ticket=ATT-5387`.
-6. Merge after the run is green.
+1. Replace the R2 fetch step with `task-packet-store fetch` using the same config as step 08.
+   Capture its receipt and digest. This command consumes the existing Drive packet; it does not
+   export or refresh Jira.
+2. Reserve `20-ac-walkthrough` with `begin`, passing the fetched digest and a unique workflow run
+   key. Retain the resulting state and reservation receipt.
+3. Run the existing walkthrough against the fetched packet with local temporary output. Read the
+   source directory and rendered HTML path from validated runtime results; use the store's
+   reservation for the destination rather than guessing it from local directory names.
+4. Connect the existing phase observer to `checkpoint`. Keep failure-boundary evidence when
+   possible. A successful final result requires a successful render, an existing HTML file, and a
+   successful final checkpoint of the complete output directory.
+5. Resolve the saved run-folder and actual HTML links through step 05a. Write `report-saved` only
+   after the required files and records have been stored and the links resolved. Missing runtime
+   state/output or a failed final upload must leave the workflow failed, with diagnostics.
+6. Make the walkthrough's `packetSha256` delegate to the shared package's identity implementation.
+   Preserve the cross-package digest test, rebuild packaged runtime as the consumer requires,
+   and run its checks.
+7. Exercise the workflow against step 08's packet. Update current user docs and the relevant
+   architecture records. Keep unrelated storage consumers and historical output for later cleanup.
 
 ## Done when
 
-```bash
-gh run list --workflow walkthrough-lab.yml --limit 1 --json conclusion --jq '.[0].conclusion'
-rclone lsjson -R ":drive,team_drive=<id>:packets/ATT-5387/stages/20-ac-walkthrough/runs" | jq -r '.[].Path'
-```
-
-Expected: `success`, and a listing that contains `v1/run.md`, `v1/snapshot.json`, and files under
-`v1/delivery/` and `v1/input/`.
+- A fresh runner reads the Drive packet and records the same input digest as step 08.
+- The selected run folder on Drive contains HTML, evidence, `run.md`, and `snapshot.json`.
+- The summary has usable report and run links, not runner filesystem paths.
+- The workflow's success requires both rendering and persistence; diagnostics cannot substitute
+  for a saved report.
+- The consumer's checks and digest contract test pass.
 
 ## Evidence
 
-```text
-```
+Pending. Record:
 
-## Rollback
+- PR/commit, runtime/package versions, and check results.
+- User command, exact Actions run URL, fetched digest, and reservation receipt.
+- Final checkpoint result and actual HTML relative path.
+- Drive report/run links and verification that they address the saved output.
 
-Revert the PR. The R2 path and `packages/packet-store` still exist until step 12.
+## Handoff and rollback
+
+Pass the successful command/result evidence to step 10. Revert the integration if needed while
+preserving generated runs. Cleanup of unused R2/Git storage code is step 12.

@@ -1,35 +1,46 @@
-# Risks, scope, follow-ups
+# Risks, scope, and follow-ups
+
+## Required first delivery
+
+The [operator contract](../plan/00-required-operator-flow.md) defines the two commands and their
+outputs. The [plan board](../plan/README.md) owns sequencing.
+
+- Confirm existing Jira/Drive access from CI and provide one shared store configuration.
+- Add read-only result-location support for both transports, then publish the consumer release.
+- Export Jira and assemble a valid packet on a runner using consumer-owned templates.
+- Store that packet on Drive, then fetch it in an independent walkthrough run.
+- Save the lab's draft HTML, evidence, and run records on Drive and report actual links.
+- Verify both commands from an empty ticket destination and preserve v1 when creating v2.
+
+Package operations and packet preparation remain usable with filesystem storage. The local
+invocation experience can be specified separately; the first acceptance run uses Drive.
 
 ## Risks accepted for the PoC
 
-| Risk | Effect | Mitigation in the PoC |
+| Risk | Effect | Mitigation in this delivery |
 | --- | --- | --- |
-| Two CI runs pick the same `vN` | One run overwrites the other's files | `checkpoint` compares `run_key` in the remote `run.md` and fails |
-| Drive listing lag | `begin` sees a stale `runs/` list | Same conflict check |
-| Service account quota | Uploads fail in My Drive | Shared Drive only |
-| Shared rclone client id | Slow under load, 403 rate errors | rclone retries. Company client id is a follow-up |
-| rclone binary drift | Behavior changes between versions | Pinned download with checksum in CI, `doctor` reports the version |
-| Teammates do not see runs | Runs are not in Git | `pull` command. A Work OS button is a follow-up |
-| Vault already commits `jira/attachments/*` binaries | Repository growth, unrelated to this PoC | Out of scope. The Drive zone can absorb it later |
+| Concurrent runs choose the same vN | Conflicting writers can overwrite output | Sequential acceptance runs; existing run-key conflict detection. Atomic reservation remains outside this proof |
+| Drive listing lag | A run listing can be stale | Existing conflict checks; record the exact run and destination in evidence |
+| Missing CI access | Export or storage cannot proceed | Step 01 verifies actual Jira reads and a Drive round trip |
+| rclone version drift | Transport behavior changes | Pinned installation and recorded tested version |
+| Report upload fails after rendering | HTML exists only on the runner | Final persistence and link resolution must succeed before report-saved |
+| Prepared packet differs from consumer expectations | Walkthrough cannot consume exported Jira | Step 08 validates a representative packet through the actual consumer input contract |
 
-## Out of scope
+The earlier real-Drive round trip is recorded in step 05. It proves the core operations, not the
+new workflows, result links, or present CI configuration.
 
-- Creating a packet in CI when none exists. The exporter spec keeps packet creation outside.
-- A vault GitHub Action that mirrors `10 Tasks/Packets/**` to Drive on every push. It replaces the
-  manual `push` later.
-- A Work OS "Pull runs" command.
-- A `stageRuns` entry in `blueprint.md`. Needs a Work OS parser change.
-- A company Google OAuth client id.
-- Changes to Jira publishing.
-- Migration of existing walkthrough history in `ac-walkthrough-artifacts`.
-- `seal`.
+## Outside this delivery
 
-## Follow-ups after the PoC
+- Packet assembly inside the Jira exporter or storage package. A consumer preparation script owns it.
+- Refresh/merge policy for a packet already edited by humans.
+- Local OAuth setup, Obsidian viewing, and a Work OS pull button.
+- Vault mirror automation and blueprint schema changes.
+- A new walkthrough target, production implementation provenance, or changes to report approval.
+- Jira publishing changes and migration/deletion of historical external artifacts.
+- Atomic multi-writer reservations, company OAuth client setup, and `seal`.
 
-1. Vault mirror Action: `task-packet-store push` for every packet changed on `main`.
-2. Work OS command that runs `pull` for the open packet.
-3. Blueprint schema version 3 with `generated.stageRuns`.
-4. `seal` when a reviewer needs to freeze a run.
-5. Company OAuth client id for rclone.
-6. Retire `ac-walkthrough-artifacts` and the walkthrough's Git adapter once every consumer uses the
-   packet store.
+## Follow-ups
+
+Optional local Drive access and vault integration are steps 02 and 07. Recon is step 11. Retiring
+unused walkthrough storage code is step 12 and depends on the completed Drive acceptance proof.
+A vault mirror, blueprint extension, or sealed-run feature needs its own subsequent scope.

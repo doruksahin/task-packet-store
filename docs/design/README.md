@@ -2,57 +2,50 @@
 
 ## 30-second overview
 
-A task packet is the folder `10 Tasks/Packets/<TICKET>/` in a vault checkout. Today it
-reaches a CI runner only through a hand-uploaded R2 copy, and tool results never return to it. This
-package closes both gaps.
+A task packet is a directory identified by a Jira ticket, containing the task source and stage
+outputs. Its persistent home is a configured local directory or Google Shared Drive.
 
 - One npm package, `@doruksahin/task-packet-store`, with one CLI, `task-packet-store`.
-- Two drivers: `fs` for a local checkout and `gdrive` for a Google Shared Drive.
-- rclone owns the Drive transport. The package owns the packet rules.
-- Five commands: `fetch`, `push`, `begin`, `checkpoint`, `pull`. Every command prints one JSON object.
-- Tool output lands under `stages/NN-slug/runs/vN/` inside the packet.
-- The vault ignores `runs/` in Git. Git keeps human notes. Drive keeps tool output.
+- Two transports: `fs` for a configured directory and `gdrive` through pinned rclone.
+- Shared operations: `fetch`, `push`, `begin`, `checkpoint`, and `pull`; `doctor` reports setup.
+- Tool output lives under `stages/NN-slug/runs/vN/` in the selected store.
+- Workflows process ordinary files in a working directory. Neither storage choice requires a vault.
 
-The first consumer is AC-visual-walkthrough in GitHub Actions. The second is the recon plugin.
+The first delivery has two user commands: Jira → packet on Drive, then Drive packet →
+AC-walkthrough → HTML on Drive. Both execute in GitHub Actions and return result links in their
+completed run summaries. See the [required commands and outputs](../plan/00-required-operator-flow.md).
+
+The storage core is implemented. Workflow integration and result-link support are planned work;
+the [plan board](../plan/README.md) records dependencies, status, and completion evidence.
 
 ## Map
 
-Read the documents in order the first time. Later, open only the one you need.
-
 | Document | Read it when |
 | --- | --- |
-| [00-decisions.md](00-decisions.md) | You want to know what was decided, why, and what reopens a decision. |
-| [01-context.md](01-context.md) | You want the evidence from the three repositories that shaped the design. |
-| [02-options.md](02-options.md) | You want the rejected alternatives and their trade-offs. |
-| [03-architecture.md](03-architecture.md) | You implement or consume the package. Config, CLI contract, layouts, schemas, rules. |
-| [04-server-operation.md](04-server-operation.md) | You run the CLI on a GitHub Actions runner or another server. |
-| [05-risks-and-scope.md](05-risks-and-scope.md) | You want the known risks, what is out of scope, and the follow-ups. |
-| [../plan/README.md](../plan/README.md) | You execute the PoC. One checkpoint document per step. |
+| [00-decisions.md](00-decisions.md) | You need the decisions and the latest delivery revision. |
+| [01-context.md](01-context.md) | You need the original repository survey and packet shape. |
+| [02-options.md](02-options.md) | You need the storage alternatives and tradeoffs. |
+| [03-architecture.md](03-architecture.md) | You implement or consume the package: configuration, CLI, records, and rules. |
+| [04-server-operation.md](04-server-operation.md) | You install and authenticate the tools on a runner. |
+| [05-risks-and-scope.md](05-risks-and-scope.md) | You need the delivery scope, accepted risks, and follow-ups. |
+| [../plan/README.md](../plan/README.md) | You select and execute the next eligible implementation step. |
 
 ## Decisions in one table
 
 | # | Decision | Chosen |
 | --- | --- | --- |
-| D1 | Storage backend | Google Shared Drive for cloud, local file system for laptops |
-| D2 | Drive transport | rclone, pinned version, spawned by the package |
-| D3 | Drive authentication | Service account in CI, personal OAuth token on laptops |
+| D1 | Storage backend | Configured Google Shared Drive or persistent filesystem directory |
+| D2 | Drive transport | Pinned rclone, invoked by the package |
+| D3 | Drive authentication | Service account in CI; personal OAuth for optional local Drive access |
 | D4 | Run layout | `stages/NN-slug/runs/vN/` |
-| D5 | Runs in vault Git | Ignored. Drive is the store for tool output |
-| D6 | Run record format | `run.md` with YAML frontmatter |
-| D7 | Repository home | `github.com/doruksahin/task-packet-store` |
-| D8 | Version numbering | `vN` from a remote listing, conflict check at checkpoint |
-| D9 | Packet identity | Digest over `00 Packet.md`, `task.md`, `jira/**` only |
-| D10 | Dropped for the PoC | `seal` command, blueprint schema change, Git/LFS storage |
+| D5 | Runs in optional vault Git | Ignored; the selected store holds tool output |
+| D6 | Run record | `run.md` with YAML frontmatter |
+| D7 | Repository | `github.com/doruksahin/task-packet-store` |
+| D8 | Run numbering | `vN` from store listing, conflict check at checkpoint |
+| D9 | Packet identity | Digest over `00 Packet.md`, `task.md`, and `jira/**` |
+| D10 | Deferred work | Seal, blueprint schema change, Git/LFS storage |
+| D11 | Required operator flow | Two CI commands, actual Drive links, no required local vault |
 
-## How to use these documents as checkpoints
-
-Each step in `docs/plan/` is one document with a `status` field in its frontmatter. The values are
-`pending`, `in-progress`, `done`, and `blocked`.
-
-1. Before you start a step, set its status to `in-progress` and commit.
-2. Do the work that the step lists. Do not do work from a later step.
-3. Paste the output of the "Done when" commands into the "Evidence" section of the step.
-4. Set the status to `done`. Update the board in `docs/plan/README.md`. Commit both files.
-
-A step is done only when its evidence is in the document. A later session reads the board first and
-continues from the first step that is not `done`.
+The [plan's execution protocol](../plan/README.md#how-to-execute-a-step) is the single source for
+checkpoint statuses and evidence. Completed foundation documents retain their historical evidence;
+optional work does not block the required delivery.

@@ -6,48 +6,38 @@ title: Recon as second consumer
 
 # Step 11. Recon as second consumer
 
-## Goal
+## Outcome
 
-The recon plugin writes its discovery dossier into `stages/10-recon/runs/vN/` through the same CLI.
-This proves that the package is not walkthrough-shaped.
+Recon stores its discovery dossier in `stages/10-recon/runs/vN/` through the same package.
+This follow-up is independent of accepting the two Drive workflow commands.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-Step 06.
+- Owner: `recon-plugin`.
+- Depends on steps 06 and 10.
+- Inputs: explicit store configuration, ticket, and the existing rendered dossier directory.
 
-## Files in the `recon-plugin` repository
+## Work
 
-- The READY delivery rail that renders the dossier (`recon-report`). Add two calls after the render
-  and before the Jira delivery gate.
-- `docs/hosts.md`: document the store file location and the credential variable for the adc-vault
-  host.
-
-## Steps
-
-1. Resolve the store file from the host: `<adc-vault>/00 System/Integrations/Packet Store/packet-store.json`.
-2. After the dossier renders, run:
-
-   ```bash
-   task-packet-store begin --store "$STORE" --ticket "$TICKET" --stage 10-recon \
-     --run-key "recon-$RUN_ID" --tool "recon@$RECON_VERSION" --state "$RECON_ROOT/$TICKET/packet-run-state.json"
-   task-packet-store checkpoint --state "$RECON_ROOT/$TICKET/packet-run-state.json" \
-     --reason dossier-rendered --source "$RECON_ROOT/$TICKET/discovery"
-   ```
-
-3. Keep the calls behind the plugin's existing capability detection. When `task-packet-store` is
-   not on PATH, print a notice and continue. Recon must not fail because the store is absent.
-4. Run recon on a ticket with a packet. Then `pull` in the vault.
+1. Inspect Recon's current host configuration and delivery rail. Add or use an explicit store-config
+   input; a vault path may be configured by an operator but is not a built-in prerequisite.
+2. After rendering, reserve the stage run with `begin` and persist its output with `checkpoint`.
+   Read destination information from package results and use the shared location interface.
+3. Preserve Recon's existing optional-capability behavior when no store is configured. Report
+   persistence as successful only after the store operation succeeds.
+4. Verify the same integration with an `fs` fixture and with the configured Drive destination.
+   Keep Jira delivery behavior outside this storage change.
 
 ## Done when
 
-`10 Tasks/Packets/<TICKET>/stages/10-recon/runs/v1/` contains `run.md`, `snapshot.json`, and
-`discovery.md` after `pull`.
+Recon's dossier and run records are in the selected store and its result reports their actual
+location. The filesystem case works without Drive credentials or a vault.
 
 ## Evidence
 
-```text
-```
+Pending. Record PR/commit, config input contract, local and Drive test results, ticket/run,
+checkpoint result, and output location.
 
-## Rollback
+## Handoff and rollback
 
-Revert the recon-plugin change.
+Revert the Recon integration if needed; keep previously saved dossiers available.

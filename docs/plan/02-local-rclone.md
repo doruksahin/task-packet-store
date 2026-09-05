@@ -1,63 +1,42 @@
 ---
 status: pending
 step: 02
-title: Local rclone and token
+title: Optional local Drive access
 ---
 
-# Step 02. Local rclone and token
+# Step 02. Optional local Drive access
 
-## Goal
+## Outcome
 
-rclone 1.75.0 is installed on the laptop. A personal OAuth token exists in the shell environment as
-`PACKET_STORE_DRIVE_TOKEN`.
+An individual operator can fetch packets or pull runs from Drive onto their own machine.
+This step is optional and is not needed for CI or for local-only `fs` storage.
 
-## Depends on
+## Owner, dependencies, and inputs
 
-Step 01 for the `sharedDriveId`.
+- Owner: the individual operator.
+- Depends on step 01's destination/access details and step 06's published package.
+- Inputs: a local store-config path and a Google account with access to the selected Shared Drive.
 
-## Steps
+## Work
 
-1. Install rclone.
-
-   ```bash
-   brew install rclone
-   rclone version
-   ```
-
-   Expected first line: `rclone v1.75.0`. A newer patch version is acceptable. Record it.
-
-2. Create a token for your own Google account. A browser window opens. Approve access.
-
-   ```bash
-   rclone authorize "drive"
-   ```
-
-   The command prints a JSON token between `--->` and `<---`. Copy only the JSON.
-
-3. Store the token outside the repository. With direnv, add to `~/.config/direnv/direnvrc` or the
-   vault's `.envrc` (git-ignored):
-
-   ```bash
-   export PACKET_STORE_DRIVE_TOKEN='<the JSON on one line>'
-   ```
-
-   Without direnv, put the same line in `~/.zshrc.local` and source it from `~/.zshrc`.
+1. Install the package version recorded in step 06 and the pinned rclone version.
+2. Obtain a personal OAuth token with `rclone authorize "drive"`. Supply it through
+   `PACKET_STORE_DRIVE_TOKEN` using the operator's existing secret-management setup.
+3. Copy or provide the credential-free Drive config at an explicit local path.
+4. Run `task-packet-store doctor --store <absolute-config-path>`, then fetch a known packet into
+   a fresh local directory and pull its runs when needed.
 
 ## Done when
 
-```bash
-RCLONE_DRIVE_TOKEN="$PACKET_STORE_DRIVE_TOKEN" rclone lsd ":drive,team_drive=<sharedDriveId>:"
-```
-
-Expected: exit 0.
+The operator can retrieve a packet and its selected stored results through the package. The local
+configuration is portable and does not rely on another person's shell or vault path.
 
 ## Evidence
 
-```text
-rclone version: v1.75.0
-lsd exit code:
-```
+Pending. Record package/rclone versions, config path, test ticket, and command outcomes without
+credential values.
 
-## Rollback
+## Handoff and rollback
 
-Revoke the token at https://myaccount.google.com/permissions under "rclone". Remove the export.
+This enables optional local viewing and step 07. Revoke only the newly created personal token if
+the operator abandons the setup; CI's service account is independent.
