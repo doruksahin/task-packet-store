@@ -3,6 +3,10 @@
 Read and write task packets from a local file system or a Google Shared Drive. One CLI for tools
 that consume or produce packet content, on a laptop or in CI.
 
+For the complete Jira → Drive packet → walkthrough → Drive report flow, start with the
+[operator playbook](docs/playbook.md). It lists the commands in order, their inputs and outputs,
+and how to find the saved files.
+
 ## Requirements
 
 - Node.js 20 or newer.
@@ -105,5 +109,6 @@ arguments, or source control.
 
 ## Documentation
 
+- [Operator playbook](docs/playbook.md): run the complete Drive flow and understand local storage support.
 - [Design](docs/design/README.md): the 30-second overview, the architecture, and the CLI contract.
-- [Plan](docs/plan/README.md): the checkpoint board for the proof of concept.
+- [Plan](docs/plan/README.md): completed delivery, acceptance evidence, and optional follow-ups.

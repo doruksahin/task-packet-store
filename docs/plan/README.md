@@ -7,6 +7,9 @@ that stored packet and receives a link to the HTML report on Drive.
 [Architecture](../design/03-architecture.md) defines the package contract. Step documents define
 bounded implementation work and record its completion evidence.
 
+For day-to-day use, start with the [operator playbook](../playbook.md), which explains the full
+sequence, inputs, outputs, and result locations.
+
 ## Current state and next action
 
 The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
@@ -17,7 +20,21 @@ published, both user commands succeeded on independent CI runners, and repeating
 created `v2` with all 701 stored `v1` files unchanged. See the
 [delivery run record](DELIVERY-RUN.md) for assignments and PRs, and
 [the acceptance record](10-drive-acceptance.md) for actual links, receipts, and disclosed limitations.
-The remaining items below are optional integrations and cleanup.
+The next authorized delivery is reusable storage selection across workflows: portable walkthrough
+entry points plus Recon as a second consumer. The original acceptance evidence remains unchanged.
+
+## Active delivery: reusable workflow storage
+
+The [adapter contract](../design/06-workflow-adapters.md) keeps one store configuration, the existing
+package operations, and ordinary plugin input/output files. Separate implementation tasks own the
+consumers; the orchestrator owns the contract, integration, documentation, and acceptance.
+
+| Step | Work | Owner / repository | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| 13 | [Shared adapter contract and integration guide](13-reusable-storage-contract.md) | Orchestrator / task-packet-store | 10 | in-progress |
+| 14 | [Portable packet and walkthrough entry points](14-portable-walkthrough-runner.md) | AC-visual-walkthrough | 13 contract | in-progress |
+| 11 | [Recon as a second consumer](11-recon-consumer.md) | recon-plugin | 13 contract | in-progress |
+| 15 | [Independent review and both-store acceptance](15-reusable-storage-acceptance.md) | Orchestrator + reviewer | 13, 14, 11 | pending |
 
 ## Required delivery sequence
 
@@ -54,12 +71,10 @@ These items do not block step 10.
 | --- | --- | --- | --- | --- |
 | 02 | [Optional local Drive access](02-local-rclone.md) | Individual operator | 01, 06 | pending |
 | 07 | [Optional vault integration](07-vault-pr.md) | adc-vault | 06, 10; 02 for local Drive access | pending |
-| 11 | [Recon as second consumer](11-recon-consumer.md) | recon-plugin | 06, 10 | pending |
 | 12 | [Retire unused walkthrough storage code](12-cleanup.md) | AC-visual-walkthrough | 10 | pending |
 
-Local-only storage remains a supported choice. Package changes must work through both transports;
-packet preparation takes explicit filesystem paths. A user command for a completely local run can
-be specified later using those same steps.
+Local-only storage remains a supported choice. Step 14 now owns the complete filesystem invocation;
+all package changes must continue to work through both transports.
 
 ## How to execute a step
 

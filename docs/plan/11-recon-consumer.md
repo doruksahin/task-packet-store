@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 11
 title: Recon as second consumer
 ---
@@ -9,12 +9,13 @@ title: Recon as second consumer
 ## Outcome
 
 Recon stores its discovery dossier in `stages/10-recon/runs/vN/` through the same package.
-This follow-up is independent of accepting the two Drive workflow commands.
+This was optional for the first Drive delivery. It is now required to prove the reusable adapter
+contract requested on 2026-09-05; the original Drive acceptance remains unchanged.
 
 ## Owner, dependencies, and inputs
 
 - Owner: `recon-plugin`.
-- Depends on steps 06 and 10.
+- Depends on steps 06, 10, and the [shared adapter contract](../design/06-workflow-adapters.md).
 - Inputs: explicit store configuration, ticket, and the existing rendered dossier directory.
 
 ## Work
@@ -27,6 +28,9 @@ This follow-up is independent of accepting the two Drive workflow commands.
    persistence as successful only after the store operation succeeds.
 4. Verify the same integration with an `fs` fixture and with the configured Drive destination.
    Keep Jira delivery behavior outside this storage change.
+5. Follow Recon's repository governance, document the literal operator command and result receipt,
+   and expose the configuration through the existing host/command conventions. Reuse the published
+   package through its CLI if that is the smallest fit for Recon's runtime.
 
 ## Done when
 
@@ -35,8 +39,8 @@ location. The filesystem case works without Drive credentials or a vault.
 
 ## Evidence
 
-Pending. Record PR/commit, config input contract, local and Drive test results, ticket/run,
-checkpoint result, and output location.
+Implementation delegated. Record PR/commit, config input contract, local and Drive test results,
+ticket/run, checkpoint result, and output location. Exact task assignment is recorded by the orchestrator.
 
 ## Handoff and rollback
 

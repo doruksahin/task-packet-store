@@ -4,6 +4,9 @@ Status: implemented and verified on 2026-09-05. Both commands passed, and repeat
 created `v2` with every stored `v1` file unchanged. This document remains the behavior contract;
 [the acceptance record](10-drive-acceptance.md) contains observed results and disclosed limitations.
 
+For the practical manual, including when to wait, where to open results, and how local storage
+fits, use the [operator playbook](../playbook.md).
+
 The user must be able to create a task packet from Jira, leave it on Google Drive, and later run
 AC-walkthrough against that stored packet. Both operations run in GitHub Actions. They must work
 without Doruk's machine, a vault checkout, Obsidian, or a personal Drive token on the user's machine.
