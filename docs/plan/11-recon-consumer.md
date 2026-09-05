@@ -39,8 +39,20 @@ location. The filesystem case works without Drive credentials or a vault.
 
 ## Evidence
 
-Implementation delegated. Record PR/commit, config input contract, local and Drive test results,
-ticket/run, checkpoint result, and output location. Exact task assignment is recorded by the orchestrator.
+Implementation task `01a0733f-b928-7db2-a672-d04bfbde2ed3` opened
+[Recon PR 8](https://github.com/AdCreative-ai/recon-plugin/pull/8) at
+`dd453a9f24536ef2c9d5b6886b5c435f91aa7dfc`, based on `ce98c764cca32a27c7bc57be7439654b08fd44a9`.
+The literal entry point is `bash recon/scripts/store-dossier.sh --store <absolute-config>
+--ticket PROJ-123 --source <current-ticket-workspace>`.
+
+The adapter stages current-run supporting files, excluding top-level archived `runs/`, and saves
+`report/dossier.html` plus evidence through published package `0.1.0`. Its eight contract groups,
+real filesystem repeat proof, generated-adapter check, and complete local pre-commit rail passed.
+No hosted checks are registered on that PR. Independent review reproduced two issues: traversal
+errors could omit unreadable current-run evidence, and overlapping filesystem destinations could
+modify the source workspace. The implementer is correcting both with regressions. Corrective
+review, real Drive acceptance, and merge remain pending; this is not a plugin publication or
+activation claim.
 
 ## Handoff and rollback
 

@@ -36,6 +36,12 @@ Recon's public source repository must not receive Drive credentials or private t
 
 ## Implementation and acceptance
 
-Pending. Record exact PR/commit references and evidence in steps 11, 14, and 15 as work completes.
+Documentation [PR 11](https://github.com/doruksahin/task-packet-store/pull/11) passed independent
+review at `c2a43ed23b5e1dc33402d90cf1e9de4205dd345b` and the required Node 20 CI. A wording correction
+clarifies that a new `begin` reserves the next version; checkpoints update the reserved run.
+
+Walkthrough [PR 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) is under corrective
+review. Step 14 records the concrete findings. Recon and acceptance harness implementation are
+still in progress. Record exact PR/commit references and evidence in steps 11, 14, and 15 as work completes.
 Deterministic storage proof and existing rendered bundles must be labeled separately from new
 live Jira/LLM execution. Merged code alone does not complete acceptance.

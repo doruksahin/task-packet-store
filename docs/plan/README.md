@@ -35,7 +35,7 @@ The [delivery run record](REUSABLE-STORAGE-RUN.md) records task assignments and 
 | 13 | [Shared adapter contract and integration guide](13-reusable-storage-contract.md) | Orchestrator / task-packet-store | 10 | in-progress |
 | 14 | [Portable packet and walkthrough entry points](14-portable-walkthrough-runner.md) | AC-visual-walkthrough | 13 contract | in-progress |
 | 11 | [Recon as a second consumer](11-recon-consumer.md) | recon-plugin | 13 contract | in-progress |
-| 15 | [Independent review and both-store acceptance](15-reusable-storage-acceptance.md) | Orchestrator + reviewer | 13, 14, 11 | pending |
+| 15 | [Independent review and both-store acceptance](15-reusable-storage-acceptance.md) | Orchestrator + reviewer | 13, 14, 11 | in-progress |
 
 ## Required delivery sequence
 

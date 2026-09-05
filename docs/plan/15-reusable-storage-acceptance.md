@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 15
 title: Verify two workflows with both stores
 ---
@@ -35,4 +35,14 @@ it is not evidence of a newly completed live Jira/LLM workflow. Any missing live
 
 ## Evidence
 
-Pending steps 13, 14, and the now-required second-consumer step 11.
+The acceptance task has exercised both candidate adapters through real filesystem storage:
+fresh `v1`/`v2`, primary/supporting file readback, package records, snapshot rehashing, complete
+packet verification, and unchanged earlier run trees. These are preliminary deterministic checks;
+final evidence must use the corrected independently reviewed consumer heads.
+
+The private walkthrough repository harness is being prepared with two deliberate triggers:
+`reusable-storage-drive` for filesystem/Drive adapter proof and `reusable-storage-live-fs` for a
+new real Jira/LLM filesystem run. Secret-bearing jobs require an explicit same-repository labeled
+event (or later manual dispatch); an existing label must not trigger new writes on every push.
+The original private AC draft bundle and a synthetic skill-rendered Recon fixture are separately
+identified as acceptance inputs. No new remote or paid execution has started.
