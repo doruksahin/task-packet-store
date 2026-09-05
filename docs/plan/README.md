@@ -12,18 +12,19 @@ bounded implementation work. This revision plans the work; it does not implement
 The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
 Shared Drive round trip in step 05. They are preserved unchanged.
 
-**Next required step: 01 — confirm the existing setup from CI.** Reuse the Drive and service account
-recorded in step 05 when available. Their successful earlier use does not establish current CI
-access, package publication, or either user workflow.
+**Delivery is in progress.** CI access, result locations, and packet preparation are delegated to
+isolated tasks; the orchestrator owns integration and release. See the
+[delivery run record](DELIVERY-RUN.md) for assignments, PRs, and current evidence. Publication and
+final acceptance remain gated on the required live checks.
 
 ## Required delivery sequence
 
 | Step | Work | Owner / repository | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| 01 | [CI access and shared configuration](01-google-workspace.md) | Administrator + AC-visual-walkthrough | 03–05 | pending |
-| 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | pending |
-| 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | pending |
-| 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | pending |
+| 01 | [CI access and shared configuration](01-google-workspace.md) | Administrator + AC-visual-walkthrough | 03–05 | in-progress |
+| 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | in-progress |
+| 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | in-progress |
+| 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | in-progress |
 | 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | pending |
 | 10 | [Prove both commands and repeat the walkthrough](10-drive-acceptance.md) | AC-visual-walkthrough + Drive | 08, 09 | pending |
 

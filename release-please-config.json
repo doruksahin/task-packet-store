@@ -4,6 +4,7 @@
   "packages": {
     ".": {
       "release-type": "node",
+      "initial-version": "0.1.0",
       "package-name": "@doruksahin/task-packet-store",
       "include-v-in-tag": true,
       "include-component-in-tag": false,
