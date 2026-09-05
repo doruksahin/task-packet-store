@@ -15,8 +15,8 @@ The first delivery has two user commands: Jira → packet on Drive, then Drive p
 AC-walkthrough → HTML on Drive. Both execute in GitHub Actions and return result links in their
 completed run summaries. See the [required commands and outputs](../plan/00-required-operator-flow.md).
 
-The storage core is implemented. Workflow integration and result-link support are planned work;
-the [plan board](../plan/README.md) records dependencies, status, and completion evidence.
+The storage package, result links, and both CI workflows are implemented. The
+[plan board](../plan/README.md) records dependencies, live acceptance, and follow-ups.
 
 ## Map
 

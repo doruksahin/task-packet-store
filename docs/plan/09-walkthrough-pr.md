@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 09
 title: Drive packet to walkthrough to Drive report
 ---
@@ -59,12 +59,43 @@ packet and saves the draft HTML, evidence, and run records on Drive with working
 
 ## Evidence
 
-Pending. Record:
-
-- PR/commit, runtime/package versions, and check results.
-- User command, exact Actions run URL, fetched digest, and reservation receipt.
-- Final checkpoint result and actual HTML relative path.
-- Drive report/run links and verification that they address the saved output.
+- [PR 93](https://github.com/doruksahin/AC-visual-walkthrough/pull/93) merged at
+  `08307480cce07cfcab32d94df1359d1055f5d9d5`. Independent review cleared the final published-package
+  build and the merge delta at `a453c51a48969902f046d95b9d4cc53b59fa5d97`.
+  [CI 33962493465](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962493465)
+  passed the full tests, documentation, and registry-conformance checks.
+- Fresh root/runtime/legacy installs resolve published store `0.1.0`; the regenerated runtime
+  uses its lightweight identity entry point. Twenty-two delivery/digest tests and 188 renderer
+  tests passed. Both showcase HTML files and representative viewport captures match released
+  walkthrough `6.5.0`; the comparison is recorded in the consumer repository.
+- The wrapper preserves draft semantics, strips Drive credentials from the Claude child, and
+  requires validated render receipts, complete output, successful final checkpoint, and actual
+  Drive links before reporting `report-saved`.
+- The exact user command with `-f ticket=ATT-5387` started
+  [Actions run 33962860607](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962860607),
+  which succeeded in 13m15s. Reservation: stage `20-ac-walkthrough`, version `v1`, run key
+  `github-33962860607-1`. Its independent runner fetched the producer digest
+  `2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653`.
+- The initialized, capture-finished, report-authored, and final report-rendered checkpoints passed.
+  Final snapshot inventory SHA-256:
+  `dffc612dda5d513acfb58a67ca802c9934ef7d49d5b48ed8236fdc17f1775b75`.
+  Capture succeeded; renderer spec `2.9` exited zero with no errors or warnings.
+- The actual [report](https://drive.google.com/file/d/1cX-sJugWQhZaeUE8KKShPybuC-W4JIcN/view)
+  lives at `packets/ATT-5387/stages/20-ac-walkthrough/runs/v1/delivery/ATT-5387-ac-verification-v1.html`.
+  The [run folder](https://drive.google.com/drive/folders/1ZarF3q5Bay8deEzayJHdfIxHH7UqSAQb)
+  contains its inputs, evidence, trace, `run.md`, and `snapshot.json`.
+- The operator's Drive connector retrieved the HTML: 985,530 bytes, SHA-256
+  `274d73754a8bf15e31d38186339d01ec7ec71f073c8fc4d54889e6a75f86f442`, matching both the
+  renderer receipt and independent stored-file verification. The exact file renders visibly in
+  isolated Chrome in light and dark modes without JavaScript errors. Native Chrome exposed the
+  complete report through accessibility, although its window screenshot was blank; the same
+  symptom did not reproduce in the isolated browser.
+- The draft marks all nine ACs as `Needs evidence`: the mock target could not advance past avatar
+  selection. Storage success is not an AC-pass claim. The embedded trace shortcut retains the
+  existing renderer's runner-local `file://` contract; the actual
+  [saved trace](https://drive.google.com/file/d/1EkcuRqXvtjimEmFlCm6yv0n5sTiKtXXM/view)
+  is available from the run folder at `input/capture/trace.zip`. Portable trace shortcuts are a
+  follow-up; the saved HTML and embedded screenshot evidence work independently of that shortcut.
 
 ## Handoff and rollback
 

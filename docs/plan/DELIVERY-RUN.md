@@ -64,11 +64,16 @@ implementation does not complete its live evidence requirements.
 - [Preparation PR 91](https://github.com/doruksahin/AC-visual-walkthrough/pull/91) passed an
   independently reproduced filesystem push/fetch and walkthrough input validation. Review found
   incomplete-attachment and literal-template-text handling gaps; both were corrected and re-reviewed.
-  Its exact package pin and live workflow proof await publication. The copied capture-smoke
-  failure was reproduced on the untouched base, confirming it predates this change.
-  Correction `f090499` now passes independent re-review and all five preparation tests.
-- The walkthrough owner is connecting phase checkpoints and mandatory final persistence. A
-  successful render, saved output, and resolved result links must all precede `report-saved`.
+  Final review also required a producer digest before upload and clean independent package installs.
+  The corrected head passed all eight focused tests and full CI, then merged at `aa4fc391`.
+  Actual dispatch exposed an invalid job-level `runner.temp` expression; reviewed
+  [PR 95](https://github.com/doruksahin/AC-visual-walkthrough/pull/95) corrected it at `3b278eb2`
+  with Actions-context validation and full CI before the successful live command.
+- [Walkthrough PR 93](https://github.com/doruksahin/AC-visual-walkthrough/pull/93) merged at
+  `08307480` after independent source/build review and full CI. It connects phase checkpoints
+  and mandatory final persistence: a successful render, saved output, and resolved result links
+  all precede `report-saved`. Its generated runtime uses published store `0.1.0`; representative
+  HTML and viewport captures still match the released renderer.
 - [Package PR 6](https://github.com/doruksahin/task-packet-store/pull/6) merged at `34448e5` after
   independent review and CI. Its installed-artifact smoke executes a complete local filesystem
   round trip, including packet/run/HTML locations, without Drive credentials or rclone.
@@ -76,8 +81,29 @@ implementation does not complete its live evidence requirements.
   The dedicated identity subpath now imports without configuration or transport dependencies;
   digest behavior and the root API are unchanged. Independent artifact rebuilds matched.
 
-## Remaining delivery gates
+## Live command evidence
 
-1. Finish workflow pins/reviews, including producer digest evidence and rebuilt runtime bundles.
-2. Run both user commands and retrieve the actual Drive HTML.
-3. Repeat the walkthrough, verifying that v2 preserves v1.
+- Both exact user commands ran from `main` at `08307480`, using ticket `ATT-5387` and the shared
+  Drive prefix `packets`. The intended operator's starting folder listing was empty.
+- [Producer run 33962806577](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962806577)
+  succeeded with nine packet files and matching producer/fetch digest
+  `2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653`.
+- [First walkthrough 33962860607](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962860607)
+  succeeded, saving the draft HTML, evidence, trace, and records under `runs/v1/`. The human Drive
+  download matches the renderer receipt and stored-file SHA, and renders visibly in an isolated
+  browser. The draft reports nine `Needs evidence` ACs because the mock avatar gate blocked them.
+- A read-only fresh fetch/pull verified the saved payload and froze all 701 stored v1 files
+  (28,558,480 bytes), including hidden capture-profile files, before repeating the command.
+  Full byte-manifest SHA: `c81b81fca4998fb0c8cb5d28ecac4ae0c084634b1057921984338634e618641c`.
+- [Repeat walkthrough 33964047130](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33964047130)
+  succeeded in 12m40s and saved `v2`. Its fresh runner used the same packet digest. A read-only
+  retrieval of both stored versions confirmed all 701 v1 file paths, sizes, and hashes unchanged.
+- Independent acceptance review cleared the agreed scope after inspecting all three successful
+  Actions runs, render/delivery/checkpoint receipts, and the completed comparison. Step 10 is done;
+  [the comparison receipt](evidence/2026-09-05/comparison.json) and
+  [frozen v1 baseline](evidence/2026-09-05/v1-baseline.json) are preserved with the plans.
+
+Steps 08–10 record the complete evidence and actual links. The native Chrome screenshot issue did
+not reproduce when rendering the exact saved HTML in isolation. The existing runner-local trace
+shortcut and retained hidden profile files are documented consumer follow-ups; the trace itself
+is stored on Drive and accessible from the run folder.

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 08
 title: Jira to packet on Drive
 ---
@@ -57,12 +57,35 @@ packet on Drive and returns its real folder link in the Actions summary.
 
 ## Evidence
 
-Pending. Record:
-
-- PR/commit and packet fixture/profile paths.
-- Consumer compatibility and local-store check commands/results.
-- User command, exact Actions run URL, ticket, and package/profile versions.
-- Producer and fetched digests, saved folder path, and actual Drive link.
+- [PR 91](https://github.com/doruksahin/AC-visual-walkthrough/pull/91) merged at
+  `aa4fc391ec15a8c2d5ad2813e1689e20c071d449`. Independent review cleared its exact head
+  `7dc5b4284f47ff60ccc6a9c34005919f5bd0b701`; [CI 33962192596](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962192596)
+  passed the full test, documentation, and registry-conformance checks.
+- Exact dependencies: `@doruksahin/task-packet-store@0.1.0` and Jira exporter `0.5.0`.
+  The repository-owned `ac-walkthrough-packet-v1` profile is under
+  `.github/packet-template/jira-profile/`; packet templates are under `.github/packet-template/packet/`.
+  Profile digest: `sha256:b0478dff2dce263fd405979b809c17f3e64dde764b10b44340169483c0c0b781`.
+- Eight focused tests passed, including the real filesystem push/fetch path, rejected incomplete
+  attachment exports, preserved literal Jira title tokens, and a producer/fetch digest mismatch.
+  Independent clean-checkout root, runtime, and legacy package installs passed with exact locks.
+- The first dispatch was rejected before any runner or Drive write because job-level environment
+  expressions cannot use `runner.temp`. [PR 95](https://github.com/doruksahin/AC-visual-walkthrough/pull/95)
+  moves the three paths into an initial runner step and adds a regression check. It merged at
+  `3b278eb2b3ee9570d9389ae9c2fe65ac7da2c131` after independent review, actionlint, and
+  [full CI 33962529820](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962529820).
+- The exact user command with `-f ticket=ATT-5387` completed successfully in
+  [Actions run 33962806577](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33962806577),
+  using default-branch commit `08307480cce07cfcab32d94df1359d1055f5d9d5`.
+  Producer and fetched SHA-256 both equal
+  `2502dacdd4f4f70a13a4b8416d84cc70dd3e7bf5d398b223e9532558285f7653`;
+  the saved comparison reports `match: true`, and the fetched packet has nine files.
+- Jira receipt: one successful issue, six comments, two attachments, two downloaded attachments,
+  no warnings. The consumer accepted the fetched packet with `acState: present`.
+- The run summary reports `packet-ready` at `packets/ATT-5387/` and the actual
+  [Drive packet folder](https://drive.google.com/drive/folders/1B4PV0MlE0O_JoWyNbksZoiPq2s8L-BiZ).
+  The intended operator's connected Drive account listed its root and Jira files and read
+  `00 Packet.md`, independently confirming access and the recorded exporter/profile provenance.
+  Diagnostic artifact `jira-to-packet-ATT-5387` retains all seven producer receipts.
 
 ## Handoff and rollback
 
