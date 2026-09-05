@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 01
 title: CI access and shared configuration
 ---

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 06
 title: Publish the consumer release
 ---
