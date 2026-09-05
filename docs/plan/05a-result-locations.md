@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 step: 05a
 title: Result locations and Drive links
 ---
@@ -46,7 +46,12 @@ Drive returns a usable link; local storage returns an absolute filesystem path.
 
 ## Evidence
 
-Pending. Record:
+Contract recorded in the architecture before implementation: `locate --store <abs cfg> --ticket
+PROJ-123 [--path <relative>]`; success keys `ticket`, `driver`, `relativePath`, `kind`, `location`.
+Implementation and local verification are in progress. Live Drive proof awaits step 01 CI access.
+The orchestrator owns the plan board.
+
+Remaining evidence:
 
 - Implementation commit and exact consumer invocation/result examples with neutral ticket IDs.
 - Local path checks and `pnpm check` result.

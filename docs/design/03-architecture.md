@@ -36,7 +36,7 @@ cli.ts ─► operations.ts ─► PacketTransport ─┬─► FsTransport     
 ```
 
 `operations.ts` is written once against `PacketTransport`. The two transports differ only in how
-bytes move. Tests exercise the same operations through both transports.
+bytes move and existing locations are resolved. Tests exercise the same operations through both transports.
 
 ## Configuration
 
@@ -164,16 +164,61 @@ task-packet-store doctor --store <abs cfg>
 Reports the rclone version, whether exactly one credential variable is set, and the resolved remote
 root. Makes no network call.
 
-## Planned result-location interface
+### locate
 
-The transfer commands above are implemented. Resolving an existing packet folder, run folder, or
-HTML file to a usable Drive link or local absolute path is required by
-[step 05a](../plan/05a-result-locations.md) and is not implemented yet.
+```text
+task-packet-store locate --store <abs cfg> --ticket <TICKET> [--path <packet-relative-path>]
+```
 
-That step must specify the exact package invocation and result shape here before implementation.
-It is a read-only operation against `PacketTransport`; backend-specific lookup stays in the
-transports. Existing transfer commands, filters, credential handling, and digest semantics remain
-in place. Both user workflows consume the resulting interface rather than invoking rclone directly.
+Read-only lookup of an existing packet folder, run folder, or file. Omitted `--path` and the empty
+string identify the packet folder. A nonempty path uses slash-separated segments, with no leading,
+trailing, or doubled slash, `.`/`..`, backslash, NUL, or control characters. Spaces in names are
+allowed. Lookup does not require packet identity files or inspect file contents.
+
+```sh
+task-packet-store locate --store /abs/store.json --ticket PROJ-123
+task-packet-store locate --store /abs/store.json --ticket PROJ-123 \
+  --path stages/20-ac-walkthrough/runs/v1
+task-packet-store locate --store /abs/store.json --ticket PROJ-123 \
+  --path stages/20-ac-walkthrough/runs/v1/delivery/report.html
+```
+
+Success returns exactly these keys; `kind` is `directory` or `file`, and `relativePath` is the
+supplied packet-relative path (empty for the packet folder):
+
+```json
+{ "ticket": "PROJ-123", "driver": "gdrive", "relativePath": "stages/20-ac-walkthrough/runs/v1/delivery/report.html",
+  "kind": "file", "location": "https://drive.google.com/file/d/<observed-object-id>/view" }
+```
+
+For `fs`, `location` is the existing absolute path, such as
+`/abs/packets/PROJ-123/stages/20-ac-walkthrough/runs/v1/delivery/report.html`. No rclone or Drive
+authentication is used. Symlinks within the packet path and non-regular files are rejected with
+`STORE_PACKET_UNSAFE`; the configured store root itself may be a symlink.
+
+For `gdrive`, the transport lists the object's parent with `rclone lsjson` and matches its exact
+name. It uses the observed `ID` and `IsDir` to return
+`https://drive.google.com/drive/folders/<observed-object-id>` for directories or the file URL above.
+No ID is inferred from a path. Listing the parent avoids the synthetic root entry without an ID
+that `lsjson --stat` can return. Lookup never invokes `rclone link`, changes sharing permissions,
+or writes content. Existing authorized readers can use the link; it does not grant access or host
+HTML as a website. The file link lets a reader retrieve the saved HTML.
+
+Missing objects (including an absent parent) fail with `STORE_LOCATION_MISSING` (exit 1). Duplicate
+matching names or missing/invalid ID/type metadata fail with `STORE_RCLONE_FAILED` (exit 1), never
+a guessed URL. Invalid ticket/path/configuration fails with `STORE_CONFIG_INVALID` (exit 2).
+Authentication and rclone failures retain their existing codes. Failures leave stdout empty and
+write one `CODE: message` line to stderr.
+
+Library API: `locateResult(transport, ticket, relativePath = ''): Promise<LocationResult>`, exported
+from the package root. `LocationResult` contains the five success keys above. The shared operation
+validates inputs and calls `PacketTransport.locate(ticket, relativePath)`, which returns
+`Promise<ResultLocation | null>`; `ResultLocation` is `{ kind: 'directory' | 'file', location: string }`.
+`null` means missing. Backend-specific lookup lives only in the transports.
+
+The interface contract is recorded before implementation in step 05a. Both user workflows consume
+this interface rather than invoking rclone directly. Transfer commands, filters, credential
+handling, and digest semantics remain unchanged.
 
 ## Layout in the selected store
 
@@ -244,7 +289,7 @@ State file, local, written by `begin`, updated by `checkpoint`:
 
 `STORE_CONFIG_INVALID` (exit 2), `STORE_STATE_INVALID` (exit 2), `STORE_AUTH_MISSING`,
 `STORE_RCLONE_UNAVAILABLE`, `STORE_RCLONE_FAILED`, `STORE_PACKET_MISSING`, `STORE_PACKET_UNSAFE`,
-`STORE_DESTINATION_EXISTS`, `STORE_RUN_MISSING`, `STORE_VERSION_CONFLICT`, `STORE_UNEXPECTED` (all
+`STORE_DESTINATION_EXISTS`, `STORE_RUN_MISSING`, `STORE_LOCATION_MISSING`, `STORE_VERSION_CONFLICT`, `STORE_UNEXPECTED` (all
 exit 1). Unknown errors are reported under `STORE_UNEXPECTED` so the failure rule holds.
 
 A failure never writes to stdout. It writes exactly one line to stderr, `CODE: message`, where
