@@ -74,6 +74,10 @@ describe('consumer-neutral package boundary', () => {
       types: './dist/index.d.ts',
       import: './dist/index.js',
     });
+    expect(manifest.exports['./identity']).toEqual({
+      types: './dist/identity.d.ts',
+      import: './dist/identity.js',
+    });
     expect(manifest.publishConfig).toEqual({
       access: 'public',
       registry: 'https://registry.npmjs.org',

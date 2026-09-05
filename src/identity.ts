@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { IGNORED_BASENAMES } from './config.js';
+import { IGNORED_BASENAMES } from './identity-constants.js';
 import { StoreError } from './errors.js';
+export { DEFAULT_IDENTITY } from './identity-constants.js';
 
 export interface PacketFile {
   path: string;
