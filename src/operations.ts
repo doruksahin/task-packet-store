@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { RUNS_GLOB, SAFE_SEGMENT, validateLocationPath, validateStage, validateTicket } from './config.js';
 import { StoreError } from './errors.js';
+import { copyFile } from './fs-file.js';
 import { listFiles, packetSha256, regularFiles, sha256 } from './identity.js';
 import {
   parseRunRecord,
@@ -282,8 +283,7 @@ export async function pullRuns(transport: PacketTransport, ticket: string, into:
       const files = assertSafeTree(staging);
       for (const relative of files) {
         const destination = path.join(target, 'stages', ...relative.split('/'));
-        fs.mkdirSync(path.dirname(destination), { recursive: true });
-        fs.copyFileSync(path.join(staging, ...relative.split('/')), destination);
+        copyFile(path.join(staging, ...relative.split('/')), destination);
       }
     } finally {
       fs.rmSync(staging, { recursive: true, force: true });
