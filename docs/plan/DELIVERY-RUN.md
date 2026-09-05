@@ -35,9 +35,12 @@ implementation does not complete its live evidence requirements.
   installed-artifact checks, and the live Jira/Drive proofs passed.
   [PR 4](https://github.com/doruksahin/task-packet-store/pull/4) configured Release Please's initial
   version and merged at `e85327a`. The release includes locations and the identity entry point.
-- The public npm package was absent when checked with both registry and scope explicitly set to
-  npmjs.org. The current CLI has no npm authentication. The exact release artifact must be ready
-  before any owner-operated bootstrap or authentication handoff.
+- The first package publication required owner authentication. Chrome's existing npm login and
+  saved passkey completed it. The verified GitHub archive was published as `0.1.0`, and an anonymous
+  registry download matched its bytes. Temporary CLI authentication was logged out and removed.
+- [Fresh registry verification 33961737413](https://github.com/doruksahin/task-packet-store/actions/runs/33961737413)
+  passed the exact archive comparison and installed local-storage smoke. npm Settings confirmed
+  the required GitHub Actions Trusted Publisher. Step 06 records the complete release evidence.
 - npm's [trusted-publishing documentation](https://docs.npmjs.com/trusted-publishers/) supports
   private repositories but cannot generate their provenance. The publish helper therefore lets
   npm choose automatic provenance instead of forcing `--provenance`; OIDC authentication and
@@ -75,7 +78,6 @@ implementation does not complete its live evidence requirements.
 
 ## Remaining delivery gates
 
-1. Publish and verify the exact release artifact on npm.
-2. Pin that version and finish workflow reviews, including producer digest evidence.
-3. Run both user commands and retrieve the actual Drive HTML.
-4. Repeat the walkthrough, verifying that v2 preserves v1.
+1. Finish workflow pins/reviews, including producer digest evidence and rebuilt runtime bundles.
+2. Run both user commands and retrieve the actual Drive HTML.
+3. Repeat the walkthrough, verifying that v2 preserves v1.
