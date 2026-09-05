@@ -69,9 +69,12 @@ success. The required outcome is successful repeated checkpoints without changin
   real published-package filesystem repeats, generated checks, and the complete commit gate pass.
   Historical `0.1.0` evidence remains unchanged.
 - Harness [PR 98](https://github.com/doruksahin/AC-visual-walkthrough/pull/98) pins these consumers
-  and package `0.1.1` at `222482ec756c767838d9e0d301c8a635620b14cf`. Final review and CI are running.
-  The corrected runs will use new label events and isolated prefixes; replaying the unchanged
-  failed workflow would retain the old package pins.
+  and package `0.1.1` at `222482ec756c767838d9e0d301c8a635620b14cf`. Independent review and the complete
+  [Linux CI 33995076779](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995076779)
+  pass. After both gates cleared, the orchestrator removed and reapplied each acceptance label
+  once at that exact head. Fresh [both-store run 33995541137](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995541137)
+  and [live filesystem run 33995541009](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995541009)
+  are running. Replaying the unchanged failed workflow would retain the old package pins.
 
 ## Done when
 

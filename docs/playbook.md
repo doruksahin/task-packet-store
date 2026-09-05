@@ -168,6 +168,7 @@ save stage runs. `pull` is available when a separate consumer needs a local copy
 
 The portable commands run on any prepared execution host. Select the store once and pass the same
 absolute config path to each command. The host can be your computer, a server, or a CI runner.
+Both delivered consumers pin storage package `0.1.1`, including its repeated-checkpoint fix.
 
 | Choice | Durable home | Processing workspace | Entry point |
 | --- | --- | --- | --- |
@@ -242,5 +243,7 @@ reads and writes ordinary directories; its adapter uses the selected store befor
 
 - [Live acceptance record](plan/10-drive-acceptance.md): successful runs, saved reports, and verified
   preservation of the first run after the second.
+- [Reusable storage acceptance](plan/15-reusable-storage-acceptance.md): filesystem/Drive adapter
+  proof and fresh Jira-to-report execution, with exact versions and result locations.
 - [Operator contract](plan/00-required-operator-flow.md): required behavior for these workflows.
 - [Plan board](plan/README.md): completed delivery and remaining integrations.

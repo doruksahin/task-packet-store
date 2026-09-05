@@ -46,7 +46,13 @@ failure recovery could checkpoint pre-existing workspaces, packet verification o
 files, and Actions summaries dropped saved-path fields. All three were fixed and independently
 reproduced as resolved at `6956b53111c81092c38738f7955b73560646c58a`.
 
-The corrected head passed 44 targeted tests with no skips and the complete
+That initial corrected head passed 44 targeted tests with no skips and the complete
 [Linux CI run 33991259282](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33991259282),
 including the installed-capture smoke. The HTML and eight viewport comparison pairs match released
-walkthrough `6.5.0` byte for byte. Both-store acceptance and integration remain pending.
+walkthrough `6.5.0` byte for byte. The initial both-store proof passed, then fresh live filesystem
+execution exposed the repeated-checkpoint defect recorded in [step 16](16-readonly-checkpoint-fix.md).
+
+Final reviewed head `a4b652c8e3d9ab3528ac09ae358cc21989e10fbe` pins published storage `0.1.1`
+and adds the actual-observer regression through all checkpoint phases. Its 45 focused tests,
+188 renderer tests, and complete [Linux CI 33994798189](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33994798189)
+pass. Corrected acceptance and merge remain pending in step 16.

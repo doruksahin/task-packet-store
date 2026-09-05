@@ -42,11 +42,21 @@ Documentation [PR 11](https://github.com/doruksahin/task-packet-store/pull/11) p
 review at `c2a43ed23b5e1dc33402d90cf1e9de4205dd345b` and the required Node 20 CI. A wording correction
 clarifies that a new `begin` reserves the next version; checkpoints update the reserved run.
 
-Walkthrough [PR 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) passed corrective
-review and the complete Linux CI at `6956b53111c81092c38738f7955b73560646c58a`. Step 14 records the
-resolved findings. Recon's corrected head `f6c5e244f50f42e4a262dbafe1502acec545ba96` and the final
-acceptance harness head `46496a6832c868342ee234794787299022e31300` passed independent review.
-The portable command documentation also passed implementation-owner and independent review. Steps 11 and 15 retain
-the exact references and evidence as work completes.
-Deterministic storage proof and existing rendered bundles must be labeled separately from new
-live Jira/LLM execution. Merged code alone does not complete acceptance.
+The initial reviewed consumers passed both-store saves in run `33992872489`. Recon
+[PR 8](https://github.com/AdCreative-ai/recon-plugin/pull/8) merged as
+`d2189c35d2df2a8341b0136531312df9b26bca80`. The fresh Jira/LLM filesystem run `33992872261` then
+exposed a repeated-checkpoint defect. [Step 16](16-readonly-checkpoint-fix.md) records its focused
+fix, independent reproduction, and the published and independently verified `0.1.1` patch.
+
+The corrected final references are independently reviewed:
+
+| Change | PR | Reviewed commit | Verification |
+| --- | --- | --- | --- |
+| Portable walkthrough, exact `0.1.1` pin | [AC 97](https://github.com/doruksahin/AC-visual-walkthrough/pull/97) | `a4b652c8e3d9ab3528ac09ae358cc21989e10fbe` | Full Linux CI `33994798189` |
+| Recon exact `0.1.1` pin | [Recon 9](https://github.com/AdCreative-ai/recon-plugin/pull/9) | `006cefb5970904d779e9d1f11ab18a3e191a1eaa` | Full local commit gate and real filesystem repeats |
+| Acceptance pins and fixture provenance | [AC 98](https://github.com/doruksahin/AC-visual-walkthrough/pull/98) | `222482ec756c767838d9e0d301c8a635620b14cf` | Full Linux CI `33995076779` |
+
+The orchestrator started fresh both-store run `33995541137` and real Jira/LLM filesystem run
+`33995541009` only after these gates passed. The acceptance task owns execution and receipts;
+the reviewer independently checks evidence. Consumer integration and final completion await those
+results. Existing rendered-bundle storage proof remains distinct from new live Jira/LLM execution.

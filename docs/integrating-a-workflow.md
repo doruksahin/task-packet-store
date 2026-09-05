@@ -43,7 +43,8 @@ Storage selection does not choose which computer or server executes the LLM.
 | Stage, owned by the adapter | `30-code-review` | Give this workflow its own run history |
 | Actual tool version | `code-review@1.0.0` | Identify the producer in the run record |
 
-Pin the published package in the adapter's environment. A JavaScript consumer can import its
+Pin the published package in the adapter's environment; the delivered adapters use `0.1.1`.
+A JavaScript consumer can import its
 existing library API; another runtime can call the CLI and read its JSON results. Both use the
 same store config and operations.
 
@@ -79,13 +80,16 @@ selection in the consumer's input provenance; do not silently substitute the new
 
 Run the same adapter once with filesystem storage and once with Drive. Open the returned result,
 compare it with the generated file, and repeat to verify preservation of the first run. Confirm
-that a failed save returns failure even if report generation succeeded.
+that a failed save returns failure even if report generation succeeded. If the workflow checkpoints
+as it progresses, also run that sequence within one reserved version, including files it seals
+read-only. Saving an existing report into two fresh versions does not exercise repeated checkpoints.
 
 The storage integration does not change the workflow's verdicts or human approval rules. A
 successfully stored draft remains a draft.
 
 The [adapter contract](design/06-workflow-adapters.md) defines the implementation boundaries, and
 the [CLI reference](design/03-architecture.md#cli-contract) gives exact storage-command arguments.
+
 ## Existing adapters to copy
 
 | Consumer | Command from its repository | Input → saved output |
