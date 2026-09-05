@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import { StoreError } from './errors.js';
+import { DEFAULT_IDENTITY } from './identity-constants.js';
+export { DEFAULT_IDENTITY, IGNORED_BASENAMES } from './identity-constants.js';
 
 export const SAFE_TICKET = /^[A-Z][A-Z0-9]+-\d+$/;
 export const SAFE_STAGE = /^\d{2}-[a-z][a-z0-9-]*$/;
@@ -12,9 +14,6 @@ export const SAFE_PREFIX = /^[A-Za-z0-9][A-Za-z0-9._-]*(?:\/[A-Za-z0-9][A-Za-z0-
 export const DRIVE_ID = /^[A-Za-z0-9_-]{10,}$/;
 /** Anchored glob. Tool output lives here and is never part of fetch or push. */
 export const RUNS_GLOB = '/stages/*/runs/**';
-export const DEFAULT_IDENTITY = ['00 Packet.md', 'task.md', 'jira/**'] as const;
-/** Basenames that no walk sees: they never enter a digest or a transfer. */
-export const IGNORED_BASENAMES: ReadonlySet<string> = new Set(['.DS_Store']);
 
 /** An exact file (`a/b.md`) or a directory subtree (`a/b/**`). Segments are SAFE_SEGMENT without `*`. */
 const IdentityEntry = z

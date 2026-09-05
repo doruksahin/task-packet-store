@@ -50,6 +50,21 @@ Every command prints one JSON object on stdout when it succeeds. On failure stdo
 stderr has one line `CODE: message`. Exit 0 on success, 2 for usage or configuration errors, and 1
 for everything else. `task-packet-store --help` prints the full command reference.
 
+## Library imports
+
+For packet digest checks in standalone bundles, import the dependency-light identity entrypoint:
+
+```js
+import { packetSha256, DEFAULT_IDENTITY } from '@doruksahin/task-packet-store/identity';
+
+const digest = packetSha256('/absolute/path/to/packet', DEFAULT_IDENTITY);
+```
+
+This entrypoint uses Node.js builtins and the package's identity/error helpers. It does not load
+the CLI, transports, configuration schemas, YAML, or Zod. The package root exports remain available.
+`matchesIdentity` and `regularFiles` are also available from the identity entrypoint for consumers
+that need the same file selection and manifest walking.
+
 ## Configuration
 
 One JSON file, credential-free, committable. Unknown keys are rejected.
