@@ -22,8 +22,8 @@ Drive returns a usable link; local storage returns an absolute filesystem path.
 
 1. Define the smallest package interface for looking up an existing result location. Record its
    exact invocation, result shape, and failure behavior in
-   [the architecture](../design/03-architecture.md) before implementing it. This interface is a
-   planned addition; no new location command is available today.
+   [the architecture](../design/03-architecture.md) before implementing it. The implemented
+   interface is recorded below; publication belongs to step 06.
 2. Implement the operation once against `PacketTransport`. Put backend-specific resolution in
    `FsTransport` and `RcloneTransport`. Keep existing transfer commands and digest behavior intact.
 3. Resolve Drive links from rclone's observed object metadata. Use the existing access permissions;
@@ -46,7 +46,8 @@ Drive returns a usable link; local storage returns an absolute filesystem path.
 
 ## Evidence
 
-Local implementation completed on 2026-09-05; live Drive acceptance is still pending.
+Implementation and live Drive/user-access checks completed on 2026-09-05; fresh GitHub runner
+evidence is still pending.
 
 - Contract-before-code commit: `d1e6f77` (`docs: define read-only result location contract`).
 - Review: [PR #2](https://github.com/doruksahin/task-packet-store/pull/2), branch `codex/result-locations`.

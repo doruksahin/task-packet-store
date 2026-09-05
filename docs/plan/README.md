@@ -12,7 +12,7 @@ bounded implementation work. This revision plans the work; it does not implement
 The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
 Shared Drive round trip in step 05. They are preserved unchanged.
 
-**Delivery is in progress.** CI access, result locations, and packet preparation are delegated to
+**Delivery is in progress.** CI access, result locations, packet preparation, and walkthrough integration are delegated to
 isolated tasks; the orchestrator owns integration and release. See the
 [delivery run record](DELIVERY-RUN.md) for assignments, PRs, and current evidence. Publication and
 final acceptance remain gated on the required live checks.
@@ -25,12 +25,13 @@ final acceptance remain gated on the required live checks.
 | 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | in-progress |
 | 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | in-progress |
 | 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | in-progress |
-| 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | pending |
+| 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | in-progress |
 | 10 | [Prove both commands and repeat the walkthrough](10-drive-acceptance.md) | AC-visual-walkthrough + Drive | 08, 09 | pending |
 
 Step 05a's implementation can start while step 01 is being completed; its live link proof uses
 step 01's access. Packet preparation in step 08 can be developed against fixtures earlier, but
-the step is complete only after the released tools succeed in CI.
+the step is complete only after the released tools succeed in CI. Step 09 implementation is also
+underway against the agreed interface; its live acceptance still depends on step 08.
 
 The release follows result-link support so the workflows can consume one pinned package version.
 The delivery is complete only when step 10 has evidence for both commands and preserved run history.
