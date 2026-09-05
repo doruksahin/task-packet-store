@@ -21,8 +21,8 @@ final acceptance remain gated on the required live checks.
 
 | Step | Work | Owner / repository | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| 01 | [CI access and shared configuration](01-google-workspace.md) | Administrator + AC-visual-walkthrough | 03–05 | in-progress |
-| 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | in-progress |
+| 01 | [CI access and shared configuration](01-google-workspace.md) | Administrator + AC-visual-walkthrough | 03–05 | done |
+| 05a | [Result locations and Drive links](05a-result-locations.md) | task-packet-store | 05; 01 for live proof | done |
 | 06 | [Publish the consumer release](06-release.md) | task-packet-store + npm maintainer | 01, 05a | in-progress |
 | 08 | [Jira → packet on Drive](08-jira-to-drive.md) | AC-visual-walkthrough | 01, 06 | in-progress |
 | 09 | [Drive packet → walkthrough → Drive report](09-walkthrough-pr.md) | AC-visual-walkthrough | 08 | in-progress |

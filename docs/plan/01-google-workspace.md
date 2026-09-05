@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 step: 01
 title: CI access and shared configuration
 ---
@@ -49,14 +49,41 @@ Shared Drive. The workflows obtain configuration and credentials independently o
 
 ## Evidence
 
-Pending. Record:
+Fresh runner proof passed on 2026-09-05 in [Actions run 33960198608](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33960198608)
+([job 101290643868](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33960198608/job/101290643868), 1m20s).
+The checked-in workflow and script are `.github/workflows/drive-ci-smoke.yml` and
+`.github/scripts/drive-ci-smoke.sh`, at [PR 92](https://github.com/doruksahin/AC-visual-walkthrough/pull/92)
+head `526209eb70a6acbd631d3954f9714040622afaa4`. Full repository tests, documentation links, and
+Zot conformance passed in [CI run 33960198716](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33960198716).
+PR 92 merged at `8c7367188286e9e4f8eaf730986ca1d76e2d22ac`.
 
-- Smoke script/workflow path, commit, and Actions run URL.
-- Config path, Shared Drive ID, prefix, and service-account identity.
-- Secret/configuration names confirmed, without values.
-- Test ticket and exporter receipt outcome.
-- Store command outcomes and content/digest comparison.
-- Scratch destination and whether it was retained or removed.
+- `.github/packet-store.json`: driver `gdrive`, Shared Drive `0APywiuwYbmGMUk9PVA`, prefix `packets`,
+  identity `00 Packet.md`, `task.md`, `jira/**`.
+- Existing service account: `task-packet-store-ci@adcreative-tooling.iam.gserviceaccount.com`.
+- Confirmed secret names: `PACKET_STORE_DRIVE_SERVICE_ACCOUNT`, `TASK_PACKET_STORE_SOURCE_TOKEN`,
+  `JIRA_HOST`, `JIRA_EMAIL`, `JIRA_API_TOKEN`. Existing lab/application credentials include
+  `CLAUDE_CODE_OAUTH_TOKEN` and `FRONTEND_REPO_TOKEN`. Values were never logged.
+- Exact package source `bc2744a1596fc0a2d08577ddeb3167d63fbe1152`; exporter source
+  `b9412c8114e0041cb8b755930d557d0ea8a454cd`, version `0.5.0`. Export receipt: `generic-v1`,
+  `success`, one synced issue `ATT-5387`, nine numbered acceptance criteria.
+- `push → fetch → begin → checkpoint → pull` passed; fetched bytes matched the source. The `v1`
+  pull matched HTML and evidence bytes, run metadata, and checkpoint inventory across seven files.
+- Packet SHA-256: `ea8ec406c41bda6eb644e392fedd4b0dcbc0298a16b1d106ed7c8b6d850d52b8`.
+  Checkpoint inventory: `364937be42c61fa0cc89b2cbfc18352cd5e675cfc1a6267353d10cac7f7e6e74`.
+- Scratch `ci-smoke/33960198608-1/TPS-33960198608` was removed after successful checks. The earlier
+  local scratch `ci-smoke/1788602767-1` was also removed after the human-account read proof.
+- The connected account `doruk.sahin@appier.com` read actual packet/run metadata and HTML bytes;
+  the packet folder also opened in its authenticated browser. Step 05a records those observations.
+  Existing inherited Shared Drive permissions were unchanged.
+
+Repeat with a suitable real ticket:
+
+```sh
+gh workflow run drive-ci-smoke.yml --repo doruksahin/AC-visual-walkthrough \
+  -f ticket=PROJ-123 -f retain_scratch=false
+```
+
+A retained scratch is available with `retain_scratch=true` when later inspection is needed.
 
 ## Handoff and rollback
 
