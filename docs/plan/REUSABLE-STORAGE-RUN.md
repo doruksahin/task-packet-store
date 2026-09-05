@@ -58,5 +58,8 @@ The corrected final references are independently reviewed:
 
 The orchestrator started fresh both-store run `33995541137` and real Jira/LLM filesystem run
 `33995541009` only after these gates passed. The acceptance task owns execution and receipts;
-the reviewer independently checks evidence. Consumer integration and final completion await those
-results. Existing rendered-bundle storage proof remains distinct from new live Jira/LLM execution.
+the reviewer independently checks evidence. The both-store run passed, all eight deliveries passed
+independent evidence review, and human Drive retrieval was verified. Recon PR 9 merged as
+`700641c21e10182fd964ff4944b936c8a1929d50`, with a tree identical to its reviewed head.
+Final walkthrough integration awaits the fresh live result. Existing rendered-bundle storage proof
+remains distinct from new live Jira/LLM execution.

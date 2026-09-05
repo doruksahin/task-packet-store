@@ -57,6 +57,15 @@ The [both-store acceptance](15-reusable-storage-acceptance.md#both-store-result)
 independent evidence review. PR 8 merged to `master` as `d2189c35d2df2a8341b0136531312df9b26bca80`.
 The source-checkout command is delivered; this is not a plugin publication or activation claim.
 
+The final consumer pins published storage `0.1.1` through
+[PR 9](https://github.com/AdCreative-ai/recon-plugin/pull/9), reviewed at
+`006cefb5970904d779e9d1f11ab18a3e191a1eaa`. All 11 contract groups, the complete local commit gate,
+and [corrected both-store acceptance](15-reusable-storage-acceptance.md#corrected-both-store-result-on-011)
+passed. Independent evidence review verified all files and records, both versions, and preservation.
+The human Drive account retrieved the new dossier and supporting run folder. PR 9 merged as
+`700641c21e10182fd964ff4944b936c8a1929d50`; its tree exactly matches the reviewed commit and its
+commit retains `Implements: SPEC-01M1SMA0CR7BCGE0821Z46YWYW`.
+
 ## Handoff and rollback
 
 Revert the Recon integration if needed; keep previously saved dossiers available.

@@ -106,3 +106,37 @@ correction, release, consumer updates, and fresh retry are tracked in
 [step 16](16-readonly-checkpoint-fix.md). This job used no Drive storage credentials or rclone;
 its partial filesystem and diagnostics are retained as a private artifact, not claimed as durable
 storage across independent hosted jobs or as successful final delivery.
+
+### Corrected both-store result on `0.1.1`
+
+[Run 33995541137](https://github.com/doruksahin/AC-visual-walkthrough/actions/runs/33995541137)
+passed both stores at reviewed harness `222482ec756c767838d9e0d301c8a635620b14cf`, using AC
+`a4b652c8e3d9ab3528ac09ae358cc21989e10fbe`, Recon `006cefb5970904d779e9d1f11ab18a3e191a1eaa`,
+and published storage `0.1.1`. The new Drive prefix is
+`acceptance/reusable-storage/33995541137-1`; previous acceptance and canonical packets are preserved.
+
+| Consumer | Payload per version | Corrected Drive results |
+| --- | --- | --- |
+| AC-walkthrough | Same existing real draft, 15 files; HTML 1,980,288 bytes | [v1 HTML](https://drive.google.com/file/d/19RaV_fTc4wSWRkbbvau59QUwZxR16EeO/view), [v2 HTML](https://drive.google.com/file/d/1EIaISDPiV9_3kOIpOAQRv3qxdDy3tUwW/view), [v1 run](https://drive.google.com/drive/folders/1BPTtRBr8Qe5c6pmqfsaG6C-yc-iLoVh1) |
+| Recon | Skill-rendered fixture with corrected provenance, 4 files; HTML 17,893 bytes | [v1 dossier](https://drive.google.com/file/d/1_Q7Eb-2QvekaIksMlHgRRxrqCbMcLVW-/view), [v2 dossier](https://drive.google.com/file/d/1Gej0EvkKnjub50Hu7OzLYC6m67HLlLzR/view), [v1 run](https://drive.google.com/drive/folders/1v3wHE-6FMFM-0hBMrIpDasUwdIfsx5AZ) |
+
+All four AC copies retain SHA-256 `d0ed22225affb5621f55348e015c314f7f8bd7b7abcd9f0e4d93dcc4742504ea`.
+All four corrected Recon copies have SHA-256
+`77842f27909551006423412b740c9639a2c92378b3a0424cbe54a2f3a843a1a5`.
+The nine packet files, every payload file, `run.md`, and `snapshot.json` passed readback and inventory
+checks. Repeating delivery preserved every earlier AC file (17 including records) and Recon file
+(6 including records), and the source trees remained unchanged. Filesystem checkpoint/location
+failure probes emitted no success result or summary. Drive failure probes were explicitly skipped.
+
+The connected human Drive account fetched both kinds of `v1` HTML and listed both run folders.
+All four primary metadata responses matched their expected names and sizes. These links hold
+downloadable HTML; they are not hosted report websites.
+
+Private artifacts `reusable-storage-fs-33995541137-1` and `reusable-storage-gdrive-33995541137-1`
+retain exact commands, receipts, and complete readbacks. Their `acceptance-<driver>/acceptance-result.json`
+hashes are `6e8c93b5817a6ef1cc595123cc805716b5795dbc7c603719673b8035f9a3ef25` (filesystem) and
+`4b1ccd961d9c2aecd84536f89c99e00d854997432d5f301905e7c5669411eaca` (Drive).
+Independent evidence review rehashed all eight deliveries and their raw receipts, all packet and
+snapshot inventories, and every earlier-run preservation copy, with no findings. This remains
+existing-output storage proof. Fresh live run `33995541009` is recorded separately
+when its final result is verified.
