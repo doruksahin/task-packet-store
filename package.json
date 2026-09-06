@@ -1,6 +1,6 @@
 {
   "name": "@doruksahin/task-packet-store",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Read and write task packets from a local file system or Google Drive.",
   "license": "MIT",
   "type": "module",

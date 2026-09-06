@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/doruksahin/task-packet-store/compare/v0.1.1...v0.1.2) (2026-09-06)
+
+
+### Miscellaneous Chores
+
+* **release:** request 0.1.2 ([#18](https://github.com/doruksahin/task-packet-store/issues/18)) ([476f11b](https://github.com/doruksahin/task-packet-store/commit/476f11be6cbfc626827865e1266dc70581e647ce))
+
 ## [0.1.1](https://github.com/doruksahin/task-packet-store/compare/v0.1.0...v0.1.1) (2026-09-05)
 
 
