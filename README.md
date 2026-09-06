@@ -116,3 +116,4 @@ arguments, or source control.
 - [Integrate another workflow](docs/integrating-a-workflow.md): reuse store selection around ordinary input/output files.
 - [Design](docs/design/README.md): the 30-second overview, the architecture, and the CLI contract.
 - [Plan](docs/plan/README.md): completed delivery, acceptance evidence, and optional follow-ups.
+- [Documentation maintenance](docs/maintenance.md): architecture changes, lychee, and required checks.
