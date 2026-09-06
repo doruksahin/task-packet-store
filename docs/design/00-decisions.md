@@ -57,6 +57,10 @@ numbers (no human-facing version).
 
 ## D5. Runs in vault Git: ignored
 
+This is a **deferred optional-integration rule**, not a requirement for storing or
+processing packets. The current filesystem/Google Drive workflow is in the
+[operator playbook](../playbook.md).
+
 When the optional vault integration is used, its `.gitignore` gains
 `10 Tasks/Packets/*/stages/*/runs/`. Runs live in the selected store and can be retrieved with
 `pull`. They do not enter vault Git.
@@ -102,6 +106,10 @@ change the input identity of every later run. The digest formula stays identical
 `run-history.ts`. Only the file subset changes.
 
 ## D10. Dropped for the PoC
+
+These items remain outside the delivered store. They are historical scope decisions,
+not current operator instructions; use the [operator playbook](../playbook.md) for
+the supported filesystem/Google Drive flow.
 
 - `seal`. Drive has no immutability to enforce, so a seal is a marker file only. Add it when a
   reviewer needs to freeze a run.
