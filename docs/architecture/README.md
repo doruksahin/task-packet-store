@@ -45,8 +45,10 @@ Credentials are never part of receipts or logs.
 The [design index](../design/README.md) links the implemented contracts. The
 [operator playbook](../playbook.md) covers Jira → packet → walkthrough → saved report.
 The [integration guide](../integrating-a-workflow.md) describes another workflow's adapter.
-Cross-repository relationships and source snapshots live in
-[plugin-architecture](https://github.com/doruksahin/plugin-architecture).
+Cross-repository relationships live in the
+[current source model](https://github.com/doruksahin/plugin-architecture/blob/main/model/current.dsl);
+use the [generated diagrams](https://github.com/doruksahin/plugin-architecture/blob/main/docs/views.md)
+for a visual overview.
 
 ## Planned changes
 
@@ -63,8 +65,9 @@ the target extraction stays separately labelled until implemented.
 
 ## Verification
 
-Run `python3 .architecture/check.py` for the contract, source links, internal installation
-dependencies, and targeted source guards. Run `pnpm check` for required package behavior/type
-checks; `pnpm release:check` remains the release candidate gate. The
-[shared audit](https://github.com/doruksahin/plugin-architecture/blob/main/README.md) verifies
-checker equality. These checks do not imply a fresh live Drive run or an AC pass.
+Follow the [maintenance procedure](../maintenance.md#verify-the-change) for architecture,
+package, and release checks. Its [lychee command](../maintenance.md#check-links) validates local
+documentation links; authenticated maintainer checks cover private cross-repository URLs.
+The [repository contract](../../.architecture/contract.json) and
+[shared checker provenance](../../.architecture/SOURCE.md) are the local verification inputs.
+These checks do not imply a fresh live Drive run or an AC pass.

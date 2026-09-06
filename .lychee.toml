@@ -1,0 +1,8 @@
+# CI validates local source documentation. Cross-repository links need an authenticated maintainer.
+no_progress = true
+format = "detailed"
+include_fragments = "anchor-only"
+include_verbatim = false
+include_mail = false
+max_retries = 2
+timeout = 20
