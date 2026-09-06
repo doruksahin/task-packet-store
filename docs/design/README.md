@@ -11,15 +11,15 @@ outputs. Its persistent home is a configured local directory or Google Shared Dr
 - Tool output lives under `stages/NN-slug/runs/vN/` in the selected store.
 - Workflows process ordinary files in a working directory. Neither storage choice requires a vault.
 
-The first delivery has two user commands: Jira → packet on Drive, then Drive packet →
-AC-walkthrough → HTML on Drive. Both execute in GitHub Actions and return result links in their
-completed run summaries. See the [required commands and outputs](../plan/00-required-operator-flow.md).
+The flow has two independent commands: Jira → saved packet, then stored packet →
+AC-walkthrough → saved HTML. The [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/README.md)
+owns the first command; AC owns the second. Both accept the same selected store.
 
 To operate it, follow the [end-to-end playbook](../playbook.md): commands in order, inputs, outputs,
 and where to open the saved packet and report.
 
-The storage package, result links, and both CI workflows are implemented. The
-[plan board](../plan/README.md) records dependencies, live acceptance, and follow-ups.
+The [plan board](../plan/README.md) preserves the initial CI delivery and live acceptance.
+The playbook identifies the current command owners and any deployment setup still required.
 
 ## Map
 

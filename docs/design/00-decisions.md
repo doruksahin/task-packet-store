@@ -111,6 +111,10 @@ change the input identity of every later run. The digest formula stays identical
 
 ## D11. Two operator commands, independent of a local vault
 
+The ownership below records the 2026-09-05 delivery. The producer now has its own
+[architecture owner](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md);
+use the [current playbook](../playbook.md) for commands and deployment prerequisites.
+
 The first GitHub Actions workflow exports Jira, prepares a complete packet, and pushes it to Drive.
 The second fetches that stored packet, runs the existing walkthrough, and checkpoints the HTML and
 evidence to Drive. Both report actual result links. Acceptance starts with an absent packet and

@@ -16,8 +16,12 @@ Temporary packet → begin → AC-walkthrough → checkpoint → Google Shared D
                                               HTML + evidence + run records
 ```
 
-These are the required consumer workflows; their implementation is tracked in
-[the delivery plan](../plan/README.md). Each workflow reports the actual saved result location.
+The first workflow is owned by the independent
+[Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/.github/workflows/jira-to-packet.yml);
+the second is owned by
+[AC-walkthrough](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/.github/workflows/walkthrough-lab.yml).
+The [current operator playbook](../playbook.md) describes setup and commands. Each workflow reports
+the actual saved result location; the [delivery plan](../plan/README.md) retains historical proof.
 A vault can optionally fetch packets and pull runs afterward.
 
 Both storage backends use the same file-processing steps. The Drive workflow uses temporary

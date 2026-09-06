@@ -13,6 +13,12 @@ sequence, inputs, outputs, and result locations.
 
 ## Current state and next action
 
+The records below describe the original delivery and its verified versions. Current producer
+ownership and commands are in the [operator playbook](../playbook.md); the
+[extraction plan](https://github.com/doruksahin/plugin-architecture/blob/main/PLAN.md) tracks the
+independent producer and the boundary checks. Historical acceptance is not a verification of
+new repository credentials or deployment activation.
+
 The storage core is implemented. Steps 03–05 contain its completed evidence, including a real
 Shared Drive round trip in step 05. They are preserved unchanged.
 
