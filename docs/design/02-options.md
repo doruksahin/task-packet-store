@@ -1,7 +1,7 @@
 # Options considered (historical)
 
-> **Historical decision record.** These are the alternatives evaluated before the
-> initial storage delivery on 2026-09-04. References to the former R2 and vault
+> **Historical decision record.** These are the alternatives evaluated for the
+> initial storage design. References to the former R2 and vault
 > paths explain that decision; they are not current operator guidance. Use the
 > [operator playbook](../playbook.md) for the supported filesystem/Google Drive
 > flow and the [architecture page](../architecture/README.md) for current ownership.
