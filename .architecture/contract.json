@@ -7,5 +7,5 @@
   "document": "docs/architecture/README.md",
   "sourcePaths": ["package.json", "src/cli.ts", "src/index.ts", "src/operations.ts", "src/transport.ts", "src/identity.ts", "src/rclone.ts", "src/fs-file.ts"],
   "dependencyChecks": [{"manifest": "package.json", "allowedInternalPackages": []}],
-  "boundaryChecks": [{"paths": ["src/operations.ts", "src/identity.ts", "src/transport.ts"], "forbidden": ["jira-markdown-exporter", "AC-visual-walkthrough", "recon-plugin"]}]
+  "boundaryChecks": [{"paths": ["src/operations.ts", "src/identity.ts", "src/transport.ts"], "forbidden": ["jira-markdown-exporter", "jira-to-packet", "AC-visual-walkthrough", "recon-plugin"]}]
 }

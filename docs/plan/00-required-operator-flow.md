@@ -1,5 +1,8 @@
 # Required operator flow: Jira → Drive packet → Drive report
 
+This records the first delivery's behavior contract and command ownership. For the extracted
+producer's current commands and repository setup, use the [operator playbook](../playbook.md).
+
 Status: implemented and verified on 2026-09-05. Both commands passed, and repeating the walkthrough
 created `v2` with every stored `v1` file unchanged. This document remains the behavior contract;
 [the acceptance record](10-drive-acceptance.md) contains observed results and disclosed limitations.

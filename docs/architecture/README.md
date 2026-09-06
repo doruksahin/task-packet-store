@@ -44,6 +44,9 @@ Credentials are never part of receipts or logs.
 
 The [design index](../design/README.md) links the implemented contracts. The
 [operator playbook](../playbook.md) covers Jira → packet → walkthrough → saved report.
+The independent [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)
+owns Jira access and packet preparation; AC consumes the existing stored packet. Both use this
+package's configuration and operations. Their installation does not add dependencies here.
 The [integration guide](../integrating-a-workflow.md) describes another workflow's adapter.
 Cross-repository relationships live in the
 [current source model](https://github.com/doruksahin/plugin-architecture/blob/main/model/current.dsl);
@@ -52,16 +55,18 @@ for a visual overview.
 
 ## Planned changes
 
-The ecosystem plans to extract the Jira packet producer from AC's repository. That is upstream
-ownership work; this package's storage configuration, packet format, and identity remain the
-shared interface. This rollout does not perform the extraction or change the published version.
+No storage behavior or package release is planned as part of the producer extraction. The
+[shared implementation plan](https://github.com/doruksahin/plugin-architecture/blob/main/PLAN.md)
+records upstream delivery and verification. Storage configuration, packet format, and identity
+remain the shared interface.
 
 ## Decisions
 
 [Storage decisions D1–D12](../design/00-decisions.md) own the delivered architecture.
 The [shared standard](https://github.com/doruksahin/plugin-architecture/blob/main/standard/README.md)
-governs this architecture entry page. Historical D11 describes delivered producer ownership;
-the target extraction stays separately labelled until implemented.
+governs this architecture entry page. Historical D11 records the first delivery; the
+[current producer architecture](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)
+owns the extracted preparation boundary.
 
 ## Verification
 
