@@ -23,6 +23,9 @@ The storage package, result links, and both CI workflows are implemented. The
 
 ## Map
 
+The [architecture entry page](../architecture/README.md) connects these detailed contracts to
+the ecosystem model and common repository checks.
+
 | Document | Read it when |
 | --- | --- |
 | [00-decisions.md](00-decisions.md) | You need the decisions and the latest delivery revision. |

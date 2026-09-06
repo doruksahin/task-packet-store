@@ -3,6 +3,10 @@
 Read `docs/design/README.md` first. The CLI contract in `docs/design/03-architecture.md` is
 authoritative over this file.
 
+When changing package responsibilities, public interfaces, dependencies, execution/storage
+integration, or failure behavior, read [the architecture contract](docs/architecture/README.md).
+Run `python3 .architecture/check.py` with the normal package checks.
+
 ## Non-negotiable rules
 
 1. Operations are written once against `PacketTransport`. Never branch on the driver inside an operation.

@@ -3,6 +3,9 @@
 Read and write task packets from a local file system or a Google Shared Drive. One CLI for tools
 that consume or produce packet content, on a laptop or in CI.
 
+For responsibilities, dependencies, execution/storage choices, and their source evidence, read
+[the architecture contract](docs/architecture/README.md).
+
 For the complete Jira → stored packet → walkthrough → stored report flow, start with the
 [operator playbook](docs/playbook.md). It lists the commands in order, their inputs and outputs,
 and how to find the saved files.
