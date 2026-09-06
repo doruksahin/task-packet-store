@@ -22,7 +22,8 @@ an AC verdict or a human approval.
 Installation: [package.json](../../package.json) has no internal plugin/package dependency.
 Library calls: [operations](../../src/operations.ts) use [PacketTransport](../../src/transport.ts).
 CLI calls: [Drive transport](../../src/rclone.ts) invokes rclone, which owns Drive API communication.
-File exchange: [filesystem transport](../../src/fs-file.ts) accesses the configured directory.
+File exchange: [filesystem transport](../../src/transport.ts) accesses the configured directory,
+using [atomic file replacement](../../src/fs-file.ts) for saved files.
 This package does not connect to Jira. Tests exercise shared operations through both transports.
 
 ## Execution and storage
