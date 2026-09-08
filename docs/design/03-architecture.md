@@ -19,7 +19,7 @@ Temporary packet → begin → AC-walkthrough → checkpoint → Google Shared D
 The first workflow is owned by the independent
 [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/.github/workflows/jira-to-packet.yml);
 the second is owned by
-[AC-walkthrough](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/.github/workflows/walkthrough-lab.yml).
+[AC-walkthrough](https://github.com/doruksahin/task-packet-store/blob/main/docs/playbook.md#run-through-github-actions).
 The [current operator playbook](../playbook.md) describes setup and commands. Each workflow reports
 the actual saved result location; the [delivery plan](../plan/README.md) retains historical proof.
 A vault can optionally fetch packets and pull runs afterward.

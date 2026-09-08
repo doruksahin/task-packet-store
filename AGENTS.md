@@ -16,7 +16,7 @@ For documentation and agent-guide edits, use the [link-check procedure](docs/mai
    3a. Help text and examples use neutral identifiers such as `PROJ-123`, never a consumer's project key.
 4. A filter has includes or excludes, never both.
 5. `fetch` and `push` exclude `/stages/*/runs/**`. `pull` includes only `/*/runs/**`.
-6. `packetSha256` keeps the formula of the walkthrough's [run-history implementation](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/packages/ac-walkthrough-plugin/runtime/scripts/src/run-history.ts). Change both or neither.
+6. `packetSha256` keeps the formula of the walkthrough's [run-history implementation](https://github.com/AdCreative-ai/AC-visual-walkthrough/blob/main/packages/ac-walkthrough-plugin/runtime/scripts/src/run-history.ts). Change both or neither.
 7. On success every command prints exactly one JSON object on stdout. On failure stdout is empty and stderr has one line `CODE: message`. Exit 0 on success, 2 for usage or configuration errors (including commander usage errors), 1 for everything else.
 
 ## Verification

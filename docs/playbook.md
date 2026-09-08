@@ -13,7 +13,7 @@ Jira → jira-to-packet → saved packet
 ## Before you start
 
 Prepare the separate [Jira producer checkout](https://github.com/doruksahin/jira-to-packet/blob/main/README.md)
-and [AC-walkthrough checkout](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/docs/portable-workflows.md).
+and [AC-walkthrough checkout](https://github.com/AdCreative-ai/AC-visual-walkthrough/blob/main/docs/portable-workflows.md).
 Their owner guides cover dependency installation and credentials. AC also needs a prepared
 application checkout with the supported `v2-mock` server running at `http://localhost:5173/`.
 These commands do not select an arbitrary application branch or preview URL.
@@ -90,7 +90,7 @@ still follows the workflow's human review rules.
 ## Run through GitHub Actions
 
 The producer workflow belongs to [jira-to-packet](https://github.com/doruksahin/jira-to-packet/blob/main/.github/workflows/jira-to-packet.yml);
-the consumer workflow belongs to [AC-walkthrough](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/.github/workflows/walkthrough-lab.yml).
+the consumer workflow belongs to [AC-walkthrough](https://github.com/AdCreative-ai/AC-visual-walkthrough/blob/main/.github/workflows/walkthrough-lab.yml).
 Before dispatch, configure the producer repository's store variable and secrets according to its
 [setup guide](https://github.com/doruksahin/jira-to-packet/blob/main/README.md), and give both jobs
 access to the same persistent store. Deployment activation in the new producer repository is not
@@ -103,7 +103,7 @@ gh workflow run jira-to-packet.yml --repo doruksahin/jira-to-packet -f ticket=PR
 Open the dispatched run and wait for `packet-ready` with its saved packet location. Then run:
 
 ```sh
-gh workflow run walkthrough-lab.yml --repo doruksahin/AC-visual-walkthrough -f ticket=PROJ-123
+gh workflow run walkthrough-lab.yml --repo AdCreative-ai/AC-visual-walkthrough -f ticket=PROJ-123
 ```
 
 Wait for `report-saved` and open its actual report/run links. Follow each exact run ID with

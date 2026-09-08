@@ -101,7 +101,7 @@ the [CLI reference](design/03-architecture.md#cli-contract) gives exact storage-
 The [operator playbook](playbook.md#run-the-same-flow-with-your-selected-store) puts these commands
 in order. Run each command from its owning repository. Setup is documented in
 [the Jira producer guide](https://github.com/doruksahin/jira-to-packet/blob/main/README.md),
-[the portable walkthrough guide](https://github.com/doruksahin/AC-visual-walkthrough/blob/main/docs/portable-workflows.md)
+[the portable walkthrough guide](https://github.com/AdCreative-ai/AC-visual-walkthrough/blob/main/docs/portable-workflows.md)
 and [Recon storage](https://github.com/AdCreative-ai/recon-plugin/blob/master/recon/docs/storage.md).
 AC also provides `run-walkthrough.mjs save --from <completed-workspace>` to save a validated existing
 draft without another LLM run; the destination must already contain the matching packet.
