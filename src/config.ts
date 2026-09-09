@@ -24,6 +24,33 @@ const IdentityEntry = z
   );
 const identity = z.array(IdentityEntry).min(1).default([...DEFAULT_IDENTITY]);
 
+/** A remote git can clone. `file://` is a legitimate bare remote and is how tests and CI run offline. */
+const GIT_PROTOCOLS = new Set(['https:', 'ssh:', 'file:']);
+const gitRemote = z
+  .string()
+  .refine(
+    (value) => {
+      try {
+        return GIT_PROTOCOLS.has(new URL(value).protocol);
+      } catch {
+        return false;
+      }
+    },
+    'remote must be an https://, ssh://, or file:// URL (scp-style host:path is not accepted)',
+  )
+  // A username is conventional (`ssh://git@host/o/r.git`); a password is the one credential a URL
+  // can carry, and the configuration file is committable. git's own credentials are the route.
+  .refine(
+    (value) => {
+      try {
+        return new URL(value).password === '';
+      } catch {
+        return true;
+      }
+    },
+    'remote must not embed a password; use an SSH agent or a git credential helper',
+  );
+
 export const StoreConfigSchema = z.discriminatedUnion('driver', [
   z.strictObject({
     driver: z.literal('fs'),
@@ -36,11 +63,19 @@ export const StoreConfigSchema = z.discriminatedUnion('driver', [
     prefix: z.string().regex(SAFE_PREFIX, 'prefix has no leading or trailing slash').optional(),
     identity,
   }),
+  z.strictObject({
+    driver: z.literal('git'),
+    remote: gitRemote,
+    branch: z.string().regex(SAFE_SEGMENT, 'branch must be one path segment').default('main'),
+    prefix: z.string().regex(SAFE_PREFIX, 'prefix has no leading or trailing slash').optional(),
+    identity,
+  }),
 ]);
 
 export type StoreConfig = z.infer<typeof StoreConfigSchema>;
 export type FsConfig = Extract<StoreConfig, { driver: 'fs' }>;
 export type GdriveConfig = Extract<StoreConfig, { driver: 'gdrive' }>;
+export type GitConfig = Extract<StoreConfig, { driver: 'git' }>;
 
 export function parseStoreConfig(value: unknown): StoreConfig {
   const result = StoreConfigSchema.safeParse(value);

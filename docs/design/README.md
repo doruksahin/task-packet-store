@@ -3,13 +3,15 @@
 ## 30-second overview
 
 A task packet is a directory identified by a Jira ticket, containing the task source and stage
-outputs. Its persistent home is a configured local directory or Google Shared Drive.
+outputs. Its persistent home is a configured local directory, a Google Shared Drive, or a branch of
+a git repository.
 
 - One npm package, `@doruksahin/task-packet-store`, with one CLI, `task-packet-store`.
-- Two transports: `fs` for a configured directory and `gdrive` through pinned rclone.
+- Three transports: `fs` for a configured directory, `gdrive` through pinned rclone, and `git`
+  through a temporary clone of a remote branch.
 - Shared operations: `fetch`, `push`, `begin`, `checkpoint`, and `pull`; `doctor` reports setup.
 - Tool output lives under `stages/NN-slug/runs/vN/` in the selected store.
-- Workflows process ordinary files in a working directory. Neither storage choice requires a vault.
+- Workflows process ordinary files in a working directory. No storage choice requires a vault.
 
 The flow has two independent commands: Jira → saved packet, then stored packet →
 AC-walkthrough → saved HTML. The [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/README.md)
@@ -53,6 +55,7 @@ the ecosystem model and common repository checks.
 | D10 | Deferred work | Seal, blueprint schema change, Git/LFS storage |
 | D11 | Required operator flow | Two CI commands, actual Drive links, no required local vault |
 | D12 | Reuse across workflows | Explicit shared store config and consumer adapters around ordinary files |
+| D13 | Git driver | Vanilla git transport around a temporary clone; LFS management stays out of scope |
 
 The [plan's execution protocol](../plan/README.md#how-to-execute-a-step) is the single source for
 checkpoint statuses and evidence. Completed foundation documents retain their historical evidence;

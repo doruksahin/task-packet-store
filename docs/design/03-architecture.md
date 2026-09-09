@@ -32,15 +32,19 @@ Inside the package:
 
 ```text
 cli.ts ─► operations.ts ─► PacketTransport ─┬─► FsTransport      (node:fs)
-   │            │                           └─► RcloneTransport  (spawns rclone)
+   │            │                           ├─► RcloneTransport  (spawns rclone)
+   │            │                           └─► GitTransport     (spawns git; FsTransport in the clone)
    │            ├─► identity.ts   packetSha256 over identity globs
    │            ├─► run-record.ts run.md frontmatter, snapshot.json, state file
    │            └─► glob.ts       anchored glob matcher for fs filters
    └─► config.ts  zod schema, credential-free
 ```
 
-`operations.ts` is written once against `PacketTransport`. The two transports differ only in how
-bytes move and existing locations are resolved. Tests exercise the same operations through both transports.
+`operations.ts` is written once against `PacketTransport`. The transports differ only in how bytes
+move and existing locations are resolved. `GitTransport` adds no file handling of its own: it clones
+the branch for one operation, delegates every read, copy, and path-safety rule to an `FsTransport`
+rooted at that clone, commits and pushes what a write changed, and removes the clone. Tests exercise
+the same operations through every transport.
 
 ## Configuration
 
@@ -63,8 +67,20 @@ One JSON file, credential-free, committable. Unknown keys are rejected.
 }
 ```
 
+```json
+{
+  "driver": "git",
+  "remote": "ssh://git@github.com/team/packets.git",
+  "branch": "main",
+  "prefix": "packets",
+  "identity": ["00 Packet.md", "task.md", "jira/**"]
+}
+```
+
 - `identity` defaults to the three entries shown. An entry is an exact file or `dir/**`.
 - `prefix` is optional, no leading or trailing slash.
+- `remote` is an `https://`, `ssh://`, or `file://` URL; scp-style `host:path` is rejected. `branch`
+  is one path segment and defaults to `main`.
 - The runs glob is a constant, `/stages/*/runs/**`. It is not configurable in the PoC.
 
 ## Credentials
@@ -76,6 +92,20 @@ One JSON file, credential-free, committable. Unknown keys are rejected.
 
 Exactly one must be set for the `gdrive` driver. The `fs` driver needs none. The package removes
 every ambient `RCLONE_*` variable before it spawns rclone and sets `RCLONE_DRIVE_SCOPE=drive`.
+
+The `git` driver has no package-scoped credential variable. The ambient credential surface reaches
+git as it is, so the SSH agent and any configured credential helper work as they already do, but the
+driver removes what would point git at another repository (`GIT_DIR`, `GIT_WORK_TREE`,
+`GIT_INDEX_FILE`, and their relatives) or override its fixed commit identity (`GIT_AUTHOR_*`,
+`GIT_COMMITTER_*`, `GIT_CONFIG*`). `GIT_TERMINAL_PROMPT=0` disables git's own terminal prompt over
+https; an askpass helper the environment supplies (`GIT_ASKPASS`, `SSH_ASKPASS`, or `core.askPass`)
+still runs, because the driver keeps the ambient credential surface. Over ssh, an unknown host key or
+a key passphrase can still prompt or hang; disable that in your own ssh configuration —
+`ssh-keyscan` the host into `known_hosts`, or set `GIT_SSH_COMMAND='ssh -o BatchMode=yes'` /
+`core.sshCommand` — the driver does not override your ssh command. `LC_ALL=C` keeps git's diagnostics
+in the English the driver matches. It reads no package-scoped variable and passes nothing to git
+beyond the configured `remote`, and a `remote` that embeds a password is rejected when the
+configuration is read.
 
 The remote is a connection string, so no `rclone.conf` exists anywhere:
 
@@ -165,8 +195,8 @@ Downloads `stages/*/runs/**` from the remote into the local packet. Merges. Neve
 task-packet-store doctor --store <abs cfg>
 ```
 
-Reports the rclone version, whether exactly one credential variable is set, and the resolved remote
-root. Makes no network call.
+Reports the driver's tool version, the credential source, and the resolved remote root. Makes no
+network call.
 
 ### locate
 
@@ -199,6 +229,12 @@ For `fs`, `location` is the existing absolute path, such as
 `/abs/packets/PROJ-123/stages/20-ac-walkthrough/runs/v1/delivery/report.html`. No rclone or Drive
 authentication is used. Symlinks within the packet path and non-regular files are rejected with
 `STORE_PACKET_UNSAFE`; the configured store root itself may be a symlink.
+
+For `git`, `location` is `<remote>#<commit>:<path>`, such as
+`ssh://git@github.com/team/packets.git#4d9f…:packets/PROJ-123/stages/20-ac-walkthrough/runs/v1/delivery/report.html`.
+The fragment is git's own `treeish:path` grammar, so the location is commit-pinned and
+provider-neutral: `git show <commit>:<path>` resolves the same bytes in any clone of that remote, and
+no web UI or host URL convention is assumed. The commit is the `HEAD` of the clone the lookup read.
 
 For `gdrive`, the transport first checks the parent's directory type with `rclone lsjson --stat`,
 then lists that directory with `rclone lsjson` and matches the object's exact name. It uses the observed `ID` and `IsDir` to return
@@ -293,11 +329,16 @@ State file, local, written by `begin`, updated by `checkpoint`:
 7. rclone exit codes 3 and 4 mean "not found". Everything else non-zero is `STORE_RCLONE_FAILED`
    with the last lines of stderr.
 8. Credentials never appear in config, state, records, stdout, or stderr.
+9. The `git` driver needs git 2.28 or newer on `PATH`. It clones for one operation and keeps no
+   persistent clone. A write commits and pushes once; a rejected push is `STORE_GIT_FAILED`, never a
+   retry, a rebase, or a force. The driver holds no Git LFS handling: the remote's `.gitattributes`
+   and an installed `git-lfs` decide that.
 
 ## Error codes
 
 `STORE_CONFIG_INVALID` (exit 2), `STORE_STATE_INVALID` (exit 2), `STORE_AUTH_MISSING`,
-`STORE_RCLONE_UNAVAILABLE`, `STORE_RCLONE_FAILED`, `STORE_PACKET_MISSING`, `STORE_PACKET_UNSAFE`,
+`STORE_RCLONE_UNAVAILABLE`, `STORE_RCLONE_FAILED`, `STORE_GIT_UNAVAILABLE`, `STORE_GIT_FAILED`,
+`STORE_PACKET_MISSING`, `STORE_PACKET_UNSAFE`,
 `STORE_DESTINATION_EXISTS`, `STORE_RUN_MISSING`, `STORE_LOCATION_MISSING`, `STORE_VERSION_CONFLICT`, `STORE_UNEXPECTED` (all
 exit 1). Unknown errors are reported under `STORE_UNEXPECTED` so the failure rule holds.
 
@@ -309,9 +350,10 @@ code. Usage errors caught by commander carry no `STORE_*` code; see "CLI contrac
 ## Testing strategy
 
 - Unit tests for config, glob, identity, and records.
-- One operations test suite, run twice: through `FsTransport`, and through `RcloneTransport` with a
-  temporary local directory as the remote. The second suite is skipped when rclone is absent and is
-  mandatory in CI, which installs the pinned rclone.
+- One operations test suite, run three times: through `FsTransport`, through `RcloneTransport` with a
+  temporary local directory as the remote, and through `GitTransport` against a temporary bare
+  repository reached over `file://`. The rclone and git suites are skipped when their binary is absent
+  and are mandatory in CI, which installs the pinned rclone.
 - One manual round trip against the real Shared Drive before the first release. Its output goes into
   the evidence of plan step 05.
 - The walkthrough repository keeps its cross-package digest contract test and imports

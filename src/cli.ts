@@ -9,7 +9,7 @@ import { TASK_PACKET_STORE_VERSION } from './version.js';
 
 const program = new Command()
   .name('task-packet-store')
-  .description('Read and write task packets from a local file system or Google Drive.')
+  .description('Read and write task packets from a local file system, Google Drive, or a git repository.')
   .version(TASK_PACKET_STORE_VERSION, '-V, --version')
   .showHelpAfterError()
   .exitOverride();
@@ -135,7 +135,7 @@ program
 
 program
   .command('doctor')
-  .description('Report rclone version, credential variables, and the resolved remote.')
+  .description('Report the driver tool version, credential source, and the resolved remote.')
   .requiredOption('--store <file>', 'absolute path to the store JSON')
   .action((options: { store: string }) =>
     run(async () => {

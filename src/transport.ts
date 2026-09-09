@@ -14,7 +14,7 @@ export type TransferFilter =
   | { readonly includes: readonly string[]; readonly excludes?: never }
   | { readonly excludes: readonly string[]; readonly includes?: never };
 
-export type Driver = 'fs' | 'gdrive';
+export type Driver = 'fs' | 'gdrive' | 'git';
 
 export interface ResultLocation {
   kind: 'directory' | 'file';
