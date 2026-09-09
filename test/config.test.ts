@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_IDENTITY, parseStoreConfig, validateStage, validateTicket } from '../src/config.js';
 
 const gdrive = { driver: 'gdrive', sharedDriveId: '0ABcDeFgHiJkLmNoP' } as const;
+const git = { driver: 'git', remote: 'https://github.com/team/packets.git' } as const;
 
 describe('store config', () => {
   it('accepts an fs config and fills the default identity', () => {
@@ -12,10 +13,30 @@ describe('store config', () => {
     const config = parseStoreConfig({ ...gdrive, prefix: 'packets' });
     expect(config.driver).toBe('gdrive');
   });
+  it('accepts a git config and defaults the branch to main', () => {
+    expect(parseStoreConfig({ ...git, prefix: 'packets' })).toMatchObject({ driver: 'git', branch: 'main' });
+  });
+  it.each(['https://github.com/team/packets.git', 'ssh://git@github.com/team/packets.git', 'file:///srv/packets.git'])(
+    'accepts git remote %j',
+    (remote) => {
+      expect(parseStoreConfig({ driver: 'git', remote }).driver).toBe('git');
+    },
+  );
+  it.each(['git@github.com:team/packets.git', 'http://github.com/team/packets.git', '/srv/packets.git', ''])(
+    'rejects git remote %j',
+    (remote) => {
+      expect(() => parseStoreConfig({ driver: 'git', remote })).toThrow('STORE_CONFIG_INVALID');
+    },
+  );
+  it.each(['release/next', '..', '.', 'a/b'])('rejects git branch %j', (branch) => {
+    expect(() => parseStoreConfig({ ...git, branch })).toThrow('STORE_CONFIG_INVALID');
+  });
   it('rejects unknown keys, relative roots, and bad prefixes', () => {
     expect(() => parseStoreConfig({ driver: 'fs', root: '/abs', extra: 1 })).toThrow('STORE_CONFIG_INVALID');
     expect(() => parseStoreConfig({ driver: 'fs', root: 'relative' })).toThrow('STORE_CONFIG_INVALID');
     expect(() => parseStoreConfig({ ...gdrive, prefix: '/x/' })).toThrow('STORE_CONFIG_INVALID');
+    expect(() => parseStoreConfig({ ...git, prefix: 'x/' })).toThrow('STORE_CONFIG_INVALID');
+    expect(() => parseStoreConfig({ ...git, extra: 1 })).toThrow('STORE_CONFIG_INVALID');
   });
   it.each(['packets', 'a/b', 'team.x/packets-2026'])('accepts prefix %j', (prefix) => {
     expect(parseStoreConfig({ ...gdrive, prefix }).driver).toBe('gdrive');

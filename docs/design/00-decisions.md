@@ -150,3 +150,28 @@ runner portable and integrates Recon dossier delivery as the second consumer.
 
 See [the adapter contract](06-workflow-adapters.md) and
 [the reusable-storage delivery plan](../plan/README.md#reusable-workflow-storage).
+
+## D13. Add a vanilla git driver as a third PacketTransport
+
+A `git` driver joins `fs` and `gdrive` behind the existing `PacketTransport`. It clones the
+configured branch into a temporary directory for one operation, delegates every read, copy, and
+path-safety rule to an `FsTransport` rooted at that clone, and commits and pushes what a write
+changed. `locate` returns `<remote>#<commit>:<path>`.
+
+Why: the interface already exists, so a third backend is a transport, not a new architecture, and
+`operations.ts` keeps its single driver-free implementation. A consumer asked for a git route. The
+scope is deliberately narrow: a transport, not the vault repository as the store; no Git LFS logic
+(the remote's `.gitattributes` and an installed `git-lfs` decide that); no ledger; no persistent
+clone; git's own credentials, never a token this package reads or forwards. This reopens
+[D1](#d1-storage-backend-google-shared-drive-and-local-file-system) (2026-09-04), and with it
+[D10](#d10-dropped-for-the-poc)'s deferral of git storage, for that narrower scope only. D1's
+rejection of the vault repository as the store, and of LFS management inside this package, both
+stand.
+
+Rejected: browse-URL locations such as a GitHub blob link (they assume a web UI and a host's URL
+convention, which is wrong for a bare or `ssh://` remote); a persistent configured clone (a
+machine-local path inside a shareable, committable configuration, plus stale-clone failure modes);
+retry or rebase on a rejected push (it hides a real concurrent write behind a silent merge).
+
+Reopen when: a consumer needs LFS management, the per-operation clone cost is measured to matter, or
+LFS quota or history growth is observed on a real remote.

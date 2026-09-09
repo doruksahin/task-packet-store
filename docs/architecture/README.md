@@ -22,14 +22,17 @@ an AC verdict or a human approval.
 Installation: [package.json](../../package.json) has no internal plugin/package dependency.
 Library calls: [operations](../../src/operations.ts) use [PacketTransport](../../src/transport.ts).
 CLI calls: [Drive transport](../../src/rclone.ts) invokes rclone, which owns Drive API communication.
+Repository exchange: [git transport](../../src/git.ts) invokes git, which owns remote authentication
+and history, around a temporary clone the filesystem transport reads and writes.
 File exchange: [filesystem transport](../../src/transport.ts) accesses the configured directory,
 using [atomic file replacement](../../src/fs-file.ts) for saved files.
-This package does not connect to Jira. Tests exercise shared operations through both transports.
+This package does not connect to Jira. Tests exercise shared operations through every transport.
 
 ## Execution and storage
 
 Runs on a developer host or CI runner with Node.js. `fs` selects a durable directory reachable
-by that host; `gdrive` selects a Shared Drive and requires rclone and explicit credentials.
+by that host; `gdrive` selects a Shared Drive and requires rclone and explicit credentials; `git`
+selects a branch of a remote repository and requires git and that host's existing git credentials.
 A temporary CI workspace is a processing copy, not durable filesystem storage. Reuse the same
 configuration through the [consumer adapter contract](../design/06-workflow-adapters.md).
 
@@ -62,7 +65,7 @@ remain the shared interface.
 
 ## Decisions
 
-[Storage decisions D1–D12](../design/00-decisions.md) own the delivered architecture.
+[Storage decisions D1–D13](../design/00-decisions.md) own the delivered architecture.
 The [shared standard](https://github.com/doruksahin/plugin-architecture/blob/main/standard/README.md)
 governs this architecture entry page. Historical D11 records the first delivery; the
 [current producer architecture](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)

@@ -1,4 +1,5 @@
 import type { StoreConfig } from './config.js';
+import { createGitRunner, gitEnv, GitTransport } from './git.js';
 import {
   createRcloneRunner,
   driveRemote,
@@ -11,8 +12,14 @@ import {
 import { FsTransport, type PacketTransport } from './transport.js';
 
 export function createTransport(config: StoreConfig, env: NodeJS.ProcessEnv = process.env): PacketTransport {
-  if (config.driver === 'fs') return new FsTransport(config.root);
-  return new RcloneTransport(createRcloneRunner(rcloneEnv(env)), (ticket) => driveRemote(config, ticket));
+  switch (config.driver) {
+    case 'fs':
+      return new FsTransport(config.root);
+    case 'gdrive':
+      return new RcloneTransport(createRcloneRunner(rcloneEnv(env)), (ticket) => driveRemote(config, ticket));
+    case 'git':
+      return new GitTransport(createGitRunner(gitEnv(env)), config);
+  }
 }
 
 export async function doctorStore(config: StoreConfig, env: NodeJS.ProcessEnv = process.env) {
@@ -23,6 +30,14 @@ export async function doctorStore(config: StoreConfig, env: NodeJS.ProcessEnv = 
       rcloneTested: RCLONE_TESTED_VERSION,
       credential: 'none',
       remoteRoot: config.root,
+    };
+  }
+  if (config.driver === 'git') {
+    return {
+      driver: config.driver,
+      git: (await createGitRunner(gitEnv(env)).run(['--version'])).stdout.trim(),
+      credential: 'ambient git credentials',
+      remoteRoot: `${config.remote}#${config.branch}${config.prefix ? `/${config.prefix}` : ''}`,
     };
   }
   const runner = createRcloneRunner(rcloneEnv(env));

@@ -1,7 +1,7 @@
 # task-packet-store
 
-Read and write task packets from a local file system or a Google Shared Drive. One CLI for tools
-that consume or produce packet content, on a laptop or in CI.
+Read and write task packets from a local file system, a Google Shared Drive, or a git repository.
+One CLI for tools that consume or produce packet content, on a laptop or in CI.
 
 For responsibilities, dependencies, execution/storage choices, and their source evidence, read
 [the architecture contract](docs/architecture/README.md).
@@ -14,6 +14,8 @@ and how to find the saved files.
 
 - Node.js 20 or newer.
 - rclone 1.75.0 for the `gdrive` driver. The `fs` driver needs no rclone.
+- `git` on `PATH` for the `git` driver; if the remote tracks files with Git LFS, `git-lfs` must also be
+  installed — the driver does not manage LFS.
 
 ## Install
 
@@ -47,11 +49,17 @@ npm exec --yes \
 | `begin` | Reserve the next `runs/vN` for a stage and write `run.md`. |
 | `checkpoint` | Upload a source directory into the reserved run and write `snapshot.json`. |
 | `pull` | Download every `stages/*/runs/**` into a local packet. |
-| `locate` | Resolve an existing packet, run folder, or file to a local absolute path or Drive link. |
-| `doctor` | Report the rclone version, the credential variables, and the resolved remote. |
+| `locate` | Resolve an existing packet, run folder, or file to a local absolute path, a Drive link, or a commit-pinned git location. |
+| `doctor` | Report the driver tool version, the credential source, and the resolved remote. |
 
-All seven commands work through the same packet operations with either driver. The `fs` driver uses
-the local filesystem directly; the `gdrive` driver spawns the pinned rclone binary.
+All seven commands work through the same packet operations with any configured driver. The `fs`
+driver uses the local filesystem directly; the `gdrive` driver spawns the pinned rclone binary; the
+`git` driver clones the branch into a temporary directory for each operation, then commits and
+pushes what a write changed.
+
+For the `git` driver, `locate` reports `<remote>#<commit>:<path>`: git's own `treeish:path` grammar
+inside a URL fragment. It is commit-pinned and provider-neutral, so `git show <commit>:<path>`
+resolves the exact bytes in any clone of that remote, with no web UI or host convention assumed.
 
 Every command prints one JSON object on stdout when it succeeds. On failure stdout is empty and
 stderr has one line `CODE: message`. Exit 0 on success, 2 for usage or configuration errors, and 1
@@ -97,8 +105,22 @@ Local file system:
 }
 ```
 
+Git repository:
+
+```json
+{
+  "driver": "git",
+  "remote": "ssh://git@github.com/team/packets.git",
+  "branch": "main",
+  "prefix": "packets",
+  "identity": ["00 Packet.md", "task.md", "jira/**"]
+}
+```
+
 - `identity` defaults to the three entries shown. An entry is an exact file or `dir/**`.
 - `prefix` is optional, with no leading or trailing slash.
+- `remote` is an `https://`, `ssh://`, or `file://` URL. The scp-style `host:path` form is rejected.
+- `branch` is optional and defaults to `main`. A remote without that branch yet gets it on the first write.
 
 Credentials for the `gdrive` driver come from the process environment only. Set exactly one of:
 
@@ -109,6 +131,11 @@ Credentials for the `gdrive` driver come from the process environment only. Set 
 
 The `fs` driver needs neither. Do not put these values in the configuration file, command
 arguments, or source control.
+
+The `git` driver uses git's own credentials: the SSH agent or the credential helper git is already
+configured with. It reads no package-scoped variable and never forwards a token. It sets
+`GIT_TERMINAL_PROMPT=0`, so an unauthenticated remote fails with a message instead of waiting for a
+prompt.
 
 ## Documentation
 

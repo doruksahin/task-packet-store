@@ -1,9 +1,12 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { parseStoreConfig } from '../src/config.js';
+import { createGitRunner, GitTransport, gitEnv } from '../src/git.js';
 import { locateResult } from '../src/operations.js';
 import { RcloneTransport, type RcloneResult } from '../src/rclone.js';
-import { FsTransport } from '../src/transport.js';
+import { FsTransport, type Driver, type PacketTransport } from '../src/transport.js';
 import { cleanupTempDirs, tempDir, writeTree } from './operations.shared.js';
 
 afterEach(cleanupTempDirs);
@@ -16,13 +19,59 @@ const objects = [
   { relativePath: report, kind: 'file', id: 'html_observed_ID' },
 ] as const;
 
-for (const driver of ['fs', 'gdrive'] as const) {
-  describe(`result location contract through ${driver}`, () => {
-    function make() {
-      const root = tempDir('tps-location-');
-      writeTree(path.join(root, ticket), { [report]: '<html>saved report</html>' });
-      const calls: string[][] = [];
-      const transport = driver === 'fs' ? new FsTransport(root) : new RcloneTransport({
+interface LocationFixture {
+  root: string;
+  transport: PacketTransport;
+  /** Backend invocations: a lookup must make only read-only ones, and a rejected path must make none. */
+  calls: string[][];
+  /** The location this driver must report for one seeded object. */
+  location(object: (typeof objects)[number]): string;
+  readOnly(args: string[]): boolean;
+}
+
+function seedRoot(): string {
+  const root = tempDir('tps-location-');
+  writeTree(path.join(root, ticket), { [report]: '<html>saved report</html>' });
+  return root;
+}
+
+/** Publish the seeded root as the `main` branch of a fresh bare repository, and return remote and commit. */
+function publish(root: string): { remote: string; commit: string } {
+  const env = { PATH: process.env.PATH ?? '' };
+  const bare = tempDir('tps-bare-');
+  const remote = `file://${bare}`;
+  const git = (args: string[]) => {
+    const result = spawnSync('git', args, { encoding: 'utf8', env });
+    if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
+    return result.stdout;
+  };
+  git(['init', '--bare', '--initial-branch=main', bare]);
+  git(['init', '--initial-branch=main', root]);
+  git(['-C', root, 'remote', 'add', 'origin', remote]);
+  git(['-C', root, 'add', '--', ticket]);
+  git(['-C', root, '-c', 'user.name=t', '-c', 'user.email=t@localhost', '-c', 'commit.gpgsign=false', 'commit', '-m', 'seed']);
+  git(['-C', root, 'push', 'origin', 'HEAD:main']);
+  return { remote, commit: git(['-C', bare, 'rev-parse', 'main']).trim() };
+}
+
+const fixtures: Record<Driver, () => LocationFixture> = {
+  fs: () => {
+    const root = seedRoot();
+    return {
+      root,
+      transport: new FsTransport(root),
+      calls: [],
+      location: (object) => path.join(root, ticket, object.relativePath),
+      readOnly: () => true,
+    };
+  },
+  gdrive: () => {
+    const root = seedRoot();
+    const calls: string[][] = [];
+    return {
+      root,
+      calls,
+      transport: new RcloneTransport({
         run: async (args) => {
           calls.push(args);
           if (args[1] === '--stat') return { code: 0, stdout: '{"IsDir":true}', stderr: '' };
@@ -37,9 +86,38 @@ for (const driver of ['fs', 'gdrive'] as const) {
           }));
           return { code: 0, stdout: JSON.stringify(listing), stderr: '' };
         },
-      }, (key) => `:drive,team_drive=sharedDriveId:packets/${key}`);
-      return { root, transport, calls };
-    }
+      }, (key) => `:drive,team_drive=sharedDriveId:packets/${key}`),
+      location: (object) => object.kind === 'directory'
+        ? `https://drive.google.com/drive/folders/${object.id}`
+        : `https://drive.google.com/file/d/${object.id}/view`,
+      readOnly: (args) => args[0] === 'lsjson' && (args.length === 2 || args[1] === '--stat'),
+    };
+  },
+  git: () => {
+    const root = seedRoot();
+    const { remote, commit } = publish(root);
+    const config = parseStoreConfig({ driver: 'git', remote });
+    if (config.driver !== 'git') throw new Error('unreachable');
+    const calls: string[][] = [];
+    const runner = createGitRunner(gitEnv({ PATH: process.env.PATH ?? '' }));
+    return {
+      root,
+      calls,
+      transport: new GitTransport({
+        run: (args, cwd) => {
+          calls.push(args);
+          return runner.run(args, cwd);
+        },
+      }, config),
+      location: (object) => [`${remote}#${commit}:${ticket}`, object.relativePath].filter(Boolean).join('/'),
+      readOnly: (args) => args[0] === 'clone' || args[2] === 'rev-parse',
+    };
+  },
+};
+
+for (const driver of ['fs', 'gdrive', 'git'] as const) {
+  describe(`result location contract through ${driver}`, () => {
+    const make = fixtures[driver];
 
     it.each(objects)('resolves existing $kind $relativePath without writing', async (object) => {
       const h = make();
@@ -47,14 +125,11 @@ for (const driver of ['fs', 'gdrive'] as const) {
       const before = fs.statSync(html);
       const result = await locateResult(h.transport, ticket, object.relativePath);
       expect(result).toEqual({
-        ticket, driver, relativePath: object.relativePath, kind: object.kind,
-        location: driver === 'fs' ? path.join(h.root, ticket, object.relativePath)
-          : object.kind === 'directory' ? `https://drive.google.com/drive/folders/${object.id}`
-          : `https://drive.google.com/file/d/${object.id}/view`,
+        ticket, driver, relativePath: object.relativePath, kind: object.kind, location: h.location(object),
       });
       expect(fs.readFileSync(html, 'utf8')).toBe('<html>saved report</html>');
       expect(fs.statSync(html).mtimeMs).toBe(before.mtimeMs);
-      expect(h.calls.every((args) => args[0] === 'lsjson' && (args.length === 2 || args[1] === '--stat'))).toBe(true);
+      expect(h.calls.every((args) => h.readOnly(args))).toBe(true);
     });
 
     it('defaults to the packet folder', async () => {
