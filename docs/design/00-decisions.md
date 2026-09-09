@@ -162,7 +162,10 @@ Why: the interface already exists, so a third backend is a transport, not a new 
 `operations.ts` keeps its single driver-free implementation. A consumer asked for a git route. The
 scope is deliberately narrow: a transport, not the vault repository as the store; no Git LFS logic
 (the remote's `.gitattributes` and an installed `git-lfs` decide that); no ledger; no persistent
-clone; git's own credentials, never a token this package reads or forwards. This reopens
+clone; git's own credentials, never a token this package reads or forwards. The driver controls
+git's environment the way the rclone driver controls rclone's: the ambient credential surface stays,
+and the variables that would redirect git at another repository or override its fixed commit
+identity are removed. This reopens
 [D1](#d1-storage-backend-google-shared-drive-and-local-file-system) (2026-09-04), and with it
 [D10](#d10-dropped-for-the-poc)'s deferral of git storage, for that narrower scope only. D1's
 rejection of the vault repository as the store, and of LFS management inside this package, both

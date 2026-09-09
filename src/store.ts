@@ -1,5 +1,5 @@
 import type { StoreConfig } from './config.js';
-import { createGitRunner, gitEnv, GitTransport } from './git.js';
+import { createGitRunner, gitEnv, GitTransport, gitVersion } from './git.js';
 import {
   createRcloneRunner,
   driveRemote,
@@ -35,9 +35,9 @@ export async function doctorStore(config: StoreConfig, env: NodeJS.ProcessEnv = 
   if (config.driver === 'git') {
     return {
       driver: config.driver,
-      git: (await createGitRunner(gitEnv(env)).run(['--version'])).stdout.trim(),
+      git: await gitVersion(createGitRunner(gitEnv(env))),
       credential: 'ambient git credentials',
-      remoteRoot: `${config.remote}#${config.branch}${config.prefix ? `/${config.prefix}` : ''}`,
+      remoteRoot: `${config.remote}#${config.branch}${config.prefix ? `:${config.prefix}` : ''}`,
     };
   }
   const runner = createRcloneRunner(rcloneEnv(env));

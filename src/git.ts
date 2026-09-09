@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process';
+import { execFile, type ExecFileException } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -6,10 +6,29 @@ import type { GitConfig } from './config.js';
 import { StoreError } from './errors.js';
 import { FsTransport, type PacketTransport, type ResultLocation, type TransferFilter } from './transport.js';
 
-/** The remote has no commit yet, or not this branch: a read sees an empty tree and the first write creates it. */
-const NO_BRANCH_YET = /Remote branch .* not found|cloned an empty repository|couldn't find remote ref/i;
+/**
+ * `git clone --branch` says this when the remote has no such branch: a read sees an empty tree and
+ * the first write creates it. Case-sensitive, because `gitEnv` pins git's messages to English.
+ */
+const NO_BRANCH_YET = /Remote branch .* not found/;
 /** `git commit` exits 1 when the copy changed nothing. Both wordings occur, on stdout or stderr. */
 const NOTHING_TO_COMMIT = /nothing to commit|nothing added to commit/;
+
+/** Point git at a repository other than the clone. An ambient one would commit and push elsewhere. */
+const REDIRECTING_VARIABLES = new Set([
+  'GIT_DIR',
+  'GIT_WORK_TREE',
+  'GIT_INDEX_FILE',
+  'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+  'GIT_COMMON_DIR',
+  'GIT_NAMESPACE',
+  'GIT_PREFIX',
+  'GIT_CEILING_DIRECTORIES',
+  'GIT_DISCOVERY_ACROSS_FILESYSTEM',
+]);
+/** `GIT_AUTHOR_*`/`GIT_COMMITTER_*` outrank `-c user.*`, and `GIT_CONFIG*` injects arbitrary configuration. */
+const REDIRECTING_PREFIXES = ['GIT_AUTHOR_', 'GIT_COMMITTER_', 'GIT_CONFIG'];
 
 export interface GitResult {
   code: number;
@@ -21,9 +40,27 @@ export interface GitRunner {
   run(args: string[], cwd?: string): Promise<GitResult>;
 }
 
-/** The ambient environment unchanged: SSH agent, credential helpers, `HOME` and `GIT_*` all stay. Never prompt. */
+/**
+ * The driver controls git's environment, as the rclone driver controls rclone's. The ambient
+ * credential surface stays untouched — SSH agent, credential helper, `HOME`, `PATH`, `GIT_EXEC_PATH`
+ * and everything else — because git's own credentials are the only ones this package uses. Removed
+ * is what could redirect git away from its temporary clone (`GIT_DIR` and the rest of
+ * `REDIRECTING_VARIABLES`) or override the fixed commit identity (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`,
+ * `GIT_CONFIG*`). Added: no prompting over https, no prompting over ssh unless the operator set their
+ * own command, and `LC_ALL=C` so the diagnostics this module matches stay the English strings.
+ */
 export function gitEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  return { ...env, GIT_TERMINAL_PROMPT: '0' };
+  const clean = Object.fromEntries(
+    Object.entries(env).filter(
+      ([key]) => !REDIRECTING_VARIABLES.has(key) && !REDIRECTING_PREFIXES.some((prefix) => key.startsWith(prefix)),
+    ),
+  );
+  // GIT_TERMINAL_PROMPT never reaches ssh, which would still ask about an unknown host key or a
+  // passphrase. BatchMode turns those into an error. An operator's own ssh command wins.
+  const ssh = env.GIT_SSH_COMMAND === undefined && env.GIT_SSH === undefined
+    ? { GIT_SSH_COMMAND: 'ssh -o BatchMode=yes' }
+    : {};
+  return { ...clean, ...ssh, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' };
 }
 
 export function createGitRunner(env: NodeJS.ProcessEnv, binary = 'git'): GitRunner {
@@ -31,29 +68,62 @@ export function createGitRunner(env: NodeJS.ProcessEnv, binary = 'git'): GitRunn
     run: (args, cwd) =>
       new Promise((resolve, reject) => {
         execFile(binary, args, { cwd, env, maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
-          if (error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+          const out = String(stdout);
+          const err = String(stderr);
+          if (!error) {
+            resolve({ code: 0, stdout: out, stderr: err });
+            return;
+          }
+          const failure = error as ExecFileException;
+          if (failure.code === 'ENOENT') {
             reject(new StoreError('STORE_GIT_UNAVAILABLE', `${binary} is not installed or not on PATH`));
             return;
           }
-          const raw = error ? Number((error as { code?: unknown }).code ?? 1) : 0;
-          resolve({ code: Number.isFinite(raw) ? raw : 1, stdout: String(stdout), stderr: String(stderr) });
+          // A killed child carries a signal and no exit status; a spawn failure such as EACCES
+          // carries a string code. Neither has stderr, so the reason has to come from the error.
+          if (failure.signal) {
+            resolve({ code: 1, stdout: out, stderr: err || `git terminated by ${failure.signal}` });
+            return;
+          }
+          const raw = Number(failure.code ?? 1);
+          if (!Number.isFinite(raw)) {
+            resolve({ code: 1, stdout: out, stderr: err || error.message });
+            return;
+          }
+          resolve({ code: raw, stdout: out, stderr: err });
         });
       }),
   };
 }
 
-/** git states the cause first; the remote echo and hints follow. */
-function firstLine(stderr: string): string {
-  return stderr.split('\n').map((line) => line.trim()).find((line) => line !== '') ?? '';
+function lines(text: string): string[] {
+  return text.split('\n').map((line) => line.trim()).filter((line) => line !== '');
+}
+
+/**
+ * git states the cause last: `clone` echoes `Cloning into '…'` before it fails, and `commit` writes
+ * its diagnostics to stdout, so an empty stderr still has to produce a reason.
+ */
+function tail(result: GitResult): string {
+  const stderr = lines(result.stderr);
+  return stderr.length > 0 ? stderr.slice(-3).join(' | ') : lines(result.stdout).slice(-1).join(' | ');
 }
 
 function gitFailure(result: GitResult, what: string): StoreError {
-  return new StoreError('STORE_GIT_FAILED', `${what} failed with exit ${result.code}: ${firstLine(result.stderr)}`);
+  return new StoreError('STORE_GIT_FAILED', `${what} failed with exit ${result.code}: ${tail(result)}`);
 }
 
 function expectSuccess(result: GitResult, what: string): GitResult {
   if (result.code !== 0) throw gitFailure(result, what);
   return result;
+}
+
+/** The installed git, validated: a binary that cannot report its own version is a broken driver. */
+export async function gitVersion(runner: GitRunner): Promise<string> {
+  const { stdout } = expectSuccess(await runner.run(['--version']), 'git --version');
+  const match = /^git version (\S+)/m.exec(stdout);
+  if (!match) throw new StoreError('STORE_GIT_FAILED', 'cannot parse the output of git --version');
+  return match[1];
 }
 
 /**
@@ -81,7 +151,18 @@ export class GitTransport implements PacketTransport {
   }
 
   async download(ticket: string, remoteDir: string, localDir: string, filter?: TransferFilter): Promise<void> {
-    return this.withClone((_clone, inner) => inner.download(ticket, remoteDir, localDir, filter));
+    return this.withClone(async (_clone, inner) => {
+      try {
+        await inner.download(ticket, remoteDir, localDir, filter);
+      } catch (error) {
+        // The inner transport names a path inside the clone, which is deleted before a caller reads
+        // the message. Name the remote instead; every other failure keeps its own message.
+        if (error instanceof StoreError && error.code === 'STORE_PACKET_MISSING') {
+          throw new StoreError('STORE_PACKET_MISSING', `${ticket}/${remoteDir} is not on ${this.config.remote}`);
+        }
+        throw error;
+      }
+    });
   }
 
   async upload(ticket: string, localDir: string, remoteDir: string, filter?: TransferFilter): Promise<void> {
@@ -125,10 +206,8 @@ export class GitTransport implements PacketTransport {
     ]);
     if (cloned.code === 0) return;
     if (!NO_BRANCH_YET.test(cloned.stderr)) throw gitFailure(cloned, 'git clone');
-    if ((await this.runner.run(['init', `--initial-branch=${branch}`, clone])).code !== 0) {
-      expectSuccess(await this.runner.run(['init', clone]), 'git init');
-      expectSuccess(await this.runner.run(['-C', clone, 'checkout', '--orphan', branch]), 'git checkout --orphan');
-    }
+    // `--initial-branch` needs git 2.28 (2020), which the package requires.
+    expectSuccess(await this.runner.run(['init', `--initial-branch=${branch}`, clone]), 'git init');
     expectSuccess(await this.runner.run(['-C', clone, 'remote', 'add', 'origin', remote]), 'git remote add');
   }
 
@@ -138,7 +217,10 @@ export class GitTransport implements PacketTransport {
     // A copy that selected no file leaves nothing to stage, and `git add` refuses an unmatched pathspec.
     if (!fs.existsSync(path.join(clone, ...scope.split('/')))) return;
     // The copy never deletes, so staging the ticket stages additions and modifications only.
-    expectSuccess(await this.runner.run(['-C', clone, 'add', '--', scope]), 'git add');
+    // `--force` because a `.gitignore` in the store repository, or the host's `core.excludesFile`,
+    // would otherwise skip packet files and exit 0 — a silent partial write. The pathspec is still
+    // only `<prefix?>/<ticket>`, so nothing outside this ticket can be staged.
+    expectSuccess(await this.runner.run(['-C', clone, 'add', '--force', '--', scope]), 'git add');
     const committed = await this.runner.run([
       '-C', clone,
       '-c', 'user.name=task-packet-store',

@@ -35,10 +35,7 @@ function gitOk(args: string[]): string {
 
 function makeGitHarness(): Harness {
   const bare = tempDir('tps-bare-');
-  if (git(['init', '--bare', '--initial-branch=main', bare]).status !== 0) {
-    gitOk(['init', '--bare', bare]);
-    gitOk(['-C', bare, 'symbolic-ref', 'HEAD', 'refs/heads/main']);
-  }
+  gitOk(['init', '--bare', '--initial-branch=main', bare]);
   const remote = `file://${bare}`;
   const config = parseStoreConfig({ driver: 'git', remote, prefix: PREFIX });
   if (config.driver !== 'git') throw new Error('unreachable');

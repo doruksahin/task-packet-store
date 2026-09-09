@@ -93,10 +93,15 @@ One JSON file, credential-free, committable. Unknown keys are rejected.
 Exactly one must be set for the `gdrive` driver. The `fs` driver needs none. The package removes
 every ambient `RCLONE_*` variable before it spawns rclone and sets `RCLONE_DRIVE_SCOPE=drive`.
 
-The `git` driver has no package-scoped credential variable. It passes the ambient environment to git
-unchanged, so the SSH agent and any configured credential helper work as they already do, and adds
-only `GIT_TERMINAL_PROMPT=0` so an unauthenticated remote fails instead of prompting. It never reads,
-forwards, or logs a token.
+The `git` driver has no package-scoped credential variable. The ambient credential surface reaches
+git as it is, so the SSH agent and any configured credential helper work as they already do, but the
+driver removes what would point git at another repository (`GIT_DIR`, `GIT_WORK_TREE`,
+`GIT_INDEX_FILE`, and their relatives) or override its fixed commit identity (`GIT_AUTHOR_*`,
+`GIT_COMMITTER_*`, `GIT_CONFIG*`). Prompts are disabled on both routes: `GIT_TERMINAL_PROMPT=0` for
+https, and `ssh -o BatchMode=yes` for ssh unless the operator set their own `GIT_SSH_COMMAND`, so an
+unauthenticated or unknown-host remote fails with a message instead of hanging. `LC_ALL=C` keeps
+git's diagnostics in the English the driver matches. It never reads, forwards, or logs a token, and a
+`remote` that embeds a password is rejected when the configuration is read.
 
 The remote is a connection string, so no `rclone.conf` exists anywhere:
 
@@ -320,9 +325,10 @@ State file, local, written by `begin`, updated by `checkpoint`:
 7. rclone exit codes 3 and 4 mean "not found". Everything else non-zero is `STORE_RCLONE_FAILED`
    with the last lines of stderr.
 8. Credentials never appear in config, state, records, stdout, or stderr.
-9. The `git` driver clones for one operation and keeps no persistent clone. A write commits and pushes
-   once; a rejected push is `STORE_GIT_FAILED`, never a retry, a rebase, or a force. The driver holds
-   no Git LFS handling: the remote's `.gitattributes` and an installed `git-lfs` decide that.
+9. The `git` driver needs git 2.28 or newer on `PATH`. It clones for one operation and keeps no
+   persistent clone. A write commits and pushes once; a rejected push is `STORE_GIT_FAILED`, never a
+   retry, a rebase, or a force. The driver holds no Git LFS handling: the remote's `.gitattributes`
+   and an installed `git-lfs` decide that.
 
 ## Error codes
 

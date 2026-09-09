@@ -9,7 +9,7 @@ import { TASK_PACKET_STORE_VERSION } from './version.js';
 
 const program = new Command()
   .name('task-packet-store')
-  .description('Read and write task packets from a local file system or Google Drive.')
+  .description('Read and write task packets from a local file system, Google Drive, or a git repository.')
   .version(TASK_PACKET_STORE_VERSION, '-V, --version')
   .showHelpAfterError()
   .exitOverride();

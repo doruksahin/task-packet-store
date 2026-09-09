@@ -14,8 +14,8 @@ and how to find the saved files.
 
 - Node.js 20 or newer.
 - rclone 1.75.0 for the `gdrive` driver. The `fs` driver needs no rclone.
-- `git` on `PATH` for the `git` driver; if the remote tracks files with Git LFS, `git-lfs` must also be
-  installed — the driver does not manage LFS.
+- git 2.28 or newer on `PATH` for the `git` driver; if the remote tracks files with Git LFS, `git-lfs`
+  must also be installed — the driver does not manage LFS.
 
 ## Install
 
@@ -57,9 +57,12 @@ driver uses the local filesystem directly; the `gdrive` driver spawns the pinned
 `git` driver clones the branch into a temporary directory for each operation, then commits and
 pushes what a write changed.
 
-For the `git` driver, `locate` reports `<remote>#<commit>:<path>`: git's own `treeish:path` grammar
-inside a URL fragment. It is commit-pinned and provider-neutral, so `git show <commit>:<path>`
-resolves the exact bytes in any clone of that remote, with no web UI or host convention assumed.
+For the `git` driver, every reported location is `<remote>#<ref>`, followed by `:<path>` when there is
+a path: git's own `treeish:path` grammar inside a URL fragment. `locate` reports
+`<remote>#<commit>:<path>`, and `doctor` reports the store root as `<remote>#<branch>`, plus
+`:<prefix>` when a prefix is configured. A `locate` result is commit-pinned and provider-neutral, so
+`git show <commit>:<path>` resolves the exact bytes in any clone of that remote, with no web UI or
+host convention assumed.
 
 Every command prints one JSON object on stdout when it succeeds. On failure stdout is empty and
 stderr has one line `CODE: message`. Exit 0 on success, 2 for usage or configuration errors, and 1
@@ -133,9 +136,13 @@ The `fs` driver needs neither. Do not put these values in the configuration file
 arguments, or source control.
 
 The `git` driver uses git's own credentials: the SSH agent or the credential helper git is already
-configured with. It reads no package-scoped variable and never forwards a token. It sets
-`GIT_TERMINAL_PROMPT=0`, so an unauthenticated remote fails with a message instead of waiting for a
-prompt.
+configured with. It reads no package-scoped variable and never forwards a token, and a `remote` that
+embeds a password is rejected when the configuration is read. Prompts are disabled on both routes:
+`GIT_TERMINAL_PROMPT=0` for https, and `ssh -o BatchMode=yes` for ssh unless the operator set their
+own `GIT_SSH_COMMAND` — so an unauthenticated or unknown-host remote fails with a message instead of
+hanging. The rest of the environment reaches git as it is, except the variables that would point git
+at another repository (`GIT_DIR` and its relatives) or override the driver's fixed commit identity
+(`GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `GIT_CONFIG*`), which the driver removes.
 
 ## Documentation
 

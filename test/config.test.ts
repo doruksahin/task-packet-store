@@ -28,6 +28,12 @@ describe('store config', () => {
       expect(() => parseStoreConfig({ driver: 'git', remote })).toThrow('STORE_CONFIG_INVALID');
     },
   );
+  it('keeps the conventional git username but rejects an embedded password', () => {
+    expect(parseStoreConfig({ driver: 'git', remote: 'ssh://git@github.com/team/packets.git' }).driver).toBe('git');
+    expect(() => parseStoreConfig({ driver: 'git', remote: 'https://user:token@github.com/team/packets.git' })).toThrow(
+      'remote must not embed a password; use an SSH agent or a git credential helper',
+    );
+  });
   it.each(['release/next', '..', '.', 'a/b'])('rejects git branch %j', (branch) => {
     expect(() => parseStoreConfig({ ...git, branch })).toThrow('STORE_CONFIG_INVALID');
   });
