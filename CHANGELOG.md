@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/doruksahin/task-packet-store/compare/v0.1.2...v0.2.0) (2026-09-09)
+
+
+### Features
+
+* **git:** add a git transport driver ([637b0ed](https://github.com/doruksahin/task-packet-store/commit/637b0ed20ce9b4b1979c9d98f7c61cd150d98ebe))
+
 ## [0.1.2](https://github.com/doruksahin/task-packet-store/compare/v0.1.1...v0.1.2) (2026-09-06)
 
 
