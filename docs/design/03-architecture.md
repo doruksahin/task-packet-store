@@ -103,8 +103,9 @@ still runs, because the driver keeps the ambient credential surface. Over ssh, a
 a key passphrase can still prompt or hang; disable that in your own ssh configuration —
 `ssh-keyscan` the host into `known_hosts`, or set `GIT_SSH_COMMAND='ssh -o BatchMode=yes'` /
 `core.sshCommand` — the driver does not override your ssh command. `LC_ALL=C` keeps git's diagnostics
-in the English the driver matches. It never reads, forwards, or logs a token, and a `remote` that
-embeds a password is rejected when the configuration is read.
+in the English the driver matches. It reads no package-scoped variable and passes nothing to git
+beyond the configured `remote`, and a `remote` that embeds a password is rejected when the
+configuration is read.
 
 The remote is a connection string, so no `rclone.conf` exists anywhere:
 

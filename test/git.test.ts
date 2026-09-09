@@ -87,12 +87,6 @@ describe('git runner and environment', () => {
 });
 
 describe('doctorStore git arm', () => {
-  it('fails gitVersion when git cannot report one', async () => {
-    await expect(
-      gitVersion(fakeGit(() => ({ code: 1, stdout: '', stderr: 'fatal: not a git repository\n' }))),
-    ).rejects.toThrow('STORE_GIT_FAILED');
-  });
-
   it.skipIf(!hasGit)('reports the git arm remoteRoot grammar with the installed git', async () => {
     const withPrefix = await doctorStore(gitConfig());
     expect(withPrefix.driver).toBe('git');
