@@ -3,6 +3,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseStoreConfig, type GitConfig } from '../src/config.js';
 import { createGitRunner, GitTransport, gitEnv, gitVersion, type GitResult, type GitRunner } from '../src/git.js';
+import { doctorStore } from '../src/store.js';
 import { cleanupTempDirs, tempDir, writeTree } from './operations.shared.js';
 
 afterEach(cleanupTempDirs);
@@ -57,6 +58,7 @@ describe('git runner and environment', () => {
         GIT_AUTHOR_NAME: 'someone else',
         GIT_COMMITTER_EMAIL: 'someone-else@example.invalid',
         GIT_CONFIG_COUNT: '1',
+        GIT_TEMPLATE_DIR: '/caller/.git-templates',
       }),
     ).toEqual({
       PATH: '/usr/bin',
@@ -78,10 +80,28 @@ describe('git runner and environment', () => {
     );
   });
 
-  it('disables ssh prompting unless the operator configured their own ssh command', () => {
-    expect(gitEnv({ PATH: '/usr/bin' }).GIT_SSH_COMMAND).toBe('ssh -o BatchMode=yes');
+  it('leaves ssh configuration to the operator', () => {
+    expect(gitEnv({ PATH: '/usr/bin' }).GIT_SSH_COMMAND).toBeUndefined();
     expect(gitEnv({ GIT_SSH_COMMAND: 'ssh -F /dev/null' }).GIT_SSH_COMMAND).toBe('ssh -F /dev/null');
-    expect(gitEnv({ GIT_SSH: '/usr/local/bin/ssh' }).GIT_SSH_COMMAND).toBeUndefined();
+  });
+});
+
+describe('doctorStore git arm', () => {
+  it('fails gitVersion when git cannot report one', async () => {
+    await expect(
+      gitVersion(fakeGit(() => ({ code: 1, stdout: '', stderr: 'fatal: not a git repository\n' }))),
+    ).rejects.toThrow('STORE_GIT_FAILED');
+  });
+
+  it.skipIf(!hasGit)('reports the git arm remoteRoot grammar with the installed git', async () => {
+    const withPrefix = await doctorStore(gitConfig());
+    expect(withPrefix.driver).toBe('git');
+    expect(withPrefix.git).toMatch(/^\d+\.\d+/);
+    expect(withPrefix.credential).toBe('ambient git credentials');
+    expect(withPrefix.remoteRoot).toBe(`${REMOTE}#main:packets`);
+
+    const withoutPrefix = await doctorStore(gitConfig({ prefix: undefined }));
+    expect(withoutPrefix.remoteRoot).toBe(`${REMOTE}#main`);
   });
 });
 
@@ -216,10 +236,8 @@ function remoteFile(bare: string, relative: string): string | null {
 describe.skipIf(!hasGit)('git transport against a real empty remote', () => {
   it('reads an empty tree, then creates the branch with the first write', async () => {
     const env = PLAIN_ENV;
-    const bare = tempDir('tps-bare-');
-    const init = spawnSync('git', ['init', '--bare', '--initial-branch=main', bare], { encoding: 'utf8', env });
-    expect(init.status).toBe(0);
-    const transport = new GitTransport(createGitRunner(gitEnv(env)), gitConfig({ remote: `file://${bare}` }));
+    const { bare, remote } = bareRemote();
+    const transport = new GitTransport(createGitRunner(gitEnv(env)), gitConfig({ remote }));
 
     expect(await transport.readText('PROJ-123', 'task.md')).toBeNull();
     expect(await transport.listDirectories('PROJ-123', 'stages')).toEqual([]);

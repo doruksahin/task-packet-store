@@ -97,11 +97,14 @@ The `git` driver has no package-scoped credential variable. The ambient credenti
 git as it is, so the SSH agent and any configured credential helper work as they already do, but the
 driver removes what would point git at another repository (`GIT_DIR`, `GIT_WORK_TREE`,
 `GIT_INDEX_FILE`, and their relatives) or override its fixed commit identity (`GIT_AUTHOR_*`,
-`GIT_COMMITTER_*`, `GIT_CONFIG*`). Prompts are disabled on both routes: `GIT_TERMINAL_PROMPT=0` for
-https, and `ssh -o BatchMode=yes` for ssh unless the operator set their own `GIT_SSH_COMMAND`, so an
-unauthenticated or unknown-host remote fails with a message instead of hanging. `LC_ALL=C` keeps
-git's diagnostics in the English the driver matches. It never reads, forwards, or logs a token, and a
-`remote` that embeds a password is rejected when the configuration is read.
+`GIT_COMMITTER_*`, `GIT_CONFIG*`). `GIT_TERMINAL_PROMPT=0` disables git's own terminal prompt over
+https; an askpass helper the environment supplies (`GIT_ASKPASS`, `SSH_ASKPASS`, or `core.askPass`)
+still runs, because the driver keeps the ambient credential surface. Over ssh, an unknown host key or
+a key passphrase can still prompt or hang; disable that in your own ssh configuration —
+`ssh-keyscan` the host into `known_hosts`, or set `GIT_SSH_COMMAND='ssh -o BatchMode=yes'` /
+`core.sshCommand` — the driver does not override your ssh command. `LC_ALL=C` keeps git's diagnostics
+in the English the driver matches. It never reads, forwards, or logs a token, and a `remote` that
+embeds a password is rejected when the configuration is read.
 
 The remote is a connection string, so no `rclone.conf` exists anywhere:
 

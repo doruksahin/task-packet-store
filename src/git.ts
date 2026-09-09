@@ -14,7 +14,10 @@ const NO_BRANCH_YET = /Remote branch .* not found/;
 /** `git commit` exits 1 when the copy changed nothing. Both wordings occur, on stdout or stderr. */
 const NOTHING_TO_COMMIT = /nothing to commit|nothing added to commit/;
 
-/** Point git at a repository other than the clone. An ambient one would commit and push elsewhere. */
+/**
+ * Point git at a repository other than the clone, or plant hooks into it. An ambient one would
+ * commit and push elsewhere.
+ */
 const REDIRECTING_VARIABLES = new Set([
   'GIT_DIR',
   'GIT_WORK_TREE',
@@ -26,6 +29,7 @@ const REDIRECTING_VARIABLES = new Set([
   'GIT_PREFIX',
   'GIT_CEILING_DIRECTORIES',
   'GIT_DISCOVERY_ACROSS_FILESYSTEM',
+  'GIT_TEMPLATE_DIR',
 ]);
 /** `GIT_AUTHOR_*`/`GIT_COMMITTER_*` outrank `-c user.*`, and `GIT_CONFIG*` injects arbitrary configuration. */
 const REDIRECTING_PREFIXES = ['GIT_AUTHOR_', 'GIT_COMMITTER_', 'GIT_CONFIG'];
@@ -46,8 +50,8 @@ export interface GitRunner {
  * and everything else — because git's own credentials are the only ones this package uses. Removed
  * is what could redirect git away from its temporary clone (`GIT_DIR` and the rest of
  * `REDIRECTING_VARIABLES`) or override the fixed commit identity (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`,
- * `GIT_CONFIG*`). Added: no prompting over https, no prompting over ssh unless the operator set their
- * own command, and `LC_ALL=C` so the diagnostics this module matches stay the English strings.
+ * `GIT_CONFIG*`). Added: no prompting over https, and `LC_ALL=C` so the diagnostics this module
+ * matches stay the English strings.
  */
 export function gitEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const clean = Object.fromEntries(
@@ -55,12 +59,7 @@ export function gitEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
       ([key]) => !REDIRECTING_VARIABLES.has(key) && !REDIRECTING_PREFIXES.some((prefix) => key.startsWith(prefix)),
     ),
   );
-  // GIT_TERMINAL_PROMPT never reaches ssh, which would still ask about an unknown host key or a
-  // passphrase. BatchMode turns those into an error. An operator's own ssh command wins.
-  const ssh = env.GIT_SSH_COMMAND === undefined && env.GIT_SSH === undefined
-    ? { GIT_SSH_COMMAND: 'ssh -o BatchMode=yes' }
-    : {};
-  return { ...clean, ...ssh, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' };
+  return { ...clean, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' };
 }
 
 export function createGitRunner(env: NodeJS.ProcessEnv, binary = 'git'): GitRunner {
@@ -110,7 +109,7 @@ function tail(result: GitResult): string {
 }
 
 function gitFailure(result: GitResult, what: string): StoreError {
-  return new StoreError('STORE_GIT_FAILED', `${what} failed with exit ${result.code}: ${tail(result)}`);
+  return new StoreError('STORE_GIT_FAILED', `${what} failed with exit ${result.code}: ${tail(result) || 'no output'}`);
 }
 
 function expectSuccess(result: GitResult, what: string): GitResult {

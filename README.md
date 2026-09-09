@@ -136,13 +136,17 @@ The `fs` driver needs neither. Do not put these values in the configuration file
 arguments, or source control.
 
 The `git` driver uses git's own credentials: the SSH agent or the credential helper git is already
-configured with. It reads no package-scoped variable and never forwards a token, and a `remote` that
-embeds a password is rejected when the configuration is read. Prompts are disabled on both routes:
-`GIT_TERMINAL_PROMPT=0` for https, and `ssh -o BatchMode=yes` for ssh unless the operator set their
-own `GIT_SSH_COMMAND` — so an unauthenticated or unknown-host remote fails with a message instead of
-hanging. The rest of the environment reaches git as it is, except the variables that would point git
-at another repository (`GIT_DIR` and its relatives) or override the driver's fixed commit identity
-(`GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `GIT_CONFIG*`), which the driver removes.
+configured with. It reads no package-scoped variable and passes nothing to git beyond the remote URL
+you configured; a `remote` that embeds a password is rejected when the configuration is read.
+`GIT_TERMINAL_PROMPT=0` disables git's own terminal prompt over https; an askpass helper the
+environment supplies (`GIT_ASKPASS`, `SSH_ASKPASS`, or `core.askPass`) still runs, because the driver
+keeps the ambient credential surface. Over ssh, an unknown host key or a key passphrase can still
+prompt or hang; disable that in your own ssh configuration — `ssh-keyscan` the host into
+`known_hosts`, or set `GIT_SSH_COMMAND='ssh -o BatchMode=yes'` / `core.sshCommand` — the driver does
+not override your ssh command. The driver also sets `LC_ALL=C` so git's diagnostics are the English
+strings it matches. The rest of the environment reaches git as it is, except the variables that would
+point git at another repository (`GIT_DIR` and its relatives) or override the driver's fixed commit
+identity (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `GIT_CONFIG*`), which the driver removes.
 
 ## Documentation
 
