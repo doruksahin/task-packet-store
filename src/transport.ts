@@ -14,7 +14,14 @@ export type TransferFilter =
   | { readonly includes: readonly string[]; readonly excludes?: never }
   | { readonly excludes: readonly string[]; readonly includes?: never };
 
-export type Driver = 'fs' | 'gdrive' | 'git';
+/**
+ * Every driver the package implements, in the order of the configuration schema's union arms.
+ * Exported so a consumer checks its own documentation and validators against this list instead of
+ * hardcoding one.
+ */
+export const DRIVERS = ['fs', 'gdrive', 'git'] as const;
+
+export type Driver = (typeof DRIVERS)[number];
 
 export interface ResultLocation {
   kind: 'directory' | 'file';

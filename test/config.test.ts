@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_IDENTITY, parseStoreConfig, validateStage, validateTicket } from '../src/config.js';
+import { DEFAULT_IDENTITY, parseStoreConfig, StoreConfigSchema, validateStage, validateTicket } from '../src/config.js';
+import { DRIVERS } from '../src/transport.js';
 
 const gdrive = { driver: 'gdrive', sharedDriveId: '0ABcDeFgHiJkLmNoP' } as const;
 const git = { driver: 'git', remote: 'https://github.com/team/packets.git' } as const;
 
 describe('store config', () => {
+  it('accepts exactly the exported drivers, in the exported order', () => {
+    expect(StoreConfigSchema.options.map((option) => option.shape.driver.value)).toEqual([...DRIVERS]);
+  });
   it('accepts an fs config and fills the default identity', () => {
     const config = parseStoreConfig({ driver: 'fs', root: '/abs/packets' });
     expect(config.identity).toEqual([...DEFAULT_IDENTITY]);
