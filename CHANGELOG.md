@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/doruksahin/task-packet-store/compare/v0.2.0...v0.3.0) (2026-09-10)
+
+
+### Features
+
+* export the driver list ([#22](https://github.com/doruksahin/task-packet-store/issues/22)) ([fd5ed9a](https://github.com/doruksahin/task-packet-store/commit/fd5ed9a650752177c37ab0f847270e52ff97afec))
+
 ## [0.2.0](https://github.com/doruksahin/task-packet-store/compare/v0.1.2...v0.2.0) (2026-09-09)
 
 
