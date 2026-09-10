@@ -83,6 +83,13 @@ the CLI, transports, configuration schemas, YAML, or Zod. The package root expor
 `matchesIdentity` and `regularFiles` are also available from the identity entrypoint for consumers
 that need the same file selection and manifest walking.
 
+To check that your own documentation and validators cover every driver, read the driver list from
+the package root instead of repeating it:
+
+```js
+import { DRIVERS } from '@doruksahin/task-packet-store';
+```
+
 ## Configuration
 
 One JSON file, credential-free, committable. Unknown keys are rejected.
