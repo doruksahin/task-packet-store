@@ -169,6 +169,27 @@ describe('cli fetch and push against a temp fs store', () => {
     );
   });
 
+  it.each([
+    { PACKET_STORE_DRIVE_TOKEN: 'test-token-value', PACKET_STORE_DRIVE_CLIENT_ID: 'test-client-id-value' },
+    {
+      PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: 'test-service-account-value',
+      PACKET_STORE_DRIVE_CLIENT_ID: 'test-client-id-value',
+      PACKET_STORE_DRIVE_CLIENT_SECRET: 'test-client-secret-value',
+    },
+  ])('rejects invalid OAuth client configuration before rclone without exposing credentials', (credentials) => {
+    const { base } = seedStore();
+    const store = path.join(base, 'gdrive.json');
+    fs.writeFileSync(store, JSON.stringify({ driver: 'gdrive', sharedDriveId: '0ABcDeFgHiJkLmNoP' }));
+    const clean = Object.fromEntries(Object.entries(process.env)
+      .filter(([key]) => !key.startsWith('PACKET_STORE_DRIVE_') && !key.startsWith('RCLONE_')));
+    const { status, stdout, stderr } = runCli(['doctor', '--store', store], { ...clean, PATH: '', ...credentials });
+    expect(status).toBe(2);
+    expect(stdout).toBe('');
+    expect(stderr.startsWith('STORE_CONFIG_INVALID:')).toBe(true);
+    expect(stderr.trimEnd().split('\n')).toHaveLength(1);
+    for (const value of Object.values(credentials)) expect(stderr).not.toContain(value);
+  });
+
   it('push uploads a local packet without runs and exits 0', () => {
     const { base, root, store } = seedStore();
     const from = path.join(base, 'local', 'PROJ-7');

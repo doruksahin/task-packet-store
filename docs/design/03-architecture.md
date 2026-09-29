@@ -88,9 +88,20 @@ One JSON file, credential-free, committable. Unknown keys are rejected.
 | Env var you set | Mapped to rclone | Who |
 | --- | --- | --- |
 | `PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS` | `RCLONE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS` | CI. The key JSON inline |
-| `PACKET_STORE_DRIVE_TOKEN` | `RCLONE_DRIVE_TOKEN` | Laptop. Output of `rclone authorize "drive"` |
+| `PACKET_STORE_DRIVE_TOKEN` | `RCLONE_DRIVE_TOKEN` | OAuth token JSON, on a developer host or CI runner |
+| `PACKET_STORE_DRIVE_CLIENT_ID` | `RCLONE_DRIVE_CLIENT_ID` | Optional dedicated OAuth client; paired with its secret and token |
+| `PACKET_STORE_DRIVE_CLIENT_SECRET` | `RCLONE_DRIVE_CLIENT_SECRET` | Optional dedicated OAuth client secret |
 
-Exactly one must be set for the `gdrive` driver. The `fs` driver needs none. The package removes
+Exactly one of the service-account credentials or OAuth token must be set for the `gdrive` driver.
+With an OAuth token, callers may set both client variables to use their own Google project's
+OAuth client. The token must have been authorized with that same client. Omitting both client
+variables preserves rclone's default client behavior; empty optional variables also mean omitted.
+An incomplete or whitespace-only client pair, or a pair alongside service-account credentials,
+fails with `STORE_CONFIG_INVALID` (exit 2) before invoking rclone. Mapping uses the child environment,
+not command arguments or output receipts; validation errors name variables without their values. The
+[rclone Drive options](https://rclone.org/drive/#drive-client-id) own OAuth behavior and quotas.
+
+The `fs` driver needs none. The package removes
 every ambient `RCLONE_*` variable before it spawns rclone and sets `RCLONE_DRIVE_SCOPE=drive`.
 
 The `git` driver has no package-scoped credential variable. The ambient credential surface reaches
