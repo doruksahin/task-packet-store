@@ -137,7 +137,12 @@ Credentials for the `gdrive` driver come from the process environment only. Set 
 | Variable | Use |
 | --- | --- |
 | `PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS` | CI. The service account key JSON, inline. |
-| `PACKET_STORE_DRIVE_TOKEN` | Laptop. The output of `rclone authorize "drive"`. |
+| `PACKET_STORE_DRIVE_TOKEN` | OAuth token JSON for a developer host or CI runner. |
+
+To use a dedicated OAuth client with the token, also set both `PACKET_STORE_DRIVE_CLIENT_ID`
+and `PACKET_STORE_DRIVE_CLIENT_SECRET`. Authorize the token with that same client. Omitting
+both preserves the existing default-client behavior; incomplete pairs or client settings alongside
+a service account fail before rclone runs. See the [credential contract](docs/design/03-architecture.md#credentials).
 
 The `fs` driver needs neither. Do not put these values in the configuration file, command
 arguments, or source control.

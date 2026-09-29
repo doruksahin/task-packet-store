@@ -19,9 +19,64 @@ describe('rclone env', () => {
     const env = rcloneEnv({
       PATH: '/bin',
       RCLONE_CONFIG: '/etc/rclone.conf',
+      RCLONE_DRIVE_CLIENT_ID: 'ambient-id',
+      RCLONE_DRIVE_CLIENT_SECRET: 'ambient-secret',
       PACKET_STORE_DRIVE_TOKEN: '{"t":1}',
     });
     expect(env).toEqual({ PATH: '/bin', RCLONE_DRIVE_SCOPE: 'drive', RCLONE_DRIVE_TOKEN: '{"t":1}' });
+  });
+
+  it('maps the explicit OAuth client pair with its token and ignores ambient client settings', () => {
+    expect(rcloneEnv({
+      PATH: '/bin',
+      PACKET_STORE_DRIVE_TOKEN: 'dedicated-token',
+      PACKET_STORE_DRIVE_CLIENT_ID: 'dedicated-id',
+      PACKET_STORE_DRIVE_CLIENT_SECRET: 'dedicated-secret',
+      RCLONE_DRIVE_CLIENT_ID: 'ambient-id',
+      RCLONE_DRIVE_CLIENT_SECRET: 'ambient-secret',
+      RCLONE_CONFIG: '/untrusted.conf',
+    })).toEqual({
+      PATH: '/bin',
+      RCLONE_DRIVE_SCOPE: 'drive',
+      RCLONE_DRIVE_TOKEN: 'dedicated-token',
+      RCLONE_DRIVE_CLIENT_ID: 'dedicated-id',
+      RCLONE_DRIVE_CLIENT_SECRET: 'dedicated-secret',
+    });
+  });
+
+  it.each([
+    { PACKET_STORE_DRIVE_CLIENT_ID: 'only-id' },
+    { PACKET_STORE_DRIVE_CLIENT_SECRET: 'only-secret' },
+    { PACKET_STORE_DRIVE_CLIENT_ID: '', PACKET_STORE_DRIVE_CLIENT_SECRET: 'only-secret' },
+    { PACKET_STORE_DRIVE_CLIENT_ID: 'id', PACKET_STORE_DRIVE_CLIENT_SECRET: '  ' },
+    { PACKET_STORE_DRIVE_CLIENT_ID: '  ', PACKET_STORE_DRIVE_CLIENT_SECRET: 'secret' },
+  ])('rejects an incomplete or blank OAuth pair without reflecting its values', (client) => {
+    try {
+      rcloneEnv({ PACKET_STORE_DRIVE_TOKEN: 'token-value', ...client });
+      expect.fail('invalid client configuration must fail');
+    } catch (error) {
+      expect(String(error)).toContain('STORE_CONFIG_INVALID');
+      expect(String(error)).toContain('set both PACKET_STORE_DRIVE_CLIENT_ID and PACKET_STORE_DRIVE_CLIENT_SECRET');
+      expect(String(error)).not.toContain('token-value');
+      expect(String(error)).not.toContain('only-id');
+      expect(String(error)).not.toContain('only-secret');
+    }
+  });
+
+  it('rejects OAuth client settings with service-account credentials', () => {
+    expect(() => rcloneEnv({
+      PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: 'service-account-value',
+      PACKET_STORE_DRIVE_CLIENT_ID: 'dedicated-id',
+      PACKET_STORE_DRIVE_CLIENT_SECRET: 'dedicated-secret',
+    })).toThrow('STORE_CONFIG_INVALID: Drive OAuth client settings require PACKET_STORE_DRIVE_TOKEN');
+  });
+
+  it('keeps existing OAuth behavior when optional client inputs are empty', () => {
+    expect(rcloneEnv({
+      PACKET_STORE_DRIVE_TOKEN: 'existing-token',
+      PACKET_STORE_DRIVE_CLIENT_ID: '',
+      PACKET_STORE_DRIVE_CLIENT_SECRET: '',
+    })).toEqual({ RCLONE_DRIVE_SCOPE: 'drive', RCLONE_DRIVE_TOKEN: 'existing-token' });
   });
 
   it('maps the service account inline', () => {

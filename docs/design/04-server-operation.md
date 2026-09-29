@@ -23,7 +23,7 @@ echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 Both workflows, CI and the publish job of Release Please, run this through the composite action
 `.github/actions/install-rclone`, whose `version` input defaults to the pinned tag.
 
-## 2. Authentication is a service account, passed inline
+## 2. Authentication is passed through named environment variables
 
 ```yaml
 env:
@@ -32,6 +32,12 @@ env:
 
 The service account must be a member of the Shared Drive with the Content manager role. Use a
 Shared Drive, not a My Drive folder. A service account has no My Drive quota and uploads fail.
+
+Alternatively, pass `PACKET_STORE_DRIVE_TOKEN` without service-account credentials. For a
+dedicated OAuth client, pass `PACKET_STORE_DRIVE_CLIENT_ID` and
+`PACKET_STORE_DRIVE_CLIENT_SECRET` alongside a token authorized with that client. Both client
+variables are required together. The [credential contract](03-architecture.md#credentials)
+owns mapping and invalid-combination behavior.
 
 The package owns scope and credential mapping and strips ambient `RCLONE_*`. Both workflows need
 write access for their outputs. CI also provides the exporter's named Jira credentials for the
@@ -83,5 +89,6 @@ numbering, the env mapping, and the JSON output live in one tested package. Work
   PoC never creates that state. `rclone dedupe` repairs it if it happens.
 - Listings can lag a few seconds after a write. `begin` numbering across two concurrent runs can
   collide. `checkpoint` detects it.
-- rclone's default OAuth client id is shared across all rclone users and rate limited. A company
-  client id lifts the limit. Follow-up, not PoC.
+- A dedicated OAuth client uses its own Google project's API quota instead of rclone's shared
+  client quota. Google user and project limits still apply; this does not remove all rate limits.
+  See [rclone's client setup](https://rclone.org/drive/#making-your-own-client-id).

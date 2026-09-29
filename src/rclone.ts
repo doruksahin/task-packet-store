@@ -30,6 +30,22 @@ export function rcloneEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
       'set exactly one of PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS or PACKET_STORE_DRIVE_TOKEN',
     );
   }
+  const clientId = env.PACKET_STORE_DRIVE_CLIENT_ID;
+  const clientSecret = env.PACKET_STORE_DRIVE_CLIENT_SECRET;
+  if (clientId || clientSecret) {
+    if (!clientId?.trim() || !clientSecret?.trim()) {
+      throw new StoreError(
+        'STORE_CONFIG_INVALID',
+        'set both PACKET_STORE_DRIVE_CLIENT_ID and PACKET_STORE_DRIVE_CLIENT_SECRET, or neither',
+      );
+    }
+    if (!token) {
+      throw new StoreError(
+        'STORE_CONFIG_INVALID',
+        'Drive OAuth client settings require PACKET_STORE_DRIVE_TOKEN; do not combine them with service-account credentials',
+      );
+    }
+  }
   const clean = Object.fromEntries(
     Object.entries(env).filter(([key]) => !key.startsWith('RCLONE_') && !key.startsWith('PACKET_STORE_DRIVE_')),
   );
@@ -37,6 +53,7 @@ export function rcloneEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     ...clean,
     RCLONE_DRIVE_SCOPE: 'drive',
     ...(credentials ? { RCLONE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS: credentials } : { RCLONE_DRIVE_TOKEN: token }),
+    ...(clientId && clientSecret ? { RCLONE_DRIVE_CLIENT_ID: clientId, RCLONE_DRIVE_CLIENT_SECRET: clientSecret } : {}),
   };
 }
 

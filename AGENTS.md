@@ -12,7 +12,7 @@ For documentation and agent-guide edits, use the [link-check procedure](docs/mai
 
 1. Operations are written once against `PacketTransport`. Never branch on the driver inside an operation.
 2. rclone owns Drive transport. Never parse Drive API responses. Never write a Drive client in this repository.
-3. Credentials for the `gdrive` driver come only from `PACKET_STORE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS` or `PACKET_STORE_DRIVE_TOKEN`. Strip ambient `RCLONE_*`. Never log them.
+3. Credentials for the `gdrive` driver use only the named environment variables in the [credential contract](docs/design/03-architecture.md#credentials), including the optional OAuth client pair. Strip ambient `RCLONE_*`. Never log credential values.
    3a. Help text and examples use neutral identifiers such as `PROJ-123`, never a consumer's project key.
 4. A filter has includes or excludes, never both.
 5. `fetch` and `push` exclude `/stages/*/runs/**`. `pull` includes only `/*/runs/**`.
