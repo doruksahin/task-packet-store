@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/doruksahin/task-packet-store/compare/v0.3.0...v0.4.0) (2026-09-29)
+
+
+### Features
+
+* **drive:** support dedicated OAuth clients ([#27](https://github.com/doruksahin/task-packet-store/issues/27)) ([854e0c5](https://github.com/doruksahin/task-packet-store/commit/854e0c5394d5ab43e1a62650267c810440f4fe4f))
+
 ## [0.3.0](https://github.com/doruksahin/task-packet-store/compare/v0.2.0...v0.3.0) (2026-09-10)
 
 
