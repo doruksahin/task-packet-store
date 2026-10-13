@@ -47,7 +47,7 @@ Credentials are never part of receipts or logs.
 
 The [design index](../design/README.md) links the implemented contracts. The
 [operator playbook](../playbook.md) covers Jira → packet → walkthrough → saved report.
-The independent [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)
+The independent [Jira producer](https://github.com/llm-workflows/jira-to-packet/blob/main/docs/architecture/README.md)
 owns Jira access and packet preparation; AC consumes the existing stored packet. Both use this
 package's configuration and operations. Their installation does not add dependencies here.
 The [integration guide](../integrating-a-workflow.md) describes another workflow's adapter.
@@ -68,7 +68,7 @@ remain the shared interface.
 [Storage decisions D1–D13](../design/00-decisions.md) own the delivered architecture.
 The [shared standard](https://github.com/doruksahin/plugin-architecture/blob/main/standard/README.md)
 governs this architecture entry page. Historical D11 records the first delivery; the
-[current producer architecture](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)
+[current producer architecture](https://github.com/llm-workflows/jira-to-packet/blob/main/docs/architecture/README.md)
 owns the extracted preparation boundary.
 
 ## Verification
