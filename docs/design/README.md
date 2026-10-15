@@ -14,7 +14,7 @@ a git repository.
 - Workflows process ordinary files in a working directory. No storage choice requires a vault.
 
 The flow has two independent commands: Jira → saved packet, then stored packet →
-AC-walkthrough → saved HTML. The [Jira producer](https://github.com/doruksahin/jira-to-packet/blob/main/README.md)
+AC-walkthrough → saved HTML. The [Jira producer](https://github.com/llm-workflows/jira-to-packet/blob/main/README.md)
 owns the first command; AC owns the second. Both accept the same selected store.
 
 To operate it, follow the [end-to-end playbook](../playbook.md): commands in order, inputs, outputs,

@@ -4,7 +4,7 @@
 > storage design; it is not a description of the current runtime. For the supported
 > filesystem/Google Drive flow and its command owners, start with the
 > [operator playbook](../playbook.md). The independent
-> [Jira producer architecture](https://github.com/doruksahin/jira-to-packet/blob/main/docs/architecture/README.md)
+> [Jira producer architecture](https://github.com/llm-workflows/jira-to-packet/blob/main/docs/architecture/README.md)
 > owns its current preparation boundary.
 
 Surveyed on 2026-09-04 across three repositories.
